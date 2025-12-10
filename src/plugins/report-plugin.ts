@@ -135,13 +135,9 @@ export default defineNuxtPlugin((nuxtApp) => {
     },
     /**
      * 初始化 SDK
-     * @param {{appId?: string, channel?: string, reportUrl?: string, adSelector?: string}} options
      */
-    init: function (options) {
-      options = options || {}
-      this._ctx.appId = options.appId || ''
-      this._ctx.channel = options.channel || ''
-      const adSelector = options.adSelector
+    init: function () {
+
       window.addEventListener('click', event => {
         const el = event.target
         //  点击事件追踪

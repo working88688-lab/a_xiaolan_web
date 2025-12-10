@@ -21,7 +21,6 @@ import type { AdItem } from '@types'
 const props = defineProps<{
   data: AdItem
   index?: number
-  adKey?: string | number
   adName?: string
   adType?: string
   isVirtual?: boolean
