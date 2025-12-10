@@ -9,12 +9,18 @@ const activeTab = defineModel<number>('active')
 const params = ref({
   kwy: props.text
 })
+
+function onTrack(data: any) {
+  __.$Tracker.trackKeywordSearch({
+    keyword: props.text,
+    search_result_count: data.count
+  })
+}
 </script>
 <template>
   <dx-tabs v-model:active="activeTab" class="dx-tabs first-no-padding primary-tabs">
     <van-tab title="视频">
-      <dx-hoc-list :track-data="{ click_item_type_key: 'video', click_item_type_name: '视频' }"
-        :api="__.$Api.Search.searchtags" :params="params">
+      <dx-hoc-list :on-track :api="__.$Api.Search.searchtags" :params="params">
         <template #item="{ item, index, items }">
           <report-click-item :data="{
             event: 'keyword_click',
@@ -26,13 +32,15 @@ const params = ref({
           }">
             <stack-link :key="item.id" track :list="items" :data="item" :index="index">
               <div class="search-videoItem">
-                <div class="search-videoCover">
+                <div class="search-videoCover flex-shrink-0">
                   <dx-image :src="item.cover_thumb_url" />
                   <span class="duration">{{ item.duration_str }}</span>
                   <dx-pay-type :coins="item.coins" class="absolute right-0.5 top-0.5 z-10"></dx-pay-type>
                 </div>
-                <div class="search-videoInfo">
-                  <p class="line-clamp-2 text-base1">{{ item.title }}</p>
+                <div class="search-videoInfo flex-1 overflow-hidden">
+                  <p class="line-clamp-2 text-base1" style="word-break: break-all; white-space: normal">
+                    {{ item.title }}
+                  </p>
                   <div class="dx dx-flex dx-align-center">
                     <img v-lazyLoad="item.user.avatar_url" class="avatar" />
                     <span class="ml-0.5">{{ item.user.nickname }}</span>
@@ -48,7 +56,7 @@ const params = ref({
       </dx-hoc-list>
     </van-tab>
     <van-tab title="片库">
-      <dx-hoc-list class="dx-grid-2" :api="__.$Api.Search.original" :params="params">
+      <dx-hoc-list :on-track class="dx-grid-2" :api="__.$Api.Search.original" :params="params">
         <template #item="{ item, items, index }">
           <report-click-item :data="{
             event: 'keyword_click',
@@ -65,7 +73,7 @@ const params = ref({
       </dx-hoc-list>
     </van-tab>
     <van-tab title="帖子">
-      <dx-hoc-list class="px-1" :api="__.$Api.Community.search" :params="{
+      <dx-hoc-list :on-track class="px-1" :api="__.$Api.Community.search" :params="{
         word: props.text
       }">
         <template #item="{ item, index }">
@@ -84,7 +92,7 @@ const params = ref({
     </van-tab>
 
     <van-tab title="用户">
-      <dx-hoc-list class="dx-grid-1" :api="__.$Api.Search.searchUser" :params="params">
+      <dx-hoc-list :on-track class="dx-grid-1" :api="__.$Api.Search.searchUser" :params="params">
         <template #item="{ item, index }">
           <report-click-item :data="{
             event: 'keyword_click',
@@ -124,7 +132,7 @@ const params = ref({
       </dx-hoc-list>
     </van-tab>
     <van-tab title="动漫">
-      <dx-hoc-list class="dx-grid-2" api="api/cartoon/search" :params="{ word: props.text }">
+      <dx-hoc-list :on-track class="dx-grid-2" api="api/cartoon/search" :params="{ word: props.text }">
         <template #item="{ item, items, index }">
           <report-click-item :data="{
             event: 'keyword_click',
@@ -141,7 +149,7 @@ const params = ref({
       </dx-hoc-list>
     </van-tab>
     <van-tab title="漫画">
-      <dx-hoc-list class="dx-grid-2" :api="__.$Api.Search.searchComics" :params="params">
+      <dx-hoc-list :on-track class="dx-grid-2" :api="__.$Api.Search.searchComics" :params="params">
         <template #item="{ item, index }">
           <report-click-item :data="{
             event: 'keyword_click',
@@ -157,7 +165,7 @@ const params = ref({
       </dx-hoc-list>
     </van-tab>
     <van-tab title="美男">
-      <dx-hoc-list class="dx-grid-2" :api="__.$Api.Search.searchImage" :params="params">
+      <dx-hoc-list :on-track class="dx-grid-2" :api="__.$Api.Search.searchImage" :params="params">
         <template #item="{ item, index }">
           <report-click-item :data="{
             event: 'keyword_click',
@@ -173,7 +181,7 @@ const params = ref({
       </dx-hoc-list>
     </van-tab>
     <van-tab title="小说">
-      <dx-hoc-list class="dx-grid-2" :api="__.$Api.Search.searchStory" :params="params">
+      <dx-hoc-list :on-track class="dx-grid-2" :api="__.$Api.Search.searchStory" :params="params">
         <template #item="{ item, index }">
           <report-click-item :data="{
             event: 'keyword_click',
@@ -189,7 +197,7 @@ const params = ref({
       </dx-hoc-list>
     </van-tab>
     <van-tab title="黄游">
-      <dx-hoc-list class="dx-grid-2" api="/api/porngame/search" :params="{ word: props.text }">
+      <dx-hoc-list :on-track class="dx-grid-2" api="/api/porngame/search" :params="{ word: props.text }">
         <template #item="{ item, index }">
           <report-click-item :data="{
             event: 'keyword_click',

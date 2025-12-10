@@ -34,6 +34,7 @@ const props = withDefaults(
       index: number
     }
     trackData?: any
+    onTrack?: (data: any) => void
   }>(),
   {
     params: undefined,
@@ -99,10 +100,9 @@ const {
     }
     props.success?.(result.value)
 
-    if (props.trackData) {
-      __.$Tracker.trackKeywordSearch({
-        keyword: props.params?.kwy,
-        search_result_count: listData.value.length
+    if (props.onTrack) {
+      props.onTrack({
+        count: listData.value.length
       })
     }
   },
