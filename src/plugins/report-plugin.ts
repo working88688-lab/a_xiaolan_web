@@ -15,24 +15,24 @@ let PAGE_ALIVE_TIMER: any
 
 export default defineNuxtPlugin((nuxtApp) => {
 
-  const route = useRoute()
-  document.addEventListener('visibilitychange', (e) => {
-    const cache = PAGE_ALIVE_MAP.get(route.name);
-    if (document.hidden) {
-      PAGE_ALIVE_MAP.set(route.name, {
-        status: 'hidden',
-        alive_time: performance.now() - cache.show_at
-      })
-    } else {
-      PAGE_ALIVE_MAP.set(route.name, {
-        status: 'show',
-        show_at: performance.now(),
-        alive_time: cache.alive_time
-      })
-    }
-  })
+  // const route = useRoute()
+  // document.addEventListener('visibilitychange', (e) => {
+  //   const cache = PAGE_ALIVE_MAP.get(route.name);
+  //   if (document.hidden) {
+  //     PAGE_ALIVE_MAP.set(route.name, {
+  //       status: 'hidden',
+  //       alive_time: performance.now() - cache.show_at
+  //     })
+  //   } else {
+  //     PAGE_ALIVE_MAP.set(route.name, {
+  //       status: 'show',
+  //       show_at: performance.now(),
+  //       alive_time: cache.alive_time
+  //     })
+  //   }
+  // })
   const app = useNuxtApp()
-
+  const userStore = useUserStore()
   app.$router.beforeEach((to, from) => {
     if (PAGE_ALIVE_TIMER) {
       clearInterval(PAGE_ALIVE_TIMER)
@@ -46,11 +46,11 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
     PAGE_LOAD_MAP.set(to.name, performance.now())
 
-    PAGE_ALIVE_MAP.set(route.name, {
-      status: 'status',
-      show_at: performance.now(),
-      alive_time: 0
-    })
+    // PAGE_ALIVE_MAP.set(route.name, {
+    //   status: 'status',
+    //   show_at: performance.now(),
+    //   alive_time: 0
+    // })
 
   })
 
@@ -60,6 +60,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     app.$Tracker.trackAppPageView({
       page_key: pageMeta.key,
       page_name: pageMeta.name,
+      user_type: userStore.u.is_vip ? 'vip' : 'normal',
       referrer_page_key: referrerMeta.key,
       referrer_page_name: referrerMeta.name,
       current_page_key: pageMeta.key,
@@ -67,24 +68,24 @@ export default defineNuxtPlugin((nuxtApp) => {
       page_load_time: performance.now() - PAGE_LOAD_MAP.get(to.name)
     })
 
-    PAGE_ALIVE_TIMER = setInterval(() => {
-      const current = PAGE_ALIVE_MAP.get(to.name);
-      if (current) {
-        app.$Tracker.trackPageLifecycle({
-          lifecycle_status: current.status,
-          page_key: pageMeta.key,
-          page_name: pageMeta.name,
-          duration: current.status === 'show' ? performance.now() - current.show_at + (current.alive_time || 0) : current.alive_time
-        })
-      } else {
-        app.$Tracker.trackPageLifecycle({
-          lifecycle_status: 'show',
-          page_key: pageMeta.key,
-          page_name: pageMeta.name,
-          duration: 10 * 60
-        })
-      }
-    }, 10 * 60 * 1000)
+    // PAGE_ALIVE_TIMER = setInterval(() => {
+    //   const current = PAGE_ALIVE_MAP.get(to.name);
+    //   if (current) {
+    //     app.$Tracker.trackPageLifecycle({
+    //       lifecycle_status: current.status,
+    //       page_key: pageMeta.key,
+    //       page_name: pageMeta.name,
+    //       duration: current.status === 'show' ? performance.now() - current.show_at + (current.alive_time || 0) : current.alive_time
+    //     })
+    //   } else {
+    //     app.$Tracker.trackPageLifecycle({
+    //       lifecycle_status: 'show',
+    //       page_key: pageMeta.key,
+    //       page_name: pageMeta.name,
+    //       duration: 10 * 60
+    //     })
+    //   }
+    // }, 10 * 60 * 1000)
   })
 
   function createFetchQueue(maxConcurrency = 5) {
@@ -137,7 +138,6 @@ export default defineNuxtPlugin((nuxtApp) => {
      * 初始化 SDK
      */
     init: function () {
-
       window.addEventListener('click', event => {
         const el = event.target
         //  点击事件追踪

@@ -215,7 +215,8 @@ const init_player = async () => {
           event,
           ...props.videoInfo,
           video_behavior_key: 'video_play',
-          ...getVideoInfo()
+          ...getVideoInfo(),
+          video_behavior_name: '播放'
         })
       })
     })
@@ -224,7 +225,8 @@ const init_player = async () => {
         event,
         ...props.videoInfo,
         video_behavior_key: 'video_pause',
-        ...getVideoInfo()
+        ...getVideoInfo(),
+        video_behavior_name: '暂停'
       })
     })
     xg_player.on(Events.ENDED, () => {
@@ -232,7 +234,8 @@ const init_player = async () => {
         event,
         ...props.videoInfo,
         video_behavior_key: 'video_complete',
-        ...getVideoInfo()
+        ...getVideoInfo(),
+        video_behavior_name: '播放完成'
       })
     })
     xg_player.on(Events.SEEKING, () => {
@@ -244,13 +247,15 @@ const init_player = async () => {
         event,
         ...props.videoInfo,
         video_behavior_key: diff > 0 ? 'video_forward' : 'video_rewind',
-        ...getVideoInfo()
+        ...getVideoInfo(),
+        video_behavior_name: diff > 0 ? '前进' : '后退'
       })
     })
     __.$Tracker.trackVideoEvent({
       event,
       ...props.videoInfo,
-      video_behavior_key: 'video_view'
+      video_behavior_key: 'video_view',
+      video_behavior_name: '展示'
     })
   }
 }
