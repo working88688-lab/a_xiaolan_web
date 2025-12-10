@@ -106,7 +106,7 @@ const target = useTemplateRef('link')
 
 const { stop } = useIntersectionObserver(target, ([entry]) => {
   if (entry?.isIntersecting) {
-    if (!props.isVirtual && !props.customTrack) {
+    if (!props.isVirtual) {
       __.$Tracker.trackAdImpression({
         page_key,
         ad_type,
