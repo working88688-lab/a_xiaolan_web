@@ -4,7 +4,7 @@
     ad_type,
     page_name,
     ad_slot_key: props.data.advertise_location_code,
-    ad_slot_name: `${name}`,
+    ad_slot_name: props.data.title,
     ad_id: props.data.advertise_code,
     event: 'ad_click'
   }">
@@ -20,11 +20,8 @@ import type { AdItem } from '@types'
 
 const props = defineProps<{
   data: AdItem
-  index?: number
-  adName?: string
   adType?: string
   isVirtual?: boolean
-  customTrack?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -65,9 +62,6 @@ const toPost = (id: string) => {
 const page_key = ((route.name as string) || '').replace(/-/g, '_')
 const page_name = route.meta?.title || route.meta?.trackPageName
 
-const name = computed(() => {
-  return [page_name, props.adName, props.index ? props.index + 1 : props.index].filter(i => i).join('_')
-})
 const ad_type = props.adType || 'banner'
 const onClick = () => {
   emit('click')
@@ -118,7 +112,7 @@ const { stop } = useIntersectionObserver(target, ([entry]) => {
         ad_type,
         page_name,
         ad_slot_key: props.data.advertise_location_code,
-        ad_slot_name: `${name.value}`,
+        ad_slot_name: props.data.title,
         ad_id: props.data.advertise_code
       })
     }
