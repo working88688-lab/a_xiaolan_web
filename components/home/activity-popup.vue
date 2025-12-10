@@ -4,7 +4,7 @@
 -->
 <template>
   <van-popup v-bind="$attrs" class="active-dialog" transition-appear transition="modal" teleport="body"
-    :close-on-click-overlay="false" @closed="onClose">
+    :close-on-click-overlay="false">
     <div class="activity-dialog-content">
       <ad-link v-if="props.type === 1" class="ad-item" ad-name="首页弹框" :data="props.item">
         <dx-image class="h-full w-full" fit="fill" :src="props.item.img_url" />
