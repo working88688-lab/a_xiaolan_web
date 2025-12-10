@@ -1,0 +1,542 @@
+<template>
+  <div class="dx-xg-player">
+    <div v-show="props.active" ref="playerRef" class="dx-xg-player--placeholder"></div>
+    <div v-show="!props.active" class="dx-xg-player-poster flex-center" :style="{
+      backgroundImage: `url(${_poster})`
+    }">
+      <img class="icon-play" :src="play_icon" alt="播放按钮" @click="on_play" />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { is_screen_orientation_portrait } from '@utils/helper'
+import { useEventListener } from '@vueuse/core'
+
+import { Events, I18N, SimplePlayer } from 'xgplayer'
+import HlsJsPlugin from 'xgplayer-hls.js'
+import ZH from 'xgplayer/es/lang/zh-cn'
+import Enter from 'xgplayer/es/plugins/enter'
+import Error from 'xgplayer/es/plugins/error'
+import Fullscreen from 'xgplayer/es/plugins/fullscreen'
+import Loading from 'xgplayer/es/plugins/loading'
+import Mobile from 'xgplayer/es/plugins/mobile'
+import Play from 'xgplayer/es/plugins/play'
+import Poster from 'xgplayer/es/plugins/poster'
+import Playbackrate from 'xgplayer/es/plugins/playbackrate'
+// import Progress from 'xgplayer/es/plugins/progress'
+import Start from 'xgplayer/es/plugins/start'
+// import Time from 'xgplayer/es/plugins/time'
+import Volume from 'xgplayer/es/plugins/volume'
+
+import play_icon from '@assets/image/play.png'
+import { CustomProgress, MiniProgress, Time } from '@utils/player'
+
+import '~/assets/styles/xgplayer.css'
+
+// 启用中文
+I18N.use(ZH)
+const props = withDefaults(
+  defineProps<{
+    src?: string
+    cover?: string
+    autoplay?: boolean
+    loop?: boolean
+    short?: boolean
+    active?: boolean
+    poster?: string
+    previewConfig?: {
+      mode: number // 0 不是预览， 1为预览
+      time?: number // 可预览时间 不传则默认预览完
+    }
+    orientation?: boolean // 是否在手机横屏播放器全屏
+    videoInfo?: any
+  }>(),
+  {
+    src: undefined,
+    cover: undefined,
+    autoplay: true,
+    loop: false,
+    short: false,
+    active: true,
+    poster: undefined,
+    previewConfig: () => ({
+      mode: 1
+    }),
+    orientation: false
+  }
+)
+
+const emit = defineEmits<{
+  previewEnded: []
+  ended: []
+  posterCryptoed: []
+}>()
+
+const __ = useNuxtApp()
+const _poster = ref('')
+const playerRef = ref<HTMLVideoElement>()
+
+let xg_player: SimplePlayer | null
+
+const on_play = () => {
+  xg_player?.play()
+}
+
+const ended = (e: any) => {
+  const { currentTime, duration } = e
+  const { mode, time } = props.previewConfig
+  if (mode === 1) {
+    if (!time && Math.ceil(currentTime) >= Math.floor(duration)) {
+      emit('previewEnded')
+      // xg_player?.replay()
+      // xg_player?.resetState()
+    }
+  }
+
+  emit('ended')
+}
+
+const onVolumeChange = (e: any) => {
+  __.$Store.player.update_autoplay_muted(e.muted)
+}
+
+const onError = (e: any) => {
+  if (e.errorType === 'media' && xg_player) {
+    xg_player.resetState()
+  }
+}
+
+function getVideoInfo() {
+  const { duration: video_duration, currentTime: play_duration } = xg_player as SimplePlayer
+  return {
+    video_duration: video_duration || props.videoInfo.duration,
+    play_duration,
+    play_progress: play_duration ? parseFloat((play_duration / video_duration).toFixed(2)) * 100 : 0
+  }
+}
+
+const init_player = async () => {
+  const base_option = {
+    el: playerRef.value,
+    width: '100%',
+    height: '100%',
+    lang: 'zh-cn',
+    playsinline: true,
+    cssFullscreen: false,
+    autoplayMuted: __.$Store.player.autoplayMuted,
+    autoplay: props.autoplay,
+    loop: props.loop,
+    url: props.src,
+    previewTime: props.previewConfig.time,
+    poster: {
+      poster: _poster.value,
+      hideCanplay: true
+    },
+    controls: {
+      mode: 'normal',
+      initShow: true
+    },
+    volume: 1,
+    icons: {
+      startPlay: play_icon
+    },
+    commonStyle: {
+      // 播放完成部分进度条底色
+      playedColor: 'linear-gradient(-90deg,#FA1F41 0%,#E31106 100%)'
+    },
+    miniprogress: true,
+    on_preview_ended: () => {
+      emit('previewEnded')
+    },
+    hlsJsPlugin: {
+      fragLoadPolicy: {
+        default: {
+          maxTimeToFirstByteMs: 9000,
+          maxLoadTimeMs: 100000,
+          timeoutRetry: {
+            maxNumRetry: 2,
+            retryDelayMs: 0,
+            maxRetryDelayMs: 0
+          },
+          errorRetry: {
+            maxNumRetry: 5,
+            retryDelayMs: 3000,
+            maxRetryDelayMs: 15000,
+            backoff: 'linear'
+          }
+        }
+      }
+    },
+
+    plugins: [
+      MiniProgress,
+      Start,
+      Enter,
+      Loading,
+      Mobile,
+      CustomProgress,
+      Time,
+      Play,
+      Error,
+      Poster,
+      Volume,
+      Playbackrate
+    ] as any
+  }
+  if (!props.short) {
+    base_option.plugins.push(Fullscreen)
+  }
+
+  if (document.createElement('video').canPlayType('application/vnd.apple.mpegurl')) {
+    xg_player = new SimplePlayer(base_option)
+  } else if (HlsJsPlugin.isSupported()) {
+    xg_player = new SimplePlayer({
+      ...base_option,
+      plugins: [...base_option.plugins, HlsJsPlugin]
+    })
+  } else {
+    xg_player = new SimplePlayer(base_option)
+  }
+
+  xg_player.on(Events.ENDED, ended)
+  xg_player.on(Events.VOLUME_CHANGE, onVolumeChange)
+  xg_player.on(Events.ERROR, onError)
+  // 视频埋点
+  if (props.videoInfo) {
+    // @ts-ignore
+
+    let seek_at = 0
+    const event = 'video_event'
+    xg_player.on(Events.PLAY, () => {
+      setTimeout(() => {
+        console.log('xg_player: ', xg_player?.duration)
+        __.$Tracker.trackVideoEvent({
+          event,
+          ...props.videoInfo,
+          video_behavior_key: 'video_play',
+          ...getVideoInfo()
+        })
+      })
+    })
+    xg_player.on(Events.PAUSE, () => {
+      __.$Tracker.trackVideoEvent({
+        event,
+        ...props.videoInfo,
+        video_behavior_key: 'video_pause',
+        ...getVideoInfo()
+      })
+    })
+    xg_player.on(Events.ENDED, () => {
+      __.$Tracker.trackVideoEvent({
+        event,
+        ...props.videoInfo,
+        video_behavior_key: 'video_complete',
+        ...getVideoInfo()
+      })
+    })
+    xg_player.on(Events.SEEKING, () => {
+      seek_at = xg_player?.currentTime
+    })
+    xg_player.on(Events.SEEKED, () => {
+      const diff = xg_player?.currentTime - seek_at
+      __.$Tracker.trackVideoEvent({
+        event,
+        ...props.videoInfo,
+        video_behavior_key: diff > 0 ? 'video_forward' : 'video_rewind',
+        ...getVideoInfo()
+      })
+    })
+    __.$Tracker.trackVideoEvent({
+      event,
+      ...props.videoInfo,
+      video_behavior_key: 'video_view'
+    })
+  }
+}
+
+watchEffect(async () => {
+  if (props.poster && !_poster.value) {
+    __.$ImageDecryption({
+      imgurl: props.poster
+    }).then(poster => {
+      _poster.value = poster
+      if (xg_player) {
+        xg_player.poster = poster
+      }
+    })
+  }
+  if (props.src && props.active) {
+    await nextTick()
+    if (!xg_player && playerRef.value) {
+      init_player()
+    }
+  }
+})
+
+watch(
+  () => props.active,
+  val => {
+    if (xg_player) {
+      if (val) {
+        xg_player.play()
+      } else {
+        xg_player.pause()
+      }
+    }
+  }
+)
+
+watch(
+  () => props.src,
+  (val, oldV) => {
+    if (xg_player && val && oldV && val !== oldV) {
+      xg_player.playNext({
+        url: val,
+        poster: _poster.value
+      })
+    }
+  }
+)
+
+watch(
+  () => props.previewConfig,
+  val => {
+    if (!val.mode && xg_player) {
+      xg_player.config.previewTime = 0
+    }
+  }
+)
+
+onActivated(() => {
+  if (xg_player && props.previewConfig.mode === 0) {
+    xg_player.play()
+  }
+})
+
+onDeactivated(() => {
+  if (xg_player) {
+    xg_player.pause()
+  }
+})
+
+onBeforeUnmount(() => {
+  if (xg_player) {
+    xg_player.src = ''
+    xg_player.off(Events.ENDED, ended)
+    xg_player.off(Events.VOLUME_CHANGE, onVolumeChange)
+    xg_player.off(Events.ERROR, onError)
+    xg_player.destroy()
+    xg_player = null
+  }
+})
+
+useEventListener(window, 'orientationchange', () => {
+  if (xg_player) {
+    if (is_screen_orientation_portrait()) {
+      if (xg_player.currentTime > 0 && !xg_player.paused) {
+        xg_player.getFullscreen()
+      }
+    } else {
+      xg_player.exitFullscreen()
+    }
+  }
+})
+
+defineExpose({
+  getReportInfo: getVideoInfo
+})
+</script>
+
+<style lang="postcss">
+.dx-xg-player {
+  width: 100%;
+  height: 100%;
+  position: relative;
+
+  &--placeholder {
+    width: 100%;
+    height: 100%;
+  }
+
+  .dx-xg-player-poster {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    /* background-size: cover; */
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 100% auto;
+  }
+
+  .icon-play {
+    width: 50px;
+    height: 50px;
+  }
+
+  .xgplayer-enter {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .xg-progress-cache,
+  .xg-progress-played {
+    height: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 0;
+  }
+
+  .xg-progress-cache {
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+
+  .xg-progress-played {
+    height: 100%;
+  }
+
+  .xg-custom {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    width: 48px;
+    height: 48px;
+    display: none;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner {
+    display: block;
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    top: 50%;
+    height: 60px;
+    width: 60px;
+    transform: translate(-50%, -50%);
+  }
+
+  .xgplayer-enter .xgplayer-enter-spinner {
+    display: block;
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    top: 50%;
+    height: 100px;
+    width: 100px;
+    transform: translate(-50%, -50%);
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div,
+  .xgplayer-enter .xgplayer-enter-spinner div {
+    width: 6%;
+    height: 15%;
+    background-color: #fff;
+    position: absolute;
+    left: 45%;
+    top: 45%;
+    opacity: 0;
+    border-radius: 30px;
+    animation: fade 1s linear infinite;
+  }
+
+  @keyframes fade {
+    0% {
+      opacity: 1;
+    }
+
+    to {
+      opacity: 0.25;
+    }
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar1,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar1 {
+    transform: rotate(0) translateY(-140%);
+    animation-delay: -0s;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar2,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar2 {
+    transform: rotate(30deg) translateY(-140%);
+    animation-delay: -0.9163s;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar3,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar3 {
+    transform: rotate(60deg) translateY(-140%);
+    animation-delay: -0.833s;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar4,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar4 {
+    transform: rotate(90deg) translateY(-140%);
+    animation-delay: -0.7497s;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar5,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar5 {
+    transform: rotate(120deg) translateY(-140%);
+    animation-delay: -0.6664s;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar6,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar6 {
+    transform: rotate(150deg) translateY(-140%);
+    animation-delay: -0.5831s;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar7,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar7 {
+    transform: rotate(180deg) translateY(-140%);
+    animation-delay: -0.4998s;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar8,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar8 {
+    transform: rotate(210deg) translateY(-140%);
+    animation-delay: -0.4165s;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar9,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar9 {
+    transform: rotate(240deg) translateY(-140%);
+    animation-delay: -0.3332s;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar10,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar10 {
+    transform: rotate(270deg) translateY(-140%);
+    animation-delay: -0.2499s;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar11,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar11 {
+    transform: rotate(300deg) translateY(-140%);
+    animation-delay: -0.1666s;
+  }
+
+  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar12,
+  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar12 {
+    transform: rotate(330deg) translateY(-142%);
+    animation-delay: -0.0833s;
+  }
+}
+
+.xgplayer-inactive {
+  .xg-mini-progress.xg-mini-progress-hide {
+    display: none;
+  }
+}
+
+.xgplayer-pause {
+  .xg-custom {
+    display: block;
+  }
+}
+</style>

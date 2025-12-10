@@ -1,0 +1,117 @@
+.user-name {
+    font-size: 12px;
+    opacity: 0.5;
+}
+
+.mb10 {
+    margin-left: 10px;
+}
+
+.ml30 {
+    margin-left: 30px;
+}
+
+.comment-layout {
+    display: flex;
+    flex-direction: column;
+    padding: 22px 0 6px 0;
+
+    .userinfo {
+        display: flex;
+        align-items: center;
+
+        span {
+            color: #323232;
+            font-size: 16px;
+            font-weight: 600px;
+            margin-left: 6px;
+        }
+
+        .landlord {
+            width: 31px;
+            height: 14px;
+            border-radius: 2px;
+            background-image: linear-gradient(to top, #428af7, #6de6fb);
+            color: #fff;
+            text-align: center;
+            line-height: 14px;
+            font-size: 11px;
+            margin-right: 6px;
+        }
+    }
+
+    .txt {
+        color: #323232;
+        font-size: 13px;
+        margin-left: 46px;
+    }
+
+    .all {
+        margin: 10px 0 10px 46px;
+        padding: 0 12px 12px 12px;
+        background-color: #f6f7f8;
+        border-radius: 5px;
+
+        .c-item {
+            display: flex;
+            flex-direction: column;
+
+            &_user {
+                display: flex;
+                align-items: center;
+                margin: 11px 0;
+
+                .landlord {
+                    width: 31px;
+                    height: 14px;
+                    border-radius: 2px;
+                    background-image: linear-gradient(to top, #428af7, #6de6fb);
+                    color: #fff;
+                    text-align: center;
+                    line-height: 14px;
+                    font-size: 11px;
+                    margin-right: 6px;
+                }
+
+                &_name {
+                    font-size: 13px;
+                    color: #548aef !important;
+                }
+            }
+
+            span {
+                color: #323232;
+                font-size: 13px;
+            }
+        }
+    }
+
+    .time-comment {
+        padding-left: 46px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+
+        &_right {
+            display: flex;
+            align-items: center;
+
+            &_item {
+                display: flex;
+                align-items: center;
+                margin-left: 18px;
+
+                img {
+                    width: 13px;
+                    height: 13px;
+                    margin-right: 4px;
+                }
+            }
+        }
+
+        span {
+            font-size: 12px;
+            color: #999;
+        }
+    }
+}

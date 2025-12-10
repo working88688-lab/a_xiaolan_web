@@ -1,0 +1,72 @@
+.dx-form-input {
+
+    .van-field__label {
+        align-items: center;
+
+        &::before {
+            content: '';
+            display: inline-block;
+            background-color: #428af7;
+            /* prettier-ignore */
+            width: 3PX;
+            /* prettier-ignore */
+            height: 14PX;
+            /* prettier-ignore */
+            margin-right: 6px;
+        }
+    }
+
+    .van-field__control {
+        font-size: 14px;
+    }
+
+    .van-field__control::placeholder {
+        color: #808080;
+    }
+
+    .my-uploader {
+        width: 168px;
+        height: 96px;
+        background-color: #f6f7f8;
+        border-radius: 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+
+        .close {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        &.black {
+            background: #000;
+        }
+
+        .icon-close {
+            width: 18px;
+            height: 18px;
+        }
+
+        .upload-status {
+            color: #888;
+        }
+    }
+
+    .label-tips {
+        color: #808080;
+        font-size: 12px;
+        margin-left: 8px;
+    }
+
+    .my-video {
+        width: 100%;
+        height: 100%;
+    }
+}

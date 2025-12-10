@@ -1,0 +1,332 @@
+.my-nav-bar {
+  background: transparent;
+  :deep(.van-icon-arrow-left),
+  :deep(.van-nav-bar__title) {
+    color: #fff;
+  }
+  :deep(.van-nav-bar__text) {
+    color: #999999;
+    font-size: 14px;
+  }
+}
+:deep(.video_describe) {
+  color: #fff;
+}
+:deep(.no-hammers) {
+  width: 165px;
+}
+.tablent_list {
+  margin-top: var(--van-nav-bar-height);
+  .tablent_header {
+    background: url('~/assets/image/discover/talent_bgi.png') no-repeat;
+    background-size: 100%;
+  }
+
+  .tablent_list_title {
+    padding: 0 0.29rem;
+    margin-top: 0.4rem;
+    display: flex;
+    justify-content: space-between;
+
+    .tablent_list_title_avatar {
+      width: 1.3rem;
+      height: 1.3rem;
+      border: 1px solid #fff;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    .tablent_list_title_content {
+      padding: 0 0.3rem 0 0;
+      margin-left: 4px;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.29rem;
+      color: rgba(255, 255, 255, 0.7);
+
+      .tablent_list_title_content_name {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin: 0.13rem 0;
+        font-size: 0.4rem;
+        color: #fff;
+      }
+    }
+
+    .tablent_list_title_right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .tablent_list_title_right_button_ {
+        width: 1.7rem;
+        height: 0.8rem;
+        background: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0.5rem;
+        color: rgb(182, 6, 218);
+        vertical-align: middle;
+        font-size: 0.34rem;
+      }
+
+      .tablent_list_title_right_button_active {
+        width: 1.7rem;
+        height: 0.8rem;
+        border: 0.01rem solid rgba(255, 255, 255, 0.7);
+        color: rgba(255, 255, 255, 0.7);
+        background: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0.5rem;
+      }
+    }
+  }
+
+  .tablent_list_mv {
+    margin-top: 0.53rem;
+    padding: 0 0.29rem 0.53rem 0.29rem;
+    width: 100%;
+
+    overflow: hidden;
+
+    p {
+      font-size: 0.35rem;
+      margin-bottom: 0.2rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .tablent_list_text_item {
+      width: 4rem;
+      height: 2.3rem;
+      background: #fef3f0;
+      border-radius: 0.03rem;
+      display: inline-block;
+      margin-right: 0.15rem;
+      font-size: 0.336rem;
+      padding: 0.336rem 0.3rem;
+
+      .title {
+        color: #222222;
+        font-weight: bold;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .content {
+        width: 100%;
+        color: #6d6d6c;
+      }
+    }
+
+    .tablent_list_mv_item {
+      width: 4.4rem;
+      height: 90px;
+      display: inline-block;
+      margin-right: 0.2rem;
+      color: #fff;
+    }
+  }
+
+  .tablent_tab {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+
+    .tablent_tab_header {
+      display: flex;
+      height: 1.2rem;
+      padding-top: 0.3rem;
+
+      .tablent-tab-item {
+        text-align: center;
+        // display: inline-block;
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.4rem;
+        margin-left: 15px;
+        margin-right: 8px;
+        flex: 1;
+        padding-bottom: 0.25rem;
+      }
+
+      .tablent-tab-item-active {
+        color: white;
+        font-size: 0.45rem;
+        font-weight: bold;
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          left: 50%;
+          bottom: 0;
+          width: 20%;
+          height: 0.1rem;
+          border-radius: 5px;
+          transform: translateX(-50%);
+          background-image: linear-gradient(130deg, #cb4aed 35%, #5d3ef9);
+        }
+      }
+    }
+
+    .tablent_tab_content {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tablent_tab_date {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+
+      .tablent_tab_date_tab {
+        width: 6rem;
+        height: 0.85rem;
+        display: flex;
+        margin: 0.65rem auto 0.53rem;
+        align-items: center;
+        font-size: 0.35rem;
+        border-radius: 0.4rem;
+        background-color: rgba(255, 255, 255, 0.2);
+
+        .tablent_tab_date_tab_item {
+          flex: 1;
+          border-radius: 0.4rem;
+          align-items: center;
+          text-align: center;
+          justify-content: center;
+          font-weight: 500;
+          color: rgba(255, 255, 255, 0.3);
+        }
+
+        .tablent_tab_date_tab_item_active {
+          background-image: linear-gradient(115deg, #cb4aed 40%, rgba(93, 62, 249, 0.5), rgba(13, 133, 245, 0.7));
+          color: white;
+          height: 100%;
+          line-height: 0.85rem;
+        }
+      }
+
+      .tablent_tab_date_center {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        flex-direction: column;
+      }
+
+      .tablent_tab_swpier {
+        width: 100%;
+        flex: 1;
+      }
+
+      .tablent_tab_date_list {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .tablent_tab_date_list_item {
+        padding: 0 0.29rem;
+        display: flex;
+        height: 1.3rem;
+        margin-bottom: 0.64rem;
+        align-items: center;
+
+        .tablent_tab_date_list_item_right_ {
+          width: 1.5rem;
+          height: 0.7rem;
+          border: 1px solid #cb4aed;
+          display: flex;
+          align-items: center;
+          color: #fff;
+          font-size: 0.32rem;
+          justify-content: center;
+          border-radius: 0.08rem;
+
+          .tablent_tab_date_list_item_right_icon {
+            width: 0.28rem;
+            height: 0.3rem;
+            margin-right: 0.05rem;
+          }
+        }
+
+        .tablent_tab_date_list_item_right_active {
+          width: 1.5rem;
+          height: 0.7rem;
+          border: 1px solid rgba(255, 255, 255, 0.7);
+          display: flex;
+          align-items: center;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 0.32rem;
+          justify-content: center;
+          border-radius: 0.08rem;
+
+          .tablent_tab_date_list_item_right_icon {
+            display: none;
+          }
+        }
+
+        .tablent_tab_date_list_item_left {
+          width: 0.746rem;
+          text-align: center;
+
+          .tablent_tab_date_list_item_left_img {
+            width: 0.7rem;
+            height: 0.7rem;
+          }
+
+          .tablent_tab_date_list_item_left_span {
+            font-family: FZLTZHK-GBK1-0;
+            color: #fff;
+            font-size: 0.42rem;
+            line-height: 1.25;
+          }
+        }
+
+        .tablent_tab_date_list_item_center {
+          flex: 1;
+          margin: 0 0.16rem;
+          display: flex;
+
+          .tablent_tab_date_list_item_center_img {
+            width: 1.3rem;
+            height: 1.3rem;
+            border-radius: 50%;
+            margin-right: 0.24rem;
+            overflow: hidden;
+          }
+
+          .tablent_tab_date_list_item_center_detail {
+            display: flex;
+            flex-direction: column;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.32rem;
+
+            span {
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+
+            .tablent_tab_date_list_item_center_detail_name {
+              font-size: 0.4rem;
+              color: #fff;
+              margin-bottom: 0.2rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}

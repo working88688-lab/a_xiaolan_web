@@ -1,0 +1,78 @@
+/* 颜色变量 */
+:root {
+  --dx-red-color: #f34751;
+  --dx-primary-color: #428af7;
+  --dx-gray-color: #ebedf0;
+  --dx-blue-color: #428af7;
+  --dx-light-blue-color: #e5f0ff;
+  --dx-base1-color: #171518;
+  --dx-base2-color: #666;
+  --dx-base3-color: #999;
+  --dx-base4-color: #ccc;
+  --dx-base5-color: #8e8e8e;
+  --dx-base6-color: #8a8b8c;
+  --dx-base7-color: #333333;
+  --dx-base8-color: #b9b9b9;
+  --dx-base9-color: #1f1f1f;
+  --dx-base10-color: #f6f6f6;
+
+  --dx-yellow-color: #f9b944;
+  --dx-orange-color: #fd5c18;
+  --dx-green-color: #1f9e36;
+}
+
+:root {
+  --dx-container-color: #fff;
+  --dx-search-tag-bg-color: #404040;
+  --dx-search-tag-color: var(--dx-base4-color);
+  --dx-dialog-bg-color: #2b2b3c;
+  --dx-image-bg: rgb(77, 77, 77);
+  --dx-video-title-color: #ffffff;
+  --dx-bg-color: #4f4f4f;
+  --dx-dialog-content-text-color: var(--dx-base2-color);
+
+}
+
+/* 字体 */
+:root {
+  --dx-title-color: var(--dx-base1-color);
+  --dx-font-color: var(--dx-base3-color);
+}
+
+/* 重置vant */
+:root:root {
+  --van-base-font: "Microsoft Yahei", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Segoe UI, Arial, Roboto, "PingFang SC", "Hiragino Sans GB", sans-serif;
+  --van-search-background: #fff;
+  --van-nav-bar-height: 46px;
+  --van-nav-bar-title-font-size: 18px;
+  --van-nav-bar-title-text-color: #111111;
+  --van-nav-bar-arrow-size: 18px;
+  --van-nav-bar-icon-color: #000;
+  --van-nav-bar-text-color: #000;
+  --van-nav-bar-background: #fff;
+  --van-border-color: #000;
+  --van-empty-padding: 12px 0;
+  --van-empty-description-font-size: 14px;
+  --van-tabbar-item-font-size: 12px;
+  --van-tabbar-item-icon-size: 2.4rem;
+  --van-tabbar-background: #fff;
+  --van-tabbar-item-text-color: #777777;
+  --van-tabbar-item-active-color: #4b8af7;
+  --van-tabbar-item-active-background: #fff;
+  --van-dialog-radius: 16px;
+  --van-text-color: #000;
+  --van-font-size-md: 16px;
+  --van-tab-active-text-color: var(--dx-primary-color);
+  --van-dialog-background: #fff;
+  --van-action-bar-button-warning-color: linear-gradient(to right, #428af7, #6de6fb);
+  --van-action-bar-button-danger-color: linear-gradient(to right, #428af7, #6de6fb);
+  --van-swipe-indicator-active-background: var(--dx-primary-color);
+  --van-swipe-indicator-inactive-background: #fff;
+  --van-swipe-indicator-size: 6px;
+  --van-cell-border-color: #f2f4f5;
+  --van-border-color: #f2f4f5;
+  --van-swipe-indicator-inactive-opacity: 0.7;
+  --van-cell-value-font-size: 13px;
+  --van-cell-horizontal-padding: 14px;
+  --van-tab-text-color: #111111;
+}

@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer components {
+    .dx-grid-1 {
+        @apply grid grid-cols-1 gap-1 px-1.5
+    }
+
+    .dx-grid-2 {
+        @apply grid grid-cols-2 gap-1 px-1.5
+    }
+
+    .dx-grid-3 {
+        @apply grid grid-cols-3 gap-1 px-1.5
+    }
+
+    .dx-duration {
+        @apply absolute bottom-0.5 right-0.5 rounded-sm text-sm text-white;
+    }
+
+    .dx-duration-bg {
+        padding: 2px 4px;
+        background: rgba(0, 0, 0, 0.5);
+        @apply text-mini rounded-sm;
+    }
+
+    .dx-cover-bottom-left {
+        @apply absolute bottom-0.5 left-0.5 text-mini text-white;
+    }
+
+
+    .dx-cover-bottom-right {
+        @apply absolute bottom-0.5 right-0.5 text-mini text-white;
+    }
+
+    .dx-cover-top-left {
+        @apply absolute top-0.5 left-0.5 text-mini text-white;
+    }
+
+    .dx-cover-top-right {
+        @apply absolute top-0.5 left-0.5 text-mini text-white;
+    }
+
+    .dx-media-auto {
+        @apply !max-w-full !h-auto
+    }
+
+    .dx-border-primary {
+        @apply border border-solid border-primary
+    }
+
+    .dx-opacity-bg {
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+}
