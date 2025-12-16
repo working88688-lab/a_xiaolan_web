@@ -56,7 +56,8 @@ const userStore = defineStore('user', {
       vip_level: 0,
       votes: '0.00',
       girl_auth: 0,
-      post_auth: 0
+      post_auth: 0,
+      build_id: ''
     },
     // TA邀请码
     incode: null

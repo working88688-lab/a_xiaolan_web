@@ -108,11 +108,12 @@ const onError = (e: any) => {
 }
 
 function getVideoInfo() {
-  const { duration: video_duration, currentTime: play_duration } = xg_player as SimplePlayer
+  const { duration: video_duration, currentTime: play_duration } = (xg_player || {}) as SimplePlayer
   return {
-    video_duration: video_duration || props.videoInfo.duration,
+    video_duration: video_duration || props.videoInfo.duration || 0,
     play_duration,
-    play_progress: play_duration ? parseFloat((play_duration / video_duration).toFixed(2)) * 100 : 0
+    play_progress:
+      !play_duration || !video_duration ? 0 : (parseFloat((play_duration / video_duration).toFixed(2)) * 100).toFixed(0)
   }
 }
 
@@ -210,7 +211,6 @@ const init_player = async () => {
     const event = 'video_event'
     xg_player.on(Events.PLAY, () => {
       setTimeout(() => {
-        console.log('xg_player: ', xg_player?.duration)
         __.$Tracker.trackVideoEvent({
           event,
           ...props.videoInfo,
@@ -238,10 +238,10 @@ const init_player = async () => {
         video_behavior_name: '播放完成'
       })
     })
-    xg_player.on(Events.SEEKING, () => {
+    xg_player.on(Events.TIME_UPDATE, () => {
       seek_at = xg_player?.currentTime
     })
-    xg_player.on(Events.SEEKED, () => {
+    xg_player.on(Events.SEEKING, () => {
       const diff = xg_player?.currentTime - seek_at
       __.$Tracker.trackVideoEvent({
         event,
@@ -313,12 +313,6 @@ watch(
   }
 )
 
-onActivated(() => {
-  if (xg_player && props.previewConfig.mode === 0) {
-    xg_player.play()
-  }
-})
-
 onDeactivated(() => {
   if (xg_player) {
     xg_player.pause()
@@ -354,194 +348,5 @@ defineExpose({
 </script>
 
 <style lang="postcss">
-.dx-xg-player {
-  width: 100%;
-  height: 100%;
-  position: relative;
-
-  &--placeholder {
-    width: 100%;
-    height: 100%;
-  }
-
-  .dx-xg-player-poster {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    /* background-size: cover; */
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: 100% auto;
-  }
-
-  .icon-play {
-    width: 50px;
-    height: 50px;
-  }
-
-  .xgplayer-enter {
-    background: rgba(0, 0, 0, 0.5);
-  }
-
-  .xg-progress-cache,
-  .xg-progress-played {
-    height: 100%;
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    width: 0;
-  }
-
-  .xg-progress-cache {
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.5);
-  }
-
-  .xg-progress-played {
-    height: 100%;
-  }
-
-  .xg-custom {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    z-index: 1;
-    transform: translate(-50%, -50%);
-    width: 48px;
-    height: 48px;
-    display: none;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner {
-    display: block;
-    position: absolute;
-    z-index: 1;
-    left: 50%;
-    top: 50%;
-    height: 60px;
-    width: 60px;
-    transform: translate(-50%, -50%);
-  }
-
-  .xgplayer-enter .xgplayer-enter-spinner {
-    display: block;
-    position: absolute;
-    z-index: 1;
-    left: 50%;
-    top: 50%;
-    height: 100px;
-    width: 100px;
-    transform: translate(-50%, -50%);
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div,
-  .xgplayer-enter .xgplayer-enter-spinner div {
-    width: 6%;
-    height: 15%;
-    background-color: #fff;
-    position: absolute;
-    left: 45%;
-    top: 45%;
-    opacity: 0;
-    border-radius: 30px;
-    animation: fade 1s linear infinite;
-  }
-
-  @keyframes fade {
-    0% {
-      opacity: 1;
-    }
-
-    to {
-      opacity: 0.25;
-    }
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar1,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar1 {
-    transform: rotate(0) translateY(-140%);
-    animation-delay: -0s;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar2,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar2 {
-    transform: rotate(30deg) translateY(-140%);
-    animation-delay: -0.9163s;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar3,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar3 {
-    transform: rotate(60deg) translateY(-140%);
-    animation-delay: -0.833s;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar4,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar4 {
-    transform: rotate(90deg) translateY(-140%);
-    animation-delay: -0.7497s;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar5,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar5 {
-    transform: rotate(120deg) translateY(-140%);
-    animation-delay: -0.6664s;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar6,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar6 {
-    transform: rotate(150deg) translateY(-140%);
-    animation-delay: -0.5831s;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar7,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar7 {
-    transform: rotate(180deg) translateY(-140%);
-    animation-delay: -0.4998s;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar8,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar8 {
-    transform: rotate(210deg) translateY(-140%);
-    animation-delay: -0.4165s;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar9,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar9 {
-    transform: rotate(240deg) translateY(-140%);
-    animation-delay: -0.3332s;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar10,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar10 {
-    transform: rotate(270deg) translateY(-140%);
-    animation-delay: -0.2499s;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar11,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar11 {
-    transform: rotate(300deg) translateY(-140%);
-    animation-delay: -0.1666s;
-  }
-
-  .xgplayer-loading .xgplayer-enter-spinner div.xgplayer-enter-bar12,
-  .xgplayer-enter .xgplayer-enter-spinner div.xgplayer-enter-bar12 {
-    transform: rotate(330deg) translateY(-142%);
-    animation-delay: -0.0833s;
-  }
-}
-
-.xgplayer-inactive {
-  .xg-mini-progress.xg-mini-progress-hide {
-    display: none;
-  }
-}
-
-.xgplayer-pause {
-  .xg-custom {
-    display: block;
-  }
-}
+@import '@styles/xgplayer-custom.css';
 </style>

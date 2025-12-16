@@ -1,9 +1,8 @@
 <script lang="tsx">
 import type { DFetchListOption } from '@types'
 
-import CateItem from '~/components/home/cate-item.vue'
+import CateItem from '~/components/pages/home/cate-item.vue'
 import VideoCard from '~/components/my/video-card.vue'
-
 import originalIcon from '~/assets/image-icon/original.png'
 
 interface PageModuleConfig {
@@ -70,7 +69,7 @@ export default defineComponent({
       },
       user: {
         config: (_params = {}) => ({
-          api: __.$Api.User.userVideos,
+          api: 'api/users/videos',
           params: {
             ...get_url_query(),
             ..._params

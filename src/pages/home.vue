@@ -3,7 +3,7 @@
     date: 2024.03.27
 -->
 <template>
-  <div ref="containerRef" class="container">
+  <div ref="container" class="container">
     <!-- 搜索  start-->
     <search-bar show-publish-button></search-bar>
     <!-- 搜索  end-->
@@ -27,7 +27,9 @@
   <!-- 官方消息dialog end-->
 
   <!--  浮动广告 -->
-  <dx-float-ad :items="config.floating_ads"></dx-float-ad>
+  <!-- <dx-float-ad :items="config.floating_ads"></dx-float-ad> -->
+  <!-- 充值广告 -->
+  <dx-recharge-ads :config="config.activity || {}"></dx-recharge-ads>
 </template>
 
 <script setup lang="ts">
@@ -111,3 +113,9 @@ onActivated(() => {
   showAd.value = true
 })
 </script>
+
+<style lang="postcss" scoped>
+.container {
+  --van-tabs-nav-background: transparent;
+}
+</style>

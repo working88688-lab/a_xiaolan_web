@@ -1,17 +1,12 @@
 <template>
   <div ref="containerRef" class="comment-input-container van-hairline--top" :class="classNames">
     <div class="flex items-center px-1 py-1">
+      <slot name="left"></slot>
       <div class="input-box">
-        <van-icon name="edit" class="text-base4" />
-        <input
-          ref="inputRef"
-          v-model="model"
-          class="pl-0.5"
-          type="text"
-          :placeholder="_placeholder"
-          @focus="onFocus"
-          @blur="onBlur"
-        />
+        <slot name="icon"></slot>
+        <!-- <van-icon name="edit" class="text-base10" /> -->
+        <input ref="inputRef" v-model="model" class="pl-0.5" type="text" :placeholder="_placeholder" @focus="onFocus"
+          @blur="onBlur" />
       </div>
 
       <slot name="right"></slot>
@@ -55,7 +50,7 @@ const _placeholder = computed(() => {
     ? props.placeholder
     : reply.value?.user
       ? `回复：${reply.value?.user?.nickname}`
-      : '善语结善缘，恶言伤人心'
+      : '我来评论下'
 })
 
 const __ = useNuxtApp()
@@ -64,13 +59,16 @@ const inputRef = ref()
 const containerRef = ref()
 const isFocus = ref(false)
 
-
-const api
-  = typeof props.api === 'string'
-    ? __.$Api.dynamic({ url: props.api, method: 'post', axiosConfig: {
+const api =
+  typeof props.api === 'string'
+    ? __.$Api.dynamic({
+      url: props.api,
+      method: 'post',
+      axiosConfig: {
         showError: true,
-        showSuccess: true,
-      } })
+        showSuccess: true
+      }
+    })
     : props.api
 
 const onSubmit = async () => {
@@ -80,13 +78,12 @@ const onSubmit = async () => {
         return __.$Toast('请输入评论内容～')
       }
       api({
-          content: model.value,
-          ...props.params
-        })
-        .then(() => {
-          model.value = ''
-          emit('success')
-        })
+        content: model.value,
+        ...props.params
+      }).then(() => {
+        model.value = ''
+        emit('success')
+      })
     } else {
       emit('submit')
     }
@@ -95,8 +92,7 @@ const onSubmit = async () => {
       close()
     })
   } catch (error) {
-    console.log('error: ', error);
-
+    console.log('error: ', error)
   }
 }
 
@@ -153,14 +149,16 @@ defineExpose({
     flex-direction: column;
   }
 }
+
 .input-box {
   display: flex;
   align-items: center;
   flex: 1;
   height: 1rem;
-  border-radius: 6px;
+  border-radius: 50px;
   padding: 0 12px;
   background-color: var(--dx-base10-color);
+
   img {
     width: 0.25rem;
     height: auto;

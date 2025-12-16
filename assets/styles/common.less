@@ -1,17 +1,23 @@
 @import './transition.less';
+
 * {
   touch-action: manipulation;
 }
+
 img {
-  -webkit-touch-callout: none; /* 禁止长按链接与图片 */
-  -webkit-user-select: none; /* 禁止选中文本 */
+  -webkit-touch-callout: none;
+  /* 禁止长按链接与图片 */
+  -webkit-user-select: none;
+  /* 禁止选中文本 */
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
 }
+
 p {
   margin: 0;
 }
+
 div {
   box-sizing: border-box;
 }
@@ -19,6 +25,7 @@ div {
 .grey-bg {
   background-color: #ebedf0;
 }
+
 .container {
   width: 100%;
   height: 100%;
@@ -32,19 +39,23 @@ div {
 .text-nowrap {
   white-space: nowrap;
 }
+
 .flex_row {
   display: flex;
   flex-direction: row;
   align-items: center;
 }
+
 .graphic-line {
   width: 100%;
   height: 0.15rem;
   background-color: #f6f7f8;
 }
+
 .dx-list {
   padding: 0 12px 12px;
 }
+
 .scroll-container {
   overflow: hidden;
   flex: 1;
@@ -88,17 +99,21 @@ div {
     }
   }
 }
+
 .dx {
   &.dx-flex {
     display: flex;
   }
+
   &.dx-justify-center {
     display: flex;
     justify-content: center;
   }
+
   &.dx-flex-col {
     flex-direction: column;
   }
+
   &.dx-align-center {
     align-items: center;
   }
@@ -139,16 +154,15 @@ div {
 }
 
 body,
-#__nuxt
-{
+#__nuxt {
   width: 100%;
   height: 100%;
- 
+
 }
 
-body{
+body {
   background-color: var(--dx-container-color);
-  
+
   padding-top: constant(safe-area-inset-top);
   padding-top: env(safe-area-inset-top);
   position: relative;
@@ -157,6 +171,7 @@ body{
 #__nuxt {
   position: relative;
 }
+
 html {
   height: 100%;
   margin: 0 auto;
@@ -165,9 +180,11 @@ html {
   overflow: hidden;
 
 }
+
 .btn {
   cursor: pointer;
 }
+
 button {
   outline: none;
 }
@@ -189,7 +206,19 @@ button {
   .van-safe-area-top {
     padding-top: 0;
   }
+
   .van-safe-area-bottom {
     padding-bottom: 0;
   }
+}
+
+
+.text-lg {
+  line-height: unset;
+  font-size: unset;
+}
+
+.line-clamp-2 {
+  word-break: break-all;
+  white-space: normal;
 }

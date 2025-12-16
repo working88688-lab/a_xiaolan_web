@@ -30,20 +30,17 @@ const onTabChange = e => {
   // navigateTo(`${e.router}`);
   __.$Replace(`${e.router}`)
 }
+
+const icon_version = '?v=2.0'
 </script>
 
 <template>
   <van-tabbar v-model="tabactive" :border="false" placeholder :fixed="false" z-index="2000">
-    <van-tabbar-item
-      v-for="(e, index) in indexNavs"
-      :key="index"
-      :index="`${index}`"
-      :name="e.value"
-      @click="() => onTabChange(e)"
-    >
+    <van-tabbar-item v-for="(e, index) in indexNavs" :key="index" :index="`${index}`" :name="e.value"
+      @click="() => onTabChange(e)">
       <span>{{ e.title }}</span>
       <template #icon="props">
-        <img :key="e.value" :src="tabactive === e.value ? e.iconselect : e.icon" />
+        <img :key="e.value" :src="tabactive === e.value ? e.iconselect + icon_version : e.icon + icon_version" />
       </template>
     </van-tabbar-item>
   </van-tabbar>

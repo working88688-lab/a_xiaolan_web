@@ -24,7 +24,6 @@ export const useKeepAlive = (config: IOptions) => {
     if (!key.value || config.deactivated?.()) {
       key.value = _getKey()
       activeTab.value = 0
-      config.reset?.()
       config.active?.()
     }
     config.effect?.()

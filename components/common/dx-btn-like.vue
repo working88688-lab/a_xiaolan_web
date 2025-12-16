@@ -1,34 +1,19 @@
 <template>
-  <div
-    class="btn_like cursor-pointer"
-    :class="{
-      'is-row': align === 'row',
-      'is-column': align === 'column'
-    }"
-    @click.stop="onLike"
-  >
-    <van-icon
-      v-if="iconType === 'van'"
-      :size="iconSize"
-      class="btn_like--icon"
-      :class="{
+  <div class="btn_like cursor-pointer" :class="{
+    'is-row': align === 'row',
+    'is-column': align === 'column'
+  }" @click.stop="onLike">
+    <slot name="icon" :is-like="isLike">
+      <van-icon v-if="iconType === 'van'" :size="iconSize" class="btn_like--icon" :class="{
         'text-mred': isLike
-      }"
-      :color="isLike ? props.activeColor : props.color"
-      :name="isLike ? activeIcon || icon : icon"
-    />
-    <nuxt-icon
-      v-if="iconType === 'nuxt'"
-      class="btn_like--icon"
-      :class="{
+      }" :color="isLike ? props.activeColor : props.color" :name="isLike ? activeIcon || icon : icon" />
+      <nuxt-icon v-if="iconType === 'nuxt'" class="btn_like--icon" :class="{
         'text-mred': isLike
-      }"
-      :style="{
-        fontSize: size
-      }"
-      :name="isLike ? activeIcon || icon : icon"
-    />
-    <slot :likes="localLikes">
+      }" :style="{
+          fontSize: size
+        }" :name="isLike ? activeIcon || icon : icon" />
+    </slot>
+    <slot v-if="showCount" :likes="localLikes">
       {{ $Utils.formatNumber(localLikes, 'en') }}
     </slot>
   </div>
@@ -53,20 +38,24 @@ const props = withDefaults(
     iconType?: 'van' | 'nuxt'
     color?: string
     activeColor?: string
+    showCount?: boolean
+    idKey?: string
   }>(),
   {
     id: undefined,
     like: false,
     likes: 0,
     api: undefined,
-    params: undefined,
+    params: () => ({}),
     size: '0.5rem',
     align: 'column',
     useToast: true,
     icon: 'like-o',
     activeIcon: 'like',
     disabled: false,
-    iconType: 'van'
+    iconType: 'van',
+    showCount: true,
+    idKey: 'id'
   }
 )
 
@@ -78,6 +67,7 @@ const __ = useNuxtApp()
 
 const slots = defineSlots<{
   default(props: { likes: number }): any
+  icon: (props: { isLike?: boolean }) => any
 }>()
 
 const isLike = ref(props.like)
@@ -97,8 +87,9 @@ const onLike = async (_data: any) => {
       : props.api
 
   try {
-    const params = props.params || {
-      id: props.id
+    const params = {
+      ...props.params,
+      [props.idKey]: props.id
     }
 
     const res = await _api(params)
@@ -119,7 +110,7 @@ const onLike = async (_data: any) => {
         like_num: localLikes.value
       }
     })
-  } catch (error) {}
+  } catch (error) { }
 }
 watchEffect(() => {
   isLike.value = props.like
@@ -131,16 +122,20 @@ watchEffect(() => {
 .btn_like {
   &.is-row {
     flex-direction: row;
+
     .btn_like--icon {
       margin-right: 4px;
     }
   }
+
   &.is-column {
     flex-direction: column;
+
     .btn_like--icon {
       margin-bottom: 4px;
     }
   }
+
   display: flex;
   justify-content: center;
   align-items: center;

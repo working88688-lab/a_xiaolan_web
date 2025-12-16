@@ -109,7 +109,7 @@ const getUrlParams = (key: string) => {
 
 onMounted(() => {
   getImg()
-  //获取渠道参数
+  //获取渠道参数. aff_code=a34&trace_id=trace_vx76n422nkom
   const affCode = getUrlParams('aff_code')
   if (affCode && !__.$Store.user.u.invite_by_code) {
     __.$Api.User.invitation({
@@ -119,8 +119,6 @@ onMounted(() => {
     })
   }
 })
-
-function report()
 </script>
 
 <style lang="postcss" scoped>
@@ -130,6 +128,10 @@ function report()
 
   :deep(.swiper-pagination-bullet) {
     transition: all 0.3s;
+  }
+
+  :deep(.report-click-item) {
+    height: 100%;
   }
 
   :deep(.swiper-pagination-bullet-active.swiper-pagination-bullet) {

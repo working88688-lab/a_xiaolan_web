@@ -60,7 +60,16 @@ export default defineNuxtPlugin(async () => {
   const g = new _proxyGlobal(app)
   await g.init()
   console.log(`【${process.client ? 'CSR' : 'SSR'}】@全局初变量加载完成~`)
-  app.$Tracker.init()
+  const globalStore = useGlobalStore()
+  const userStore = useUserStore()
+
+  app.$Tracker.init({
+    channel: userStore.u.build_id,
+    appId: globalStore.config.click_app_id,
+    uid: userStore.u.uid,
+    deviceId: app.$Oauth.data().oauth_id,
+    reportUrl: globalStore.config.click_transit_path
+  })
   return {
     provide: {
       G: g

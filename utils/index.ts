@@ -9,7 +9,7 @@ export const formatNumber = (num: number | string, local?: Local) => {
   num = Number.isNaN(num) ? 0 : num
   local = local || 'en'
   const unitMap = {
-    'zh-cn': formatNumberWithChineseUnit,
+    'zh-cn': formatNumberWithUnit,
     en: formatNumberWithUnit
   }
   return unitMap[local](num)
@@ -44,8 +44,8 @@ function formatNumberWithUnit(number: number) {
     return 0
   }
   // 定义单位和对应的数字范围
-  const units = ['', 'k', 'M', 'G', 'T']
-  const unitThreshold = 1000
+  const units = ['', 'W']
+  const unitThreshold = 10000
 
   // 初始化单位索引和初始值
   let unitIndex = 0

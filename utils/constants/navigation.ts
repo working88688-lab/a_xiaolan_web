@@ -5,7 +5,9 @@ export const NAVIGATION_MAP = {
   4: '/home/resource',
   5: '/home/daily',
   9: '/home/anime',
-  11: '/home/live'
+  11: '/home/live',
+  12: '/ai/face',
+  13: '/category'
 } as const
 
 // 9=> "男漫",

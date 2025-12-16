@@ -1,7 +1,7 @@
 /* 颜色变量 */
 :root {
   --dx-red-color: #f34751;
-  --dx-primary-color: #428af7;
+  --dx-primary-color: #3DA7FD;
   --dx-gray-color: #ebedf0;
   --dx-blue-color: #428af7;
   --dx-light-blue-color: #e5f0ff;
@@ -19,6 +19,8 @@
   --dx-yellow-color: #f9b944;
   --dx-orange-color: #fd5c18;
   --dx-green-color: #1f9e36;
+
+  --default-font-size-color: #151515;
 }
 
 :root {
@@ -31,6 +33,12 @@
   --dx-bg-color: #4f4f4f;
   --dx-dialog-content-text-color: var(--dx-base2-color);
 
+}
+
+:root {
+  --recharge-ad-height: 0px;
+  --recharge-toggle-height: 0px;
+  --dx-open-app-height: 0px;
 }
 
 /* 字体 */
@@ -49,7 +57,7 @@
   --van-nav-bar-arrow-size: 18px;
   --van-nav-bar-icon-color: #000;
   --van-nav-bar-text-color: #000;
-  --van-nav-bar-background: #fff;
+  --van-nav-bar-background: transprent;
   --van-border-color: #000;
   --van-empty-padding: 12px 0;
   --van-empty-description-font-size: 14px;
@@ -74,5 +82,7 @@
   --van-swipe-indicator-inactive-opacity: 0.7;
   --van-cell-value-font-size: 13px;
   --van-cell-horizontal-padding: 14px;
-  --van-tab-text-color: #111111;
+  --van-tab-text-color: #646C85;
+  --van-cell-background: #fff;
+  --van-cell-horizontal-padding: 12px;
 }

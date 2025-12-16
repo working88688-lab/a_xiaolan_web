@@ -1,0 +1,6 @@
+export const SEARCH_HISTORY_KEY = 'SEARCH_HISTORY_KEY'
+
+export const CACHE_KEY = {
+  AI_FACE: 'AI_FACE',
+  PREVIEW_AI_FACE: 'PREVIEW_AI_FACE'
+} as const

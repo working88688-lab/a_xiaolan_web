@@ -1,10 +1,10 @@
 <template>
   <report-click-item stop-propagation :data="{
-    page_key,
-    ad_type,
-    page_name,
+    page_key: props.data.page_key || page_key,
+    ad_type: props.data.ad_type || ad_type,
+    page_name: props.data.page_name || page_name,
     ad_slot_key: props.data.advertise_location_code,
-    ad_slot_name: props.data.title,
+    ad_slot_name: props.data.ad_slot_name || name || props.data.title,
     ad_id: props.data.advertise_code,
     event: 'ad_click'
   }">
@@ -21,6 +21,8 @@ import type { AdItem } from '@types'
 const props = defineProps<{
   data: AdItem
   adType?: string
+  adName?: string
+  index?: number
   isVirtual?: boolean
 }>()
 
@@ -63,6 +65,10 @@ const page_key = ((route.name as string) || '').replace(/-/g, '_')
 const page_name = route.meta?.title || route.meta?.trackPageName
 
 const ad_type = props.adType || 'banner'
+
+const name = computed(() => {
+  return [page_name, props.adName, props.index].filter(i => i).join('_')
+})
 const onClick = () => {
   emit('click')
   switch (props.data.type) {
@@ -108,11 +114,11 @@ const { stop } = useIntersectionObserver(target, ([entry]) => {
   if (entry?.isIntersecting) {
     if (!props.isVirtual) {
       __.$Tracker.trackAdImpression({
-        page_key,
-        ad_type,
-        page_name,
+        page_key: props.data.page_key || page_key,
+        ad_type: props.data.ad_type || ad_type,
+        page_name: props.data.page_name || page_name,
         ad_slot_key: props.data.advertise_location_code,
-        ad_slot_name: props.data.title,
+        ad_slot_name: props.data.ad_slot_name || name.value || props.data.title,
         ad_id: props.data.advertise_code
       })
     }
