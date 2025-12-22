@@ -31,6 +31,8 @@ export default {
   mycPost: { method: 'post', url: '/api/community/favorit_post' },
   //帖子点赞
   likePost: { method: 'post', url: '/api/community/like_post' },
+  //我的购买-视频
+  buyedVideo: { method: 'post', url: '/api/chargeVideo/maiguo' },
   //我的购买-漫画
   buyedManhua: { method: 'post', url: '/api/manhua/my_buy' },
   //我的购买-美图
@@ -90,6 +92,8 @@ export default {
   getOtherUserInfo: { method: 'post', url: '/api/users/getUserHome' },
   // 我的关注
   myFollowed: { method: 'post', url: '/api//users/followed' },
+  // 用户视频
+  userVideos: { method: 'post', url: '/api/users/videos' },
   // 用户合集
   // userlistOfTopics: { method: 'post', url: '/api/usertopic/listOfTopic' },
   // 用户帖子

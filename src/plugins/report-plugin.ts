@@ -1,13 +1,35 @@
 /* eslint-disable */
 // @ts-nocheck
 
+// utils/encryptSecret.ts
+import SHA1 from 'crypto-js/sha1';
+import MD5 from 'crypto-js/md5';
+
+export function encryptSecret(key: string, time: number): string {
+  const parts = key.split('_');
+  const secret = parts[0];
+  const intervalStr = parts[parts.length - 1];
+  const parsedInterval = parseInt(intervalStr, 10);
+  const interval = time;
+  const ct = Math.floor(Date.now() / 1000 / interval);
+  const cal = SHA1(secret + ct.toString()).toString();
+  const sha = SHA1(secret + cal).toString();
+  const str = MD5(sha.toString()).toString();
+  return str.substring(0, 16);
+}
+
+
+function checkRule(ctx, role_key) {
+  const key = `is_report_${role_key}`
+  return ctx.bury_point[key] === 1
+}
+
 function getPageTrackData(page: any) {
   return {
     key: page.name,
     name: page.meta?.trackPageName || page.meta?.title || page.query?.title,
   }
 }
-
 
 function groupBy(arr, key) {
   return arr.reduce((acc, item) => {
@@ -33,6 +55,7 @@ function groupAds() {
 
 let ad_impression_queue = [];
 let ad_impression_timer = null;
+
 
 const PAGE_ALIVE_MAP = new Map()
 const PAGE_LOAD_MAP = new Map()
@@ -136,16 +159,18 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
 
     function enqueueRequest(batchBody) {
-      // 这里的 batchBody 是一组事件数组，比如 [{...}, {...}]
+      const url = Tracker._ctx.bury_point.click_transit_path
+      console.log('url: ', url);
       return new Promise((resolve, reject) => {
         const taskFn = () =>
-          Tracker._ctx.reportUrl ? fetch(Tracker._ctx.reportUrl, {
+          url ? fetch(url, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': Tracker._ctx.bury_point.is_encryption ? 'application/x-www-form-urlencoded' : 'application/json',
+              'Cf-Ray-Xf': encryptSecret(Tracker._ctx.bury_point.authentication_key, Tracker._ctx.bury_point.authentication_time)
             },
-            body: JSON.stringify(batchBody)
-          }) : Promise.resolve()
+            body: Tracker._ctx.bury_point.is_encryption ? Tracker._ctx.createSign({ [`${Tracker._ctx.bury_point.sign_key}`]: batchBody }, Tracker._ctx.bury_point.encryption_key, Tracker._ctx.bury_point.encryption_iv, Tracker._ctx.bury_point.sign_key) : JSON.stringify(batchBody)
+          }) : Promise.resolve();
 
         queue.push({ taskFn, resolve, reject });
         runNext();
@@ -321,7 +346,9 @@ export default defineNuxtPlugin((nuxtApp) => {
       payload
     }
 
-    return limitedFetch(data).catch(() => { })
+    return limitedFetch(data).catch((e) => {
+      console.log('e: ', e);
+    })
   }
   // SDK 主体
   const Tracker = {
@@ -329,15 +356,16 @@ export default defineNuxtPlugin((nuxtApp) => {
       appId: '',
       channel: '',
       uid: '',
-      reportUrl: '',
       deviceId: '',
       user_agent: typeof navigator !== 'undefined'
         ? navigator.userAgent
         : '',
+      bury_point: {},
+      createSign: () => { }
     },
     /**
       * 初始化 SDK
-      * @param {{appId: string, channel?: string, reportUrl?: string deviceId?:string}} options
+      * @param {{appId: string, channel?: string, deviceId?:string}} options
       */
     init: function (options) {
       options = options || {};
@@ -345,7 +373,13 @@ export default defineNuxtPlugin((nuxtApp) => {
       this._ctx.channel = options.channel || '';
       this._ctx.uid = options.uid.toString() || ''
       this._ctx.deviceId = options.deviceId
-      this._ctx.reportUrl = options.reportUrl
+      this._ctx.bury_point = options.bury_point
+      this._ctx.createSign = options.createSign
+      console.log('options.bury_point: ', options.bury_point);
+      if (options.rule) {
+
+        this._ctx.rule = options.rule
+      }
       window.addEventListener('click', event => {
         const el = event.target
 
@@ -374,117 +408,141 @@ export default defineNuxtPlugin((nuxtApp) => {
      * 通用 track
      */
     track: function (trackData) {
+      const event = trackData.event
       const ctx = this._ctx
-      if (data.event === 'ad_impression') {
-        ad_impression_queue.push(trackData)
+      if (checkRule(ctx, event)) {
+        if (event === 'ad_impression') {
+          ad_impression_queue.push(trackData)
+          if (ad_impression_timer) {
+            return
+          }
+          ad_impression_timer = setTimeout(() => {
+            const adGrounds = groupAds()
+            adGrounds.forEach(_data => {
+              send(ctx, _data);
+            })
+            ad_impression_queue = []
+            clearTimeout(ad_impression_timer)
+            ad_impression_timer = null
+          }, 5000)
+
+          return
+        }
+        return send(ctx, trackData)
+      }
+    },
+    // 导航路径行为 navigation
+    trackNavigation: function (extra) {
+      if (checkRule(this._ctx, 'navigation')) {
+        return send(this._ctx, {
+          event: 'navigation',
+          ...extra
+        })
+      }
+    },
+
+    // 应用页面展示 app_page_view
+    trackAppPageView: function (extra) {
+      if (checkRule(this._ctx, 'app_page_view')) {
+        return send(this._ctx, {
+          event: 'app_page_view',
+          ...extra
+        })
+      }
+    },
+
+    // 应用页面点击 page_click
+    trackPageClick: function (extra) {
+      if (checkRule(this._ctx, 'page_click')) {
+        return send(this._ctx, {
+          event: 'page_click',
+          ...extra
+        })
+
+      }
+    },
+
+    // APP 广告行为 advertising
+    trackAdvertising: function (extra) {
+      if (checkRule(this._ctx, 'advertising')) {
+        return send(this._ctx, {
+          event: 'advertising',
+          ...extra
+        })
+      }
+    },
+
+    // 页面存活 page_lifecycle
+    trackPageLifecycle: function (extra) {
+      if (checkRule(this._ctx, 'page_lifecycle')) {
+        return send(this._ctx, {
+          event: 'page_lifecycle',
+          ...extra
+        })
+      }
+    },
+
+    // 视频事件 video_event
+    trackVideoEvent: function (extra) {
+      if (checkRule(this._ctx, 'video_event')) {
+        return send(this._ctx, {
+          event: 'video_event',
+          ...extra
+        })
+      }
+    },
+
+    // 关键词搜索 keyword_search
+    trackKeywordSearch: function (extra) {
+      if (checkRule(this._ctx, 'keyword_search')) {
+        return send(this._ctx, {
+          event: 'keyword_search',
+          ...extra
+        })
+      }
+    },
+
+    // 关键词搜索点击 keyword_click
+    trackKeywordClick: function (extra) {
+      if (checkRule(this._ctx, 'keyword_click')) {
+        return send(this._ctx, {
+          event: 'keyword_click',
+          ...extra
+        })
+      }
+    },
+
+    // 广告展示 ad_impression
+    trackAdImpression: function (extra) {
+      if (checkRule(this._ctx, 'ad_impression')) {
+        const ctx = this._ctx
+        ad_impression_queue.push(extra)
         if (ad_impression_timer) {
           return
         }
         ad_impression_timer = setTimeout(() => {
           const adGrounds = groupAds()
           adGrounds.forEach(_data => {
-            send(ctx, _data);
+            send(ctx, {
+              event: 'ad_impression',
+              ..._data
+            });
           })
           ad_impression_queue = []
           clearTimeout(ad_impression_timer)
           ad_impression_timer = null
         }, 5000)
-
-        return
       }
-      return send(this._ctx, trackData)
-    },
-    // 导航路径行为 navigation
-    trackNavigation: function (extra) {
-      return send(this._ctx, {
-        event: 'navigation',
-        ...extra
-      })
-    },
-
-    // 应用页面展示 app_page_view
-    trackAppPageView: function (extra) {
-      return send(this._ctx, {
-        event: 'app_page_view',
-        ...extra
-      })
-    },
-
-    // 应用页面点击 page_click
-    trackPageClick: function (extra) {
-      return send(this._ctx, {
-        event: 'page_click',
-        ...extra
-      })
-    },
-
-    // APP 广告行为 advertising
-    trackAdvertising: function (extra) {
-      return send(this._ctx, {
-        event: 'advertising',
-        ...extra
-      })
-    },
-
-    // 页面存活 page_lifecycle
-    trackPageLifecycle: function (extra) {
-      return send(this._ctx, {
-        event: 'page_lifecycle',
-        ...extra
-      })
-    },
-
-    // 视频事件 video_event
-    trackVideoEvent: function (extra) {
-      return send(this._ctx, {
-        event: 'video_event',
-        ...extra
-      })
-    },
-
-    // 关键词搜索 keyword_search
-    trackKeywordSearch: function (extra) {
-      return send(this._ctx, {
-        event: 'keyword_search',
-        ...extra
-      })
-    },
-
-    // 关键词搜索点击 keyword_click
-    trackKeywordClick: function (extra) {
-      return send(this._ctx, {
-        event: 'keyword_click',
-        ...extra
-      })
-    },
-
-    // 广告展示 ad_impression
-    trackAdImpression: function (extra) {
-      const ctx = this._ctx
-      ad_impression_queue.push(extra)
-      if (ad_impression_timer) {
-        return
-      }
-      ad_impression_timer = setTimeout(() => {
-        const adGrounds = groupAds()
-        adGrounds.forEach(_data => {
-          send(ctx, {
-            event: 'ad_impression',
-            ..._data
-          });
-        })
-        ad_impression_queue = []
-        clearTimeout(ad_impression_timer)
-        ad_impression_timer = null
-      }, 5000)
     },
 
     // 广告点击 ad_click
     trackAdClick: function (extra) {
-      return send(this._ctx, {
-        event: 'ad_click',
-        ...extra
-      })
+      if (checkRule(this._ctx, 'ad_click')) {
+        return send(this._ctx, {
+          event: 'ad_click',
+          ...extra
+        })
+      }
     }
   }
 

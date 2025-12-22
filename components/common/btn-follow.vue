@@ -1,8 +1,13 @@
 <template>
-  <div v-if="is_not_self" class="btn_follow" :class="{
-    has_style: props.useDefaultStyle,
-    followed: follow
-  }" @click.stop="onFollow">
+  <div
+    v-if="is_not_self"
+    class="btn_follow"
+    :class="{
+      has_style: props.useDefaultStyle,
+      followed: follow
+    }"
+    @click.stop="onFollow"
+  >
     <slot :text="text" :follow="follow">
       {{ text }}
     </slot>
@@ -65,7 +70,7 @@ const onFollow = async (_data: any) => {
       }
     })
     emit('success', follow.value ? 1 : -1)
-  } catch (error) { }
+  } catch (error) {}
 }
 watchEffect(() => {
   follow.value = props.attention === 1
@@ -78,16 +83,13 @@ const is_not_self = computed(() => {
 
 <style lang="less">
 .btn_follow.has_style {
-  width: 64px;
+  width: 84px;
   height: 30px;
   border-radius: 15px;
   border: solid 1px #548aef;
+  line-height: 30px;
   text-align: center;
-  background-color: #548aef;
-  color: #fff;
+  color: #548aef;
   font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 </style>

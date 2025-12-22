@@ -35,7 +35,7 @@ function onConfirm() {
       <div class="mb-2 text-sm">邀好友再送3天VIP！</div>
       <div>
         <dx-button to="/renewal" linear class="!mr-2 w-[120px]">开通会员</dx-button>
-        <dx-button to="/myinvite" color="#fd6409" class="w-[120px] !border-0">分享得会员</dx-button>
+        <dx-button to="/invite" color="#fd6409" class="w-[120px] !border-0">分享得会员</dx-button>
       </div>
     </template>
   </div>

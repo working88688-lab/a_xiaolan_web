@@ -63,12 +63,22 @@ export default defineNuxtPlugin(async () => {
   const globalStore = useGlobalStore()
   const userStore = useUserStore()
 
+  function createSign(data = {}, keyString: string, ivString: string, signKey: string) {
+    const _data = JSON.stringify({
+      ...app.$Oauth.data(),
+      ...data,
+      system_token: useUserStore().token
+    })
+    console.log('_data: ', _data)
+    return app.$CryptoData.encryptReportParamsBrowser(_data, { keyString, ivString, signKey })
+  }
   app.$Tracker.init({
     channel: userStore.u.build_id,
     appId: globalStore.config.click_app_id,
     uid: userStore.u.uid,
     deviceId: app.$Oauth.data().oauth_id,
-    reportUrl: globalStore.config.click_transit_path
+    bury_point: toRaw(globalStore.config.bury_point),
+    createSign
   })
   return {
     provide: {

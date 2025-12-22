@@ -1,30 +1,34 @@
-<script setup lang="ts">
-import type { BaseCard, StoryData } from '@types'
+<template>
+  <div class="graphic-information-common" @click="__.$NavigateTo(`/${_page}?id=${item.id}`)">
+    <div class="thumb">
+      <dx-image :src="props.item?.thumb_full" />
+    </div>
+    <div class="max-w-full truncate">{{ props.item.title }}</div>
+  </div>
+</template>
 
-const props = withDefaults(
-  defineProps<{
-    item: BaseCard | StoryData
-    page?: string
-    lines?: boolean
-  }>(),
-  {
-    lines: true,
-    page: 'comics'
-  }
-)
+<script setup lang="ts">
+import type { BaseCard } from '@types'
+const props = defineProps<{
+  item: BaseCard
+  page?: string
+  size?: number
+}>()
+
+const __ = useNuxtApp()
+const _page = props.page || 'comics'
+
+const _size = (props.size || 5.9) + 'rem'
 </script>
 
-<template>
-  <nuxt-link class="graphic-information-common" :to="`/${props.page}?id=${item.id}`">
-    <dx-cover class="aspect-h-4 aspect-w-3" :poster="props.item?.thumb_full">
-      <dx-pay-type :coins="item.coins" class="absolute right-0.5 top-0.5" />
-      <div v-if="props.page !== 'images'"
-        class="absolute bottom-0.5 right-0 z-10 rounded-s-lg bg-morange py-[2px] pl-1 pr-0.5 text-tiny text-white">
-        {{ item.is_finish ? '已完结' : '连载中' }}
-      </div>
-    </dx-cover>
-    <div class="text-sm" :class="[props.lines ? 'line-clamp-2' : 'truncate']">
-      {{ props.item.title }}
-    </div>
-  </nuxt-link>
-</template>
+<style lang="postcss" scoped>
+.graphic-information-common {
+  .thumb {
+    width: 100%;
+    height: v-bind(_size);
+    border-radius: 5px;
+    margin-bottom: 0.2rem;
+    overflow: hidden;
+  }
+}
+</style>

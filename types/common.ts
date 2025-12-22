@@ -172,41 +172,5 @@ export interface AdItem {
   page_name: string
   ad_slot_name: string
   ad_type: string
-}
-
-export interface RecTabItem {
-  has_tab: 0 | 1
-  icon: string
-  id: number
-  nag_id: number
-  show_max: number
-  show_style: 0 | 1
-  sub_title: string
-  title: string
-  type: 0 | 1 | 2 | 3 | 4 | 5
-  has_hyh: 0 | 1
-  list: Array<VideoItem>
-}
-
-export interface Ai {
-  id: number
-  coins: number
-  thumb: string
-  face_thumb: string
-  ground: string
-  type: 1 | 2
-  title: string
-  face_thumb_w: number
-  face_thumb_h: number
-  ground_w: number
-  ground_h: number
-  thumb_w: number
-  thumb_h: number
-
-  strip_thumb: string
-  strip_thumb_h: number
-  strip_thumb_w: number
-  is_favorite: 0 | 1
-  is_like: 0 | 1
-  like_count: number
+  creative_id: string
 }

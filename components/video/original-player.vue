@@ -196,8 +196,6 @@ onBeforeRouteUpdate(async to => {
   selected.value = Number(to.query.sort || 1)
   init_fetch()
 })
-
-const { isPageActive } = usePageActive()
 </script>
 
 <template>
@@ -206,10 +204,17 @@ const { isPageActive } = usePageActive()
       <dx-loading v-if="loading" />
       <video-placeholder v-else-if="previewEnd" :coins="data.detail?.coins" @confirm="onVideoEnd" />
       <template v-else-if="data.detail">
-        <xg-player :active="is_player_active && isPageActive" :src="play_url" :poster="data.detail?.cover_full"
-          :preview-config="{
-            mode: +!!preview_tip,
-            time: !!preview_tip ? 10 : 0
+        <xg-player :active="is_player_active" :src="play_url" :poster="data.detail?.cover_full" :preview-config="{
+          mode: +!!preview_tip,
+          time: !!preview_tip ? 10 : 0
+        }" :video-info="{
+            video_id: data.detail?.video_id,
+            video_title: data.detail?.title,
+            video_tag_name: data.detail?.tags,
+            video_type_id: '',
+            video_type_name: '',
+            video_tag_key: '',
+            duration: 0
           }" @preview-ended="onVideoEnd" />
       </template>
       <div v-else class="translate-50 absolute left-1/2 top-1/2 text-xl font-semibold text-white">资源不存在</div>
@@ -239,7 +244,7 @@ const { isPageActive } = usePageActive()
                 <dx-btn-like :id="data.detail?.id" :key="data.detail?.id" class="action-icon" align="row"
                   :like="data.detail?.is_like === 1" :likes="data.detail?.like_count" :api="API_MAP.like[mvType]"
                   :use-toast="false" size="0.6rem" icon="like-o" active-icon="like" active-color="#ff416a" />
-                <nuxt-link class="flex items-center" to="/myinvite">
+                <nuxt-link class="flex items-center" to="/invite">
                   <div class="mr-0.5 h-[28px] w-[28px]">
                     <img src="~/assets/image-icon/share-rect.png" />
                   </div>

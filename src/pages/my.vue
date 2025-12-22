@@ -7,16 +7,14 @@
     <scroll-list :pull-down-refresh="userStore.info">
       <div class="user-content">
         <div class="user-top">
-          <nuxt-icon v-link="`/my/notice?_index=1`" class="cursor-pointer text-[24px]" name="my/notice"
-            filled></nuxt-icon>
-          <div v-if="user.message_tip > 0" class="mark" />
+          <img v-link="`/my/notice?_index=1`" class="cursor-pointer" src="~/assets/image/my/icon-bell.png" />
         </div>
-
         <!-- 头像 start -->
         <div class="user-avatar-box">
           <div class="user-avatar-left">
             <div class="user-avatar cursor-pointer">
               <dx-avatar :uid="user.uid" :size="1.4" :img="user.avatar_url" />
+              <div v-if="user.message_tip > 0" class="mark" />
             </div>
             <div class="user-avatar-info">
               <div class="user-avatar-title">{{ user?.nickname }}</div>
@@ -40,92 +38,92 @@
         <!-- 头像 end -->
         <!-- 关注 start -->
         <div class="user-info-box">
-          <div v-link="`/fans`" class="user-info-item user-info-item-border cursor-pointer">
-            <div class="mr-0.5">粉丝</div>
-            <div>{{ user?.fans_count ?? 0 }}</div>
+          <div v-link="`/fans`" class="user-info-item cursor-pointer">
+            <div class="user-info-item-title">{{ user?.fans_count ?? 0 }}</div>
+            <div class="user-info-item-subtitle">粉丝</div>
           </div>
-          <div v-link="`/follow`" class="user-info-item user-info-item-border cursor-pointer">
-            <div class="mr-0.5">{{ user?.followed_count ?? 0 }}</div>
-            <div>关注</div>
+          <div v-link="`/follow`" class="user-info-item cursor-pointer">
+            <div class="user-info-item-title">{{ user?.followed_count ?? 0 }}</div>
+            <div class="user-info-item-subtitle">关注</div>
           </div>
           <div class="user-info-item">
-            <div class="mr-0.5">{{ user?.likes_count ?? 0 }}</div>
-            <div>获赞</div>
+            <div class="user-info-item-title">{{ user?.likes_count ?? 0 }}</div>
+            <div class="user-info-item-subtitle">获赞</div>
           </div>
         </div>
         <!-- 关注 end -->
         <!-- 用户级别 start -->
-        <div v-link="`/renewal`" class="user-member-box relative cursor-pointer">
+        <div v-link="`/renewal`" class="user-member-box cursor-pointer">
           <div class="user-member-info">
             <div class="info">
-              <div class="user-info-container">
-                <span class="user-member-type">
-                  <vip-level :value="user.vip_level"></vip-level>
-                </span>
-              </div>
-              <div class="flex items-center">
-                <div class="mr-0.5">{{ setVipLevelItem() }}</div>
-                <div class="user-member-btn">
-                  <img src="~/assets/image/my/icon-renewal.png" />
-                </div>
-              </div>
+              <img class="user-member-icon" src="~/assets/image/my/icon-member.png" />
+              <span class="user-member-type">
+                <vip-level :value="user.vip_level"></vip-level>
+              </span>
+              <span class="user-member-line">|</span>
+              <span>{{ setVipLevelItem() }}</span>
             </div>
           </div>
-          <img src="@/assets/image/my/model.png" class="model" alt="" />
+          <div class="user-member-btn">
+            <img src="~/assets/image/my/icon-renewal.png" />
+          </div>
         </div>
         <!-- 用户级别 end -->
         <!-- 导航 start -->
         <div class="user-active-box grid grid-cols-4 gap-1">
           <div v-link="`/my/collect`" class="user-active-item">
-            <nuxt-icon name="my/star" class="icon" filled></nuxt-icon>
+            <img class="user-active-icon" src="~/assets/image/my/iconActive1.png" />
             <p class="user-active-title">我的收藏</p>
           </div>
           <div v-link="`/my/buy`" class="user-active-item">
-            <nuxt-icon name="my/buy" class="icon" filled></nuxt-icon>
+            <img class="user-active-icon" src="~/assets/image/my/iconActive2.png" />
             <p class="user-active-title">我的购买</p>
           </div>
           <div v-link="`/my/watched`">
             <div class="user-active-item">
-              <nuxt-icon name="my/record" class="icon" filled></nuxt-icon>
+              <img class="user-active-icon" src="~/assets/image-icon/history.png" />
               <p class="user-active-title">浏览历史</p>
             </div>
           </div>
           <div v-link="`/mypost`">
             <div class="user-active-item">
-              <nuxt-icon name="my/post" class="icon" filled></nuxt-icon>
+              <img class="user-active-icon" src="~/assets/image/my/iconActive11.png" />
               <p class="user-active-title">我的帖子</p>
             </div>
           </div>
           <div v-link="`/my/work`">
             <div class="user-active-item">
-              <nuxt-icon name="my/work" class="icon" filled></nuxt-icon>
+              <img class="user-active-icon" src="~/assets/image/my/work.png" />
               <p class="user-active-title">作品管理</p>
             </div>
           </div>
 
           <div v-link="`/coin-recharge`">
             <div class="user-active-item">
-              <nuxt-icon name="my/coin" class="icon" filled></nuxt-icon>
+              <img class="user-active-icon" src="~/assets/image/my/iconActive6.png" />
               <p class="user-active-title">金币充值</p>
             </div>
           </div>
           <div v-link="`/myinvite`">
             <div class="user-active-item">
-              <nuxt-icon name="my/invite" class="icon" filled></nuxt-icon>
+              <img class="user-active-icon" src="~/assets/image/my/iconActive8.png" />
               <p class="user-active-title">邀请好友</p>
             </div>
           </div>
           <div v-link="`/my/notice`">
             <div class="user-active-item">
-              <nuxt-icon name="my/message" class="icon" filled></nuxt-icon>
+              <img class="user-active-icon" src="~/assets/image/my/iconActive4.png" />
               <p class="user-active-title">消息中心</p>
             </div>
           </div>
         </div>
-        <div class="user-active-box income-card">
+
+        <!-- 导航 end -->
+        <!-- 设置 start -->
+        <div class="user-server-box">
           <div v-link="`/income`" class="user-revenue-item">
-            <div class="user-revenue-item_top px-1.5">
-              <nuxt-icon name="my/income" class="mr-0.5 !text-[24px]" filled></nuxt-icon>
+            <div class="user-revenue-item_top">
+              <img src="~/assets/image/my/revenue_icon.png" />
               <span>我的收入</span>
             </div>
             <div class="user-revenue-item_assets">
@@ -143,48 +141,45 @@
               </div>
             </div>
           </div>
-        </div>
-        <!-- 导航 end -->
-        <!-- 设置 start -->
-        <div class="user-server-box">
+
           <div v-link="`/my/afilm`" class="user-server-item">
             <div class="user-server-item-left">
-              <nuxt-icon name="my/want" class="s-icon" filled></nuxt-icon>
+              <img class="user-server-item-icon" src="~/assets/image/my/iconServer4.png" />
               <div class="user-server-item-title">我的求片</div>
             </div>
             <div class="user-server-item-right"></div>
           </div>
           <div v-link="`/customer`" class="user-server-item">
             <div class="user-server-item-left">
-              <nuxt-icon name="my/service" class="s-icon" filled></nuxt-icon>
+              <img class="user-server-item-icon" src="~/assets/image/my/iconActive5.png" />
               <div class="user-server-item-title">客服中心</div>
             </div>
             <div class="user-server-item-right"></div>
           </div>
           <div v-link="`/app-center`" class="user-server-item">
             <div class="user-server-item-left">
-              <nuxt-icon name="my/app" class="s-icon" filled></nuxt-icon>
+              <img class="user-server-item-icon" src="~/assets/image/my/iconServer1.png" />
               <div class="user-server-item-title">应用推荐</div>
             </div>
             <div class="user-server-item-right"></div>
           </div>
           <div class="user-server-item" @click="onOpenTg">
             <div class="user-server-item-left">
-              <nuxt-icon name="my/group" class="s-icon" filled></nuxt-icon>
+              <img class="user-server-item-icon" src="~/assets/image/my/iconServer2.png" />
               <div class="user-server-item-title">官方聊骚群</div>
             </div>
             <div class="user-server-item-right"></div>
           </div>
           <div v-link="`/my/feedback`" class="user-server-item">
             <div class="user-server-item-left">
-              <nuxt-icon name="my/feedback" class="s-icon" filled></nuxt-icon>
+              <img class="user-server-item-icon" src="~/assets/image-icon/gift.png" />
               <div class="user-server-item-title">有奖反馈</div>
             </div>
             <div class="user-server-item-right"></div>
           </div>
           <div v-link="`/setting`" class="user-server-item">
             <div class="user-server-item-left">
-              <nuxt-icon name="my/setting" class="s-icon" filled></nuxt-icon>
+              <img class="user-server-item-icon" src="~/assets/image/my/iconServer3.png" />
               <div class="user-server-item-title">设置</div>
             </div>
             <div class="user-server-item-right"></div>
@@ -242,53 +237,7 @@ useSyncCacheData(cacheData => {
 
 <style lang="less" scoped>
 @import '@styles/my.less';
-
 :deep(.vip-level) {
   margin-top: 2px;
-}
-
-.icon {
-  font-size: 32px;
-}
-
-.s-icon {
-  font-size: 24px;
-}
-
-.model {
-  position: absolute;
-  width: 90px;
-  height: 106px;
-  right: 6px;
-  bottom: 0;
-}
-
-.user-active-box.income-card {
-  background: linear-gradient(180deg, #fff2ed 0%, #ffffff 22.12%);
-  border: 1px solid #fff;
-}
-
-.user-server-box {
-
-  .s-icon,
-  .icon {
-    margin-right: 6px;
-  }
-}
-
-.user-info-item-border {
-  position: relative;
-
-  &::after {
-    display: block;
-    content: '';
-    height: 10px;
-    width: 1px;
-    background-color: #fff;
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-  }
 }
 </style>

@@ -9,8 +9,8 @@
     <div class="video-box">
       <dx-loading v-if="loading"></dx-loading>
       <template v-else>
-        <xg-player ref="player" :active="is_player_active && isPageActive" :src="play_url"
-          :poster="data.detail?.cover_thumb_url" :preview-config="{
+        <xg-player ref="player" :active="is_player_active" :src="play_url" :poster="data.detail?.cover_thumb_url"
+          :preview-config="{
             mode: +!!data.detail?.preview_tip,
             time: !!data.detail?.preview_tip ? 10 : 0
           }" :video-info="{
@@ -55,12 +55,12 @@
                     {{ $Utils.formatNumber(likes, 'en') }}
                   </template>
                 </dx-btn-like>
-                <nuxt-link class="btn flex items-center" to="/myinvite" @click="openShare">
+                <div class="btn flex items-center" @click="openShare">
                   <div class="mr-0.5 h-[22px] w-[22px]">
                     <img src="~/assets/image/home/share.png" />
                   </div>
                   <span>分享</span>
-                </nuxt-link>
+                </div>
               </div>
             </div>
           </div>
@@ -149,7 +149,7 @@ const {
 })
 
 function openShare() {
-  // showShareDialog()
+  showShareDialog()
 
   __.$Tracker.trackVideoEvent({
     event: 'video_event',
@@ -312,8 +312,6 @@ useSyncCacheData(cacheData => {
     }
   }
 })
-
-const { isPageActive } = usePageActive()
 </script>
 
 <style lang="postcss" scoped>

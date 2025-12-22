@@ -1,8 +1,22 @@
 <template>
-  <div ref="containerRef" :class="classNames">
-    <img v-if="props.src" :key="props.src" v-lazyLoad:[props.groupId]="props.src" :style="{
-      'object-fit': fit
-    }" :data-index="props.index" :data-image-preview="preview" :alt="alt" @decrypted="onDecrypted" />
+  <div
+    class="dx-image"
+    :class="{
+      'no-bg': props.noBg,
+      'overflow-hidden !rounded-full': props.round
+    }"
+  >
+    <img
+      v-if="props.src"
+      :key="props.src"
+      v-lazyLoad:[props.groupId]="props.src"
+      :style="{
+        'object-fit': fit
+      }"
+      :data-index="props.index"
+      :data-image-preview="preview"
+      :alt="alt"
+    />
     <img v-else style="object-fit: contain" :src="loading" alt="alt" />
   </div>
 </template>
@@ -33,27 +47,9 @@ const props = withDefaults(
     fit: 'cover'
   }
 )
-
-const [name, bem] = createNamespace('image')
-
-const classNames = computed(() => {
-  return [
-    bem({
-      round: props.round,
-      noBg: props.noBg
-    })
-  ]
-})
-
-const containerRef = useTemplateRef<HTMLDivElement>('containerRef')
-
-function onDecrypted() {
-  containerRef.value?.classList.add('dx-image--noBg')
-  containerRef.value?.classList.remove('dx-image--loading')
-}
 </script>
 
-<style lang="postcss">
+<style lang="less">
 .dx-image {
   width: 100%;
   height: 100%;
@@ -62,40 +58,14 @@ function onDecrypted() {
   justify-content: center;
   align-items: center;
   background: #f6f6f6;
-
-  &--noBg {
+  &.no-bg {
     background: transparent;
   }
-
-  &--round {
-    border-radius: 50%;
-    overflow: hidden;
-  }
-
-  &--placeholder {
-    width: 60%;
-    height: 60%;
-  }
-
-  img.is-error,
   img.loading {
     object-fit: contain !important;
-    /* width: 60%;
-    height: 60%; */
   }
-
-  &--element {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  &--gray {
-    background: var(--dx-base8-color);
-  }
-
-  &--loading {
-    height: var(--image-loading-height);
+  img.is-error {
+    object-fit: contain !important;
   }
 }
 </style>

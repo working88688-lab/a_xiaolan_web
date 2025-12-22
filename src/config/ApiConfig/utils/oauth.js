@@ -22,14 +22,15 @@ class Oauth {
 
     _this.instance = true
     _this.oauth_type = 'pwa'
-
+    const parmas = new URLSearchParams(location.search)
     // 封装
     const getdata = () => {
       return {
         bundle_id: 'tips.yc.bs',
         version: config.api.version,
         oauth_type: _this.oauth_type,
-        oauth_id: _this.oauth_id
+        oauth_id: _this.oauth_id,
+        trace_id: parmas.get('trace_id') || ''
       }
     }
 

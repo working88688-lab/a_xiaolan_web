@@ -1,4 +1,8 @@
 export default {
+  // 原创首页
+  home: { method: 'post', url: '/api/original/home' },
+  // 原创列表
+  list: { method: 'post', url: '/api/original/list' },
   // 原创详情
   detail: { method: 'post', url: '/api/original/detail' },
   // 评论列表

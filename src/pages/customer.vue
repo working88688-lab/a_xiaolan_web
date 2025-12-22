@@ -35,6 +35,5 @@ onMounted(() => {
 .my-nav-bar {
   --van-nav-bar-background: #000;
   --van-nav-bar-title-text-color: #fff;
-  --van-nav-bar-icon-color: #fff;
 }
 </style>

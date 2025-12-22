@@ -1,13 +1,21 @@
 <template>
   <div class="container">
-    <dx-hoc-list api="api/proxy/userInviteList" class="dx-grid-1">
-      <template #item="{ item }">
-        <div class="item flex items-center bg-white px-1 py-2">
-          <div class="m-0 mr-1 truncate font-medium">{{ item.nickname || '' }}</div>
-          <div class="ml-auto flex-shrink-0 text-sm text-base3">{{ item.regdate_str || '' }}</div>
-        </div>
-      </template>
-    </dx-hoc-list>
+    <div class="user-common-list-header">
+      <div class="user-common-list-item">昵称</div>
+      <div class="user-common-list-item">状态</div>
+      <div class="user-common-list-item">金额</div>
+    </div>
+    <div class="scroll-container">
+      <scroll-list v-model:loading="loading" :is-empty="isEmpty" :is-end="isEnd" :pullup="execute">
+        <template v-for="(item, index) in listData" :key="index">
+          <div class="user-common-list">
+            <div class="user-common-list-item">{{ item.nickname || '' }}</div>
+            <div class="user-common-list-item">{{ item.is_reg ? '注册成功' : '未注册' }}</div>
+            <div class="user-common-list-item">{{ item.regdate_str || '' }}</div>
+          </div>
+        </template>
+      </scroll-list>
+    </div>
   </div>
 </template>
 
@@ -20,9 +28,6 @@ const { listData, loading, execute, isEmpty, isEnd } = useFetchList<any>({
 })
 </script>
 
-<style lang="postcss" scoped>
-.item {
-  box-shadow: 0px 2px 11.9px 0px #00000012;
-  border-radius: 10px;
-}
+<style lang="less" scoped>
+@import '@styles/list.less';
 </style>

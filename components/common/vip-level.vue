@@ -26,7 +26,7 @@ export default defineComponent({
     } else {
       userType = '普通用户'
     }
-    return () => <span>{userType}</span>
+    return () => <span style={{ fontSize: '12px' }}>{userType}</span>
   }
 })
 </script>

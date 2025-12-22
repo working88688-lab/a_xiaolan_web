@@ -51,8 +51,6 @@ const { data, loading } = useMyFetch<{
     if (import.meta.dev) {
       data.value.run_light = '开发环境模拟跑马灯数据，打包后 自动删除'
     }
-
-    scrollTo()
   }
 })
 
@@ -87,22 +85,6 @@ const on_select = (_index: number) => {
 const onConfirm = () => {
   showPayment.value = true
 }
-const route = useRoute()
-function scrollTo() {
-  nextTick(() => {
-    const { id } = route.query
-    if (id && swipe_ref.value && data.value.list?.online?.length) {
-      const index = data.value.list.online.findIndex(item => item.id === Number(id))
-      if (index >= 0) {
-        swipe_ref.value.slideToLoop(index)
-      }
-    }
-  })
-}
-
-onActivated(() => {
-  scrollTo()
-})
 
 useNoticeWithoutReg()
 </script>
@@ -122,10 +104,21 @@ useNoticeWithoutReg()
     </div>
     <dx-spin v-show="loading" size="0.6rem" class="my-2 text-center"></dx-spin>
     <div class="py-1" @touchstart="onTouchMove">
-      <swiper v-if="data.list?.online?.length" :modules="[Controller]" class="swiper-container"
-        :touch-move-stop-propagation="true" :loop="true" :space-between="0" :initial-slide="0" :slides-per-view="3"
-        :centered-slides="true" :slide-to-click="false" :controller="{ control: swipe_ref }" @slide-change="onChange"
-        @swiper="setSwiper">
+      <swiper
+        v-if="data.list?.online?.length"
+        :modules="[Controller]"
+        class="swiper-container"
+        :touch-move-stop-propagation="true"
+        :loop="true"
+        :space-between="0"
+        :initial-slide="0"
+        :slides-per-view="3"
+        :centered-slides="true"
+        :slide-to-click="false"
+        :controller="{ control: swipe_ref }"
+        @slide-change="onChange"
+        @swiper="setSwiper"
+      >
         <swiper-slide v-for="(item, index) in data.list?.online" :key="item.id" @click="on_select(index)">
           <div class="slide flex-col-center relative cursor-pointer px-1 py-3">
             <h2 class="name font-medium">{{ item.pname }}</h2>
@@ -157,8 +150,11 @@ useNoticeWithoutReg()
           </div>
 
           <div class="grid grid-cols-2 gap-1">
-            <div v-for="(item, index) in selectItem.right" :key="item.id"
-              class="right-item flex h-8 items-center rounded-sm p-1">
+            <div
+              v-for="(item, index) in selectItem.right"
+              :key="item.id"
+              class="right-item flex h-8 items-center rounded-sm p-1"
+            >
               <div class="mr-1 h-3 w-3">
                 <dx-image no-bg :src="item.img_url"></dx-image>
               </div>
@@ -194,7 +190,6 @@ useNoticeWithoutReg()
 .right-item {
   background-image: linear-gradient(to right, #fdf7f0, #ffffff);
 }
-
 .container {
   background-color: #fff;
   background-image: url(@assets/image/my/vip/vip_bg.png);
@@ -202,11 +197,9 @@ useNoticeWithoutReg()
   background-size: contain;
   background-repeat: no-repeat;
 }
-
 :deep(.van-nav-bar) {
   background: transparent;
 }
-
 .user-recharge {
   flex: 1;
   width: 100%;
@@ -230,7 +223,6 @@ useNoticeWithoutReg()
     }
   }
 }
-
 .count-down {
   display: flex;
   align-items: center;
@@ -244,7 +236,6 @@ useNoticeWithoutReg()
   text-align: center;
   font-weight: bold;
 }
-
 .swiper-slide {
   display: flex;
   align-items: center;
@@ -252,31 +243,25 @@ useNoticeWithoutReg()
   height: 160px;
   color: #191e3a;
   width: 125px;
-
   &.swiper-slide-active {
     .price {
       color: #444ddc;
     }
-
     .slide {
       border-color: #444ddc;
       height: 160px;
       width: 125px;
       flex-shrink: 0;
     }
-
     .tag {
       font-size: 12px;
     }
-
     .name {
       font-size: 15px;
     }
-
     .price {
       font-size: 20px;
     }
-
     .count-down,
     .desc,
     .origin-price {
@@ -284,7 +269,6 @@ useNoticeWithoutReg()
     }
   }
 }
-
 .slide {
   width: 106px;
   height: 138px;
@@ -294,13 +278,11 @@ useNoticeWithoutReg()
   transition-duration: 0.2s;
   transition-timing-function: ease, linear;
   border: 2px solid #f7f7f7;
-
   * {
     transition-property: background-color, color, fontSize;
     transition-duration: 0.2s;
     transition-timing-function: ease, linear;
   }
-
   .tag {
     position: absolute;
     left: -2px;
@@ -310,17 +292,14 @@ useNoticeWithoutReg()
     border-radius: 12px 0 0 0;
     color: #fff;
   }
-
   .desc,
   .origin-price {
     font-size: 10px;
   }
-
   .name {
     font-size: 13px;
     text-align: center;
   }
-
   .price {
     font-size: 17px;
   }

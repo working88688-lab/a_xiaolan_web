@@ -24,7 +24,7 @@ export default defineNuxtPlugin(app => {
             theme: 'round-button',
             ...options
           })
-        } else {
+        } else if (typeof options === 'string') {
           return showDialog({
             title: '温馨提示',
             theme: 'round-button',
@@ -32,6 +32,8 @@ export default defineNuxtPlugin(app => {
             message: options || ' ',
             confirmButtonText: '确定'
           })
+        } else {
+          //
         }
       },
       Confirm: options => {
@@ -58,13 +60,13 @@ export default defineNuxtPlugin(app => {
         const _options =
           typeof options === 'string'
             ? {
-              message: options,
-              transition: 'van-dialog-bounce'
-            }
+                message: options,
+                transition: 'van-dialog-bounce'
+              }
             : {
-              ...options,
-              transition: 'van-dialog-bounce'
-            }
+                ...options,
+                transition: 'van-dialog-bounce'
+              }
 
         showToast(_options)
       },

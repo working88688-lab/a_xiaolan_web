@@ -2,48 +2,51 @@
  * desc: 录像追踪
  * date: 2024.03.29
  */
-import type { VideoItem } from '~/types'
+import type { VideoItem } from '@types'
 
 const stackStore = defineStore('stack', {
   // 初始状态
   state: () => ({
+    stackKey: 0,
     stacks: [] as unknown as VideoItem[],
-    api: '',
-    params: {} as any,
-    index: 0,
-    fieldPath: 'data'
+    index: -1
   }),
-  getters: {},
+  getters: {
+    stackIds(): number[] {
+      return this.stacks.map(item => item.id)
+    },
+    currentItem(): VideoItem {
+      return this.stacks[this.index]
+    }
+  },
   // 提交状态
   actions: {
-    update_params(params: any) {
-      this.params = {
-        ...params
-      }
-    },
-    updateFieldPath(_path: string) {
-      this.fieldPath = _path
-    },
-    update_api(api: string) {
-      this.api = api
-    },
-    addStacks(stacks: VideoItem[]) {
-      this.stacks = [...this.stacks, ...stacks]
-    },
-    updateStacks(stacks: VideoItem[]) {
+    updateStacks(stacks: any[]) {
       this.stacks = [...stacks]
     },
-    updateIndex(_index: number) {
-      this.index = _index
-    },
-    updateStackByIndex(index: number, stack: VideoItem) {
+    updateStackByIndex(index: number, stack: any) {
       this.stacks.splice(index, 1, stack)
+    },
+    addStack(stackData: any) {
+      const { stackKey, data, index } = stackData
+      if (!this.stackKey || this.stackKey !== stackKey) {
+        this.stackKey = stackKey
+        this.stacks = []
+        this.stacks.push(data)
+      } else {
+        if (!this.stackIds.includes(data.id)) {
+          this.stacks.push(data)
+        }
+      }
+    },
+    setIndex(index: number) {
+      this.index = index
     }
   },
 
   persist: {
     storage: sessionStorage,
-    pick: ['api', 'params', 'fieldPath', 'index', 'stacks']
+    pick: ['stacks']
   }
 })
 

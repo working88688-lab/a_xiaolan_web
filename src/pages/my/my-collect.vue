@@ -13,23 +13,16 @@ const { key, activeTab } = useKeepAlive({})
           </template>
         </dx-hoc-list>
       </van-tab>
-
-      <van-tab title="短视频">
-        <dx-hoc-list v-if="key" class="dx-grid-3" api="api/users/likes" :params="{ show_type: 1 }">
-          <template #item="{ item, items, index, page }">
-            <video-tiktok-item :key="item.id" show-title :list="items" :index="index" :item="item" api="api/users/likes"
-              :params="{
-                page: page.page,
-                show_type: 1
-              }" />
-          </template>
-        </dx-hoc-list>
-      </van-tab>
       <van-tab title="片库">
         <dx-hoc-list v-if="key" class="grid grid-cols-2 gap-1 px-1" :api="__.$Api.original.like_list">
           <template #item="{ item, items, index }">
-            <video-card :list="items" :index="index" :mv-type="2" :show-duration="false"
-              :item="{ cover_thumb_url: item.cover_full, ...item, rating: item.play_count }"></video-card>
+            <video-card
+              :list="items"
+              :index="index"
+              :mv-type="2"
+              :show-duration="false"
+              :item="{ cover_thumb_url: item.cover_full, ...item, rating: item.play_count }"
+            ></video-card>
           </template>
         </dx-hoc-list>
       </van-tab>
@@ -44,8 +37,13 @@ const { key, activeTab } = useKeepAlive({})
       <van-tab title="动漫">
         <dx-hoc-list v-if="key" class="grid grid-cols-2 gap-1 px-1" api="api/cartoon/like_list">
           <template #item="{ item, items, index }">
-            <video-card :list="items" :index="index" :mv-type="3" :show-duration="false"
-              :item="{ cover_thumb_url: item.cover_full, ...item, rating: item.play_count }"></video-card>
+            <video-card
+              :list="items"
+              :index="index"
+              :mv-type="3"
+              :show-duration="false"
+              :item="{ cover_thumb_url: item.cover_full, ...item, rating: item.play_count }"
+            ></video-card>
           </template>
         </dx-hoc-list>
       </van-tab>

@@ -1,10 +1,17 @@
 <template>
-  <van-tabs ref="tabsRef" line-width="0" line-height="0" lazy-render swipeable animated :shrink="center" :class="[
-    classNames,
-    {
-      'zero-line': zeroLine
-    }
-  ]">
+  <van-tabs
+    ref="tabsRef"
+    lazy-render
+    swipeable
+    animated
+    :shrink="center"
+    :class="[
+      classNames,
+      {
+        'zero-line': zeroLine
+      }
+    ]"
+  >
     <template #nav-left>
       <slot name="left"></slot>
     </template>
@@ -72,27 +79,19 @@ defineExpose({
 
 <style lang="postcss">
 .dx-custom-tabs {
-  --van-tabs-nav-background: tranparent;
-  --dx-light-blue-color: #e6f4ff;
-
   .van-tabs__wrap {
     margin-bottom: v-bind(gap);
   }
-
   .van-tab {
     padding: 0 9px;
   }
-
   .van-tab {
     transition: transform 0.2s;
   }
-
   .van-tab--active {
-    color: #151515;
-    font-weight: 600;
+    transform: scale(1.1);
   }
-
-  &__button>.van-tabs__wrap {
+  &__button > .van-tabs__wrap {
     .van-tab {
       padding: 0;
       font-size: 14px;
@@ -103,12 +102,10 @@ defineExpose({
         line-height: 22px;
       }
     }
-
     .van-tabs__line {
       width: 0;
       height: 0;
     }
-
     .van-tab--active {
       .van-tab__text {
         color: var(--dx-primary-color);
@@ -118,38 +115,35 @@ defineExpose({
     }
   }
 
-  &--static>.van-tabs__wrap {
+  &--static > .van-tabs__wrap {
     .van-tabs__nav {
       /* padding-bottom: 0; */
       align-items: center;
     }
   }
-
-  &.text-lg>.van-tabs__wrap {
+  &.text-lg > .van-tabs__wrap {
     .van-tab__text {
       font-size: 17px;
     }
   }
-
-  &.text-medium>.van-tabs__wrap {
+  &.text-medium > .van-tabs__wrap {
     .van-tab__text {
       font-size: 15px;
     }
   }
-
-  &.text-normal>.van-tabs__wrap {
+  &.text-normal > .van-tabs__wrap {
     .van-tab__text {
       font-size: 14px;
     }
   }
 
-  &.text-mini>.van-tabs__wrap {
+  &.text-mini > .van-tabs__wrap {
     .van-tab__text {
       font-size: 13px;
     }
   }
 
-  &.first-no-padding>.van-tabs__wrap {
+  &.first-no-padding > .van-tabs__wrap {
     .van-tab:first-child {
       margin-left: -8px;
     }
@@ -162,14 +156,13 @@ defineExpose({
     }
   }
 }
-
-.dx-custom-tabs--center>.van-tabs__wrap {
+.dx-custom-tabs--center > .van-tabs__wrap {
   .van-tabs__nav {
     justify-content: center;
   }
 }
 
-.dx-custom-tabs--sticky>.van-tabs__wrap {
+.dx-custom-tabs--sticky > .van-tabs__wrap {
   position: sticky;
   top: 0;
   left: 0;

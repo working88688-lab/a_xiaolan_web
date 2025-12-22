@@ -171,18 +171,7 @@ export default defineAppConfig({
       name: 'myinvite',
       path: `/myinvite`,
 
-      meta: {
-        title: '邀请好友',
-        theme: {
-          page: {
-            background: '#F8FAFF'
-          }
-        },
-        nav: {
-          rightTitle: '我的邀请',
-          to: '/invite-records'
-        }
-      }
+      meta: { title: '邀请好友' }
     },
     {
       name: 'invite',
@@ -195,7 +184,7 @@ export default defineAppConfig({
       name: 'invite-records',
       path: `/invite-records`,
 
-      meta: { title: '我的邀请' }
+      meta: { title: '邀请记录' }
     },
     {
       name: 'promotion',
@@ -377,16 +366,13 @@ export default defineAppConfig({
     },
     {
       name: 'comics',
-      path: `/comics`,
-      meta: {
-        trackPageName: '漫画详情'
-      }
+      path: `/comics`
     },
     {
       name: 'category',
       path: `/category`,
 
-      meta: { title: '小蓝片库', keepalive: true }
+      meta: { title: '更多分类', keepalive: true }
     },
     {
       name: 'story',
@@ -507,8 +493,7 @@ export default defineAppConfig({
       name: 'Tag',
       path: '/tag',
       meta: {
-        keepalive: true,
-        trackPageName: '标签'
+        keepalive: true
       }
     },
     {
@@ -587,86 +572,17 @@ export default defineAppConfig({
       meta: {
         trackPageName: '线路超时'
       }
-    },
-    {
-      name: 'tiktok',
-      path: '/tiktok',
-      meta: {
-        bottom: true,
-        keepalive: true,
-        trackPageName: '短视频'
-      }
-    },
-    {
-      name: 'discover-list',
-      path: '/home/discover-list',
-      meta: {
-        keepalive: true,
-        title: '发现精彩'
-      }
-    },
-    {
-      name: 'short-player',
-      path: '/short-player',
-      meta: { keepalive: true, trackPageName: '短视频播放' }
-    },
-    {
-      name: 'search-result',
-      path: '/search/result',
-      meta: { keepalive: true, trackPageName: '搜索结果' }
-    },
-    {
-      name: 'ai-face',
-      path: '/ai/face',
-      meta: {
-        keepalive: true,
-        title: '图片换脸',
-        nav: {
-          rightTitle: '我的记录',
-          to: '/ai/record?_index=1'
-        }
-      }
-    },
-    {
-      name: 'replace-face',
-      path: '/ai/replace',
-      meta: {
-        title: '',
-        keepalive: true,
-        trackPageName: '图片换脸',
-        nav: {
-          rightTitle: '我的记录',
-          to: '/ai/record?_index=1'
-        }
-      }
-    },
-    {
-      name: 'ai-record',
-      path: '/ai/record',
-      meta: {
-        keepalive: true,
-        title: '图片换脸',
-        trackPageName: '换脸记录'
-      }
-    },
-    {
-      name: 'preview-face',
-      path: '/ai/preview-face',
-      meta: {
-        title: '',
-        trackPageName: '换脸预览'
-      }
     }
   ],
 
-  lines: ['https://api.yjrvwdy.cc/pwa.php'],
+  lines: ['https://api.mrwzjek.xyz/pwa.php'],
   // 接口配置
   api: {
-    baseURL: 'https://api.yjrvwdy.cc/pwa.php',
-    reportURL: 'https://api.yjrvwdy.cc/api/report/batch',
+    baseURL: 'https://api.mrwzjek.xyz/pwa.php',
+    reportURL: 'https://api.mrwzjek.xyz/api/report/batch',
     withCredentials: false,
     timeout: 50000,
-    version: '4.9.7',
+    version: '4.9.6',
     contentType: 'application/x-www-form-urlencoded'
   },
 
@@ -681,20 +597,6 @@ export default defineAppConfig({
         router: `/home`
       },
       {
-        title: '短视频',
-        value: 'tiktok',
-        icon: '/images/tabbar/tiktok.png',
-        iconselect: '/images/tabbar/tiktokActive.png',
-        router: `/tiktok`
-      },
-      {
-        title: '暗网',
-        value: 'darkweb',
-        icon: '/images/tabbar/darkweb.png',
-        iconselect: '/images/tabbar/darkwebActive.png',
-        router: `/darkweb`
-      },
-      {
         title: '片库',
         value: 'original',
         icon: '/images/tabbar/original.png',
@@ -707,6 +609,13 @@ export default defineAppConfig({
         icon: '/images/tabbar/community.png',
         iconselect: '/images/tabbar/communityActive.png',
         router: `/community`
+      },
+      {
+        title: '暗网',
+        value: 'darkweb',
+        icon: '/images/tabbar/darkweb.png',
+        iconselect: '/images/tabbar/darkwebActive.png',
+        router: `/darkweb`
       },
       {
         title: '我的',

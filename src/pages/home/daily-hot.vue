@@ -1,14 +1,26 @@
 <template>
   <div :key="key" class="container">
-    <dx-navbar class="my-nav-bar" :border="false" title="今日热点" left-arrow @click-right="showCalendar = true"
-      @click-left="__.$Back">
+    <dx-navbar
+      class="my-nav-bar"
+      :border="false"
+      title="今日热点"
+      left-arrow
+      @click-right="showCalendar = true"
+      @click-left="__.$Back"
+    >
       <template #right>
         <vue-calendar v-model="params.date"></vue-calendar>
       </template>
     </dx-navbar>
     <div class="scroll-container">
-      <dx-hoc-list v-if="key" refresh-result class="dx-grid-2 pb-1.5" :api="__.$Api.Discover.daily_video"
-        :params="params" :show-end="false">
+      <dx-hoc-list
+        v-if="key"
+        refresh-result
+        class="dx-grid-2 pb-1.5"
+        :api="__.$Api.Discover.daily_video"
+        :params="params"
+        :show-end="false"
+      >
         <template #banner="{ data }">
           <div class="daily_mv_title sticky top-0 bg-white">
             <img src="~/assets/image/discover/day_hot_bgi.png" />
@@ -63,7 +75,6 @@ const { key } = useKeepAlive({
   color: #428af7;
   font-size: 0.42rem;
   font-weight: 500;
-
   img {
     z-index: -1;
     position: absolute;
@@ -76,12 +87,10 @@ const { key } = useKeepAlive({
     height: 0.96rem;
   }
 }
-
 .daily_mv_item_text {
   font-size: 0.35rem;
   line-height: 1.3;
 }
-
 .daily_mv_item_img {
   height: 107px;
 }

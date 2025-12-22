@@ -1,7 +1,12 @@
 <template>
   <div class="container">
-    <dx-navbar class="custom-nav-bar" :border="false" :title="pageData?.title?.length > 15 ? '图集详情' : pageData?.title"
-      left-arrow @click-left="__.$Back"></dx-navbar>
+    <dx-navbar
+      class="custom-nav-bar"
+      :border="false"
+      :title="pageData?.title?.length > 15 ? '图集详情' : pageData?.title"
+      left-arrow
+      @click-left="__.$Back"
+    ></dx-navbar>
     <div class="scroll-container">
       <scroll-list v-model:loading="loading" :is-ready="!loading">
         <img v-for="(item, _index) in pageData?.series" :key="_index" v-lazyLoad="item.img_url_full" src="" alt="" />
@@ -13,8 +18,11 @@
           <div v-if="pageData?.is_pay === 0 && pageData.coins > 0" class="no-right" @click="handleBuyAction">
             购买即可看全套{{ pageData?.total }}张
           </div>
-          <div v-else-if="pageData?.is_pay === 0 && pageData?.coins == 0 && !pageData?.has_right" class="no-right"
-            @click="handleVipAction">
+          <div
+            v-else-if="pageData?.is_pay === 0 && pageData?.coins == 0 && !pageData?.has_right"
+            class="no-right"
+            @click="handleVipAction"
+          >
             会员可看全套{{ pageData?.total }}张
           </div>
           <div v-else>全套{{ pageData?.total }}张</div>
@@ -24,7 +32,7 @@
             <img :src="pageData?.is_like ? DetailLikeActiveIcon : DetailLikeIcon" />
             <span>{{ $Utils.formatNumber(pageData?.favorites ?? 0) }}</span>
           </div>
-          <dx-link to="/myinvite" class="ml-1 flex items-center">
+          <dx-link to="/invite" class="ml-1 flex items-center">
             <div class="mr-0.5 h-[22px] w-[22px]">
               <img src="~/assets/image/home/share.png" />
             </div>
@@ -161,7 +169,6 @@ onBeforeMount(async () => {
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
 }
-
 .atlas-content {
   box-shadow: 0 0 13px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -174,7 +181,6 @@ onBeforeMount(async () => {
     flex: 1;
     align-items: center;
     margin-right: 0.5rem;
-
     .no-right {
       padding: 9.5px 17.5px 9px 17px;
       border-radius: 35px;
@@ -183,18 +189,15 @@ onBeforeMount(async () => {
       background-image: linear-gradient(to top, #ffce73, #ffe7bc);
     }
   }
-
   .right {
     display: flex;
     flex-direction: row;
     align-items: center;
-
     .action {
       display: flex;
       flex-direction: row;
       align-items: center;
       padding: 0.2rem;
-
       img {
         width: 0.6rem;
         height: 0.6rem;
