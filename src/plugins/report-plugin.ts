@@ -169,7 +169,7 @@ export default defineNuxtPlugin((nuxtApp) => {
               'Content-Type': Tracker._ctx.bury_point.is_encryption ? 'application/x-www-form-urlencoded' : 'application/json',
               'Cf-Ray-Xf': encryptSecret(Tracker._ctx.bury_point.authentication_key, Tracker._ctx.bury_point.authentication_time)
             },
-            body: Tracker._ctx.bury_point.is_encryption ? Tracker._ctx.createSign({ [`${Tracker._ctx.bury_point.sign_key}`]: batchBody }, Tracker._ctx.bury_point.encryption_key, Tracker._ctx.bury_point.encryption_iv, Tracker._ctx.bury_point.sign_key) : JSON.stringify(batchBody)
+            body: Tracker._ctx.bury_point.is_encryption ? Tracker._ctx.createSign(batchBody, Tracker._ctx.bury_point.encryption_key, Tracker._ctx.bury_point.encryption_iv, Tracker._ctx.bury_point.sign_key) : JSON.stringify(batchBody)
           }) : Promise.resolve();
 
         queue.push({ taskFn, resolve, reject });

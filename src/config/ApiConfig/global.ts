@@ -63,14 +63,8 @@ export default defineNuxtPlugin(async () => {
   const globalStore = useGlobalStore()
   const userStore = useUserStore()
 
-  function createSign(data = {}, keyString: string, ivString: string, signKey: string) {
-    const _data = JSON.stringify({
-      ...app.$Oauth.data(),
-      ...data,
-      system_token: useUserStore().token
-    })
-    console.log('_data: ', _data)
-    return app.$CryptoData.encryptReportParamsBrowser(_data, { keyString, ivString, signKey })
+  function createSign(data = [], keyString: string, ivString: string, signKey: string) {
+    return app.$CryptoData.encryptReportParamsBrowser(data, { keyString, ivString, signKey })
   }
   app.$Tracker.init({
     channel: userStore.u.build_id,
