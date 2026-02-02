@@ -9,7 +9,7 @@ export const formatNumber = (num: number | string, local?: Local) => {
   num = Number.isNaN(num) ? 0 : num
   local = local || 'en'
   const unitMap = {
-    'zh-cn': formatNumberWithChineseUnit,
+    'zh-cn': formatNumberWithUnit,
     en: formatNumberWithUnit
   }
   return unitMap[local](num)
@@ -39,29 +39,21 @@ function formatNumberWithChineseUnit(number: number) {
   // 返回带单位的格式化数字
   return `${formattedNumber}${units[unitIndex]}`
 }
+
+function toFixedFloor(num: number, digits: number) {
+  const factor = Math.pow(10, digits)
+  return (Math.floor(num * factor) / factor).toFixed(digits)
+}
 function formatNumberWithUnit(number: number) {
   if (number < 0) {
     return 0
   }
-  // 定义单位和对应的数字范围
-  const units = ['', 'k', 'M', 'G', 'T']
-  const unitThreshold = 1000
-
-  // 初始化单位索引和初始值
-  let unitIndex = 0
-  let formattedNumber = number
-
-  // 循环直到找到合适的单位
-  while (formattedNumber >= unitThreshold && unitIndex < units.length - 1) {
-    formattedNumber /= unitThreshold
-    unitIndex++
+  let formattedNumber = number + ''
+  if (number >= 10000) {
+    formattedNumber = toFixedFloor(number / 10000, 1) + 'W'
   }
 
-  // 保留一位小数，并且去掉多余的0
-  formattedNumber = parseFloat(formattedNumber.toFixed(1))
-
-  // 返回带单位的格式化数字
-  return `${formattedNumber}${units[unitIndex]}`
+  return formattedNumber
 }
 
 export const getYearMonthDay = (str, lang, time) => {

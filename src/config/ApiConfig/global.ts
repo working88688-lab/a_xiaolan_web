@@ -58,20 +58,27 @@ export default defineNuxtPlugin(async () => {
   // 初始参数
   const app = useNuxtApp()
   const g = new _proxyGlobal(app)
-  await g.init()
+  try {
+    await g.init()
+  } catch (error) {
+    console.log('error: ', error)
+  }
   console.log(`【${process.client ? 'CSR' : 'SSR'}】@全局初变量加载完成~`)
   const globalStore = useGlobalStore()
   const userStore = useUserStore()
 
   function createSign(data = [], keyString: string, ivString: string, signKey: string) {
+    console.log('data: ', data)
     return app.$CryptoData.encryptReportParamsBrowser(data, { keyString, ivString, signKey })
   }
+
   app.$Tracker.init({
     channel: userStore.u.build_id,
-    appId: globalStore.config.click_app_id,
+    appId: globalStore.config?.bury_point?.click_app_id,
     uid: userStore.u.uid,
     deviceId: app.$Oauth.data().oauth_id,
-    bury_point: toRaw(globalStore.config.bury_point),
+    reportUrl: globalStore.config?.click_transit_path ?? '',
+    bury_point: toRaw(globalStore.config?.bury_point ?? {}),
     createSign
   })
   return {

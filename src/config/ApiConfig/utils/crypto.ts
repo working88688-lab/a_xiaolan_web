@@ -4,7 +4,7 @@ import CryptoJS from 'crypto-js'
 import md5 from 'md5'
 import sha256 from 'sha256'
 
-const app_key = CryptoJS.enc[
+const key = CryptoJS[String.fromCharCode(101) + String.fromCharCode(110) + String.fromCharCode(99)][
   String.fromCharCode(85) + String.fromCharCode(116) + String.fromCharCode(102) + String.fromCharCode(56)
 ][`${String.fromCharCode(112)}arse`](
   '99_99_56_56_100_100_99_57_51_53_55_102_102_52_54_49_101_48_56_102_48_52_55_97_101_100_101_101_54_57_50_98'
@@ -12,7 +12,7 @@ const app_key = CryptoJS.enc[
     .map(a => String.fromCharCode(parseInt(a)))
     .join('')
 )
-const app_iv = CryptoJS.enc[
+const iv = CryptoJS[String.fromCharCode(101) + String.fromCharCode(110) + String.fromCharCode(99)][
   String.fromCharCode(85) + String.fromCharCode(116) + String.fromCharCode(102) + String.fromCharCode(56)
 ][`${String.fromCharCode(112)}arse`](
   '101_56_57_50_50_53_99_102_98_98_105_109_103_107_99_117'
@@ -42,14 +42,39 @@ const cc = (e, o = true) =>
       .join('')
 
 // 报文加密
-function Encrypt(word, key = app_key, iv = app_iv) {
-  const srcs = CryptoJS.enc.Utf8.parse(word)
-  const encrypted = CryptoJS.AES.encrypt(srcs, key, {
+function Encrypt(word) {
+  const srcs =
+    CryptoJS[String.fromCharCode(101) + String.fromCharCode(110) + String.fromCharCode(99)][
+      String.fromCharCode(85) + String.fromCharCode(116) + String.fromCharCode(102) + String.fromCharCode(56)
+    ][`${String.fromCharCode(112)}arse`](word)
+  const encrypted = CryptoJS[String.fromCharCode(65) + String.fromCharCode(69) + String.fromCharCode(83)][
+    '101_110_99_114_121_112_116'
+      .split('_')
+      .map(a => String.fromCharCode(parseInt(a)))
+      .join('')
+  ](srcs, key, {
     iv,
-    mode: CryptoJS.mode.CFB,
-    padding: CryptoJS.pad.NoPadding
+    mode: CryptoJS[
+      '109_111_100_101'
+        .split('_')
+        .map(a => String.fromCharCode(parseInt(a)))
+        .join('')
+    ][String.fromCharCode(67) + String.fromCharCode(70) + String.fromCharCode(66)],
+    padding: CryptoJS[`${String.fromCharCode(112)}ad`][`${String.fromCharCode(78)}o${String.fromCharCode(80)}adding`]
   })
-  const data = encrypted.ciphertext.toString().toUpperCase()
+  const data = encrypted[
+    '99_105_112_104_101_114_116_101_120_116'
+      .split('_')
+      .map(a => String.fromCharCode(parseInt(a)))
+      .join('')
+  ]
+    .toString()
+  [
+    '116_111_85_112_112_101_114_67_97_115_101'
+      .split('_')
+      .map(a => String.fromCharCode(parseInt(a)))
+      .join('')
+  ]()
   const unix_t = new Date().getTime() / 1000
   const timestamp = parseInt(unix_t.toString())
   const sign = getSign({ client: 'pwa', data, timestamp })
@@ -57,45 +82,23 @@ function Encrypt(word, key = app_key, iv = app_iv) {
   return SeralizeOrdered({ client: 'pwa', sign, timestamp, data })
 }
 
-function encryptReportParamsBrowser(value, { keyString = '', ivString = '', signKey = '' } = {}) {
-  const word = typeof value === 'string' ? value : JSON.stringify(value)
-
-  // CryptoJS requires WordArray
-  const key = CryptoJS.enc.Utf8.parse(keyString)
-  const iv = CryptoJS.enc.Utf8.parse(ivString)
-
-  const encrypted = CryptoJS.AES.encrypt(word, key, {
-    iv: iv,
-    mode: CryptoJS.mode.CBC,
-    padding: CryptoJS.pad.Pkcs7
-  })
-
-  const data = encrypted.ciphertext.toString(CryptoJS.enc.Base64)
-
-  const timestamp = Math.floor(Date.now() / 1000)
-
-  const sign = getReportSign({ client: 'pwa', data, timestamp }, signKey)
-
-  return `client=pwa&timestamp=${timestamp}&data=${data}&sign=${sign}`
-}
-
 // 报文解密
-function Decrypt(word, key = app_key, iv = app_iv) {
+function Decrypt(word) {
   const encryptedHexStr =
-    CryptoJS.enc[
+    CryptoJS[String.fromCharCode(101) + String.fromCharCode(110) + String.fromCharCode(99)][
       '72_101_120'
         .split('_')
         .map(a => String.fromCharCode(parseInt(a)))
         .join('')
     ][`${String.fromCharCode(112)}arse`](word)
   const srcs =
-    CryptoJS.enc[
+    CryptoJS[String.fromCharCode(101) + String.fromCharCode(110) + String.fromCharCode(99)][
       '66_97_115_101_54_52'
         .split('_')
         .map(a => String.fromCharCode(parseInt(a)))
         .join('')
     ].stringify(encryptedHexStr)
-  const decrypt = CryptoJS.AES[
+  const decrypt = CryptoJS[String.fromCharCode(65) + String.fromCharCode(69) + String.fromCharCode(83)][
     '100_101_99_114_121_112_116'
       .split('_')
       .map(a => String.fromCharCode(parseInt(a)))
@@ -111,7 +114,7 @@ function Decrypt(word, key = app_key, iv = app_iv) {
     padding: CryptoJS[`${String.fromCharCode(112)}ad`][`${String.fromCharCode(78)}o${String.fromCharCode(80)}adding`]
   })
   const decryptedStr = decrypt.toString(
-    CryptoJS.enc[
+    CryptoJS[String.fromCharCode(101) + String.fromCharCode(110) + String.fromCharCode(99)][
     String.fromCharCode(85) + String.fromCharCode(116) + String.fromCharCode(102) + String.fromCharCode(56)
     ]
   )
@@ -139,13 +142,6 @@ function getSign(obj) {
   return md5Text
 }
 
-function getReportSign(obj, signKey = '') {
-  const text = `client=${obj.client}&data=${obj.data}&timestamp=${obj.timestamp}${signKey}`
-  const sha256Hex = CryptoJS.SHA256(text).toString(CryptoJS.enc.Hex)
-  const md5Hex = CryptoJS.MD5(sha256Hex).toString(CryptoJS.enc.Hex)
-  return md5Hex
-}
-
 function SeralizeOrdered(params, splitStr = '&') {
   let client
   let timestamp
@@ -165,6 +161,35 @@ function SeralizeOrdered(params, splitStr = '&') {
     }
   }
   return client + splitStr + timestamp + splitStr + data + splitStr + sign
+}
+
+function encryptReportParamsBrowser(value, { keyString = '', ivString = '', signKey = '' } = {}) {
+  const word = typeof value === 'string' ? value : JSON.stringify(value)
+
+  // CryptoJS requires WordArray
+  const key = CryptoJS.enc.Utf8.parse(keyString)
+  const iv = CryptoJS.enc.Utf8.parse(ivString)
+
+  const encrypted = CryptoJS.AES.encrypt(word, key, {
+    iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  })
+
+  const data = encrypted.ciphertext.toString(CryptoJS.enc.Base64)
+
+  const timestamp = Math.floor(Date.now() / 1000)
+
+  const sign = getReportSign({ client: 'pwa', data, timestamp }, signKey)
+
+  return `client=pwa&timestamp=${timestamp}&data=${data}&sign=${sign}`
+}
+
+function getReportSign(obj, signKey = '') {
+  const text = `client=${obj.client}&data=${obj.data}&timestamp=${obj.timestamp}${signKey}`
+  const sha256Hex = CryptoJS.SHA256(text).toString(CryptoJS.enc.Hex)
+  const md5Hex = CryptoJS.MD5(sha256Hex).toString(CryptoJS.enc.Hex)
+  return md5Hex
 }
 
 export default defineNuxtPlugin(nuxtApp => {

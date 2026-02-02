@@ -17,7 +17,7 @@ const props = defineProps<{
         :touch-move-stop-propagation="true" :loop="true" :autoplay="true" :space-between="0" :initial-slide="0"
         :centered-slides="true">
         <swiper-slide v-for="(item, index) in props.items" :key="item.id">
-          <ad-link class="my-swipe-item" :data="item" ad-key="float" ad-type="popup" :index ad-name="浮窗">
+          <ad-link class="my-swipe-item" :data="item">
             <div class="aspect-h-1 aspect-w-1">
               <dx-image fit="fill" :src="item.img_url" no-bg :alt="item.title" />
             </div>

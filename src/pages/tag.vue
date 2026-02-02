@@ -1,10 +1,10 @@
 <script lang="tsx">
 import type { DFetchListOption } from '@types'
 
-import CateItem from '~/components/home/cate-item.vue'
+import CateItem from '~/components/pages/home/cate-item.vue'
 import VideoCard from '~/components/my/video-card.vue'
-
 import originalIcon from '~/assets/image-icon/original.png'
+import TikTokItem from '~/components/pages/tiktok/video-tiktok-item.vue'
 
 interface PageModuleConfig {
   config: (_params: any) => DFetchListOption
@@ -14,6 +14,7 @@ interface PageModuleConfig {
   props?: Record<string, any>
   rewrite_props?: (item: any) => any
   sortKey?: string
+  restProps?: (...args: any[]) => any
 }
 
 interface PageModule {
@@ -70,7 +71,7 @@ export default defineComponent({
       },
       user: {
         config: (_params = {}) => ({
-          api: __.$Api.User.userVideos,
+          api: 'api/users/videos',
           params: {
             ...get_url_query(),
             ..._params
@@ -122,6 +123,48 @@ export default defineComponent({
         className: 'dx-grid-2',
         props: {
           lines: true
+        }
+      },
+      video: {
+        config: (_params = {}) => ({
+          api: __.$Api.Home.new_mv_tag,
+          params: {
+            ...get_url_query(),
+            ..._params
+          },
+          adConfig: {
+            key: 'list_ads'
+          }
+        }),
+        component: VideoCard,
+        className: 'dx-grid-2',
+        props: {
+          lines: true
+        }
+      },
+      tiktok: {
+        config: (_params = {}) => ({
+          api: __.$Api.Home.new_mv_tag,
+          params: {
+            ...get_url_query(),
+            ..._params
+          }
+        }),
+        component: TikTokItem,
+        className: 'dx-grid-3',
+        props: {
+          showTitle: true
+        },
+        restProps({ item, items, page, index, _params = {} }) {
+          return {
+            index,
+            list: items,
+            api: '/api/tabnew/listOfTag',
+            params: {
+              page: page.page,
+              ..._params
+            }
+          }
         }
       },
       anime: {
@@ -179,13 +222,15 @@ export default defineComponent({
       }
     } as PageModule
 
-    const { mv_find_tab, mv_nag_tab, mv_original_tab: original_tag, cartoon_tab } = useGlobalStore()
+    const { mv_find_tab, mv_nag_tab, mv_original_tab: original_tag, cartoon_tab, mv_tag_tab } = useGlobalStore()
     const TABS = {
       find: mv_find_tab,
       home: mv_nag_tab,
       discover: mv_find_tab,
       anime: cartoon_tab,
-      original_tag
+      original_tag,
+      video: mv_tag_tab,
+      tiktok: mv_tag_tab
     }
 
     const module = computed(() => {
@@ -199,15 +244,20 @@ export default defineComponent({
 
       return route.query.has_sort === '0' ? null : TABS[type]
     })
-    const { key } = useKeepAlive({})
+    const { key } = useKeepAlive({
+      reset() {
+        activeTab.value = 0
+      }
+    })
 
     const render_list = (_params = {}) => {
       const slots = {
-        item: ({ item }: any) => {
+        item: ({ item, items, index, page }: any) => {
           return h(module.value.component, {
             key: item.id,
             item: module.value.rewrite_props ? module.value.rewrite_props(item) : item,
-            ...(module.value?.props ?? {})
+            ...(module.value?.props ?? {}),
+            ...(module.value?.restProps ? module.value?.restProps({ item, index, items, page, _params }) : {})
           })
         }
       }

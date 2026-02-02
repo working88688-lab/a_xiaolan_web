@@ -29,10 +29,21 @@ export class HistoryDb extends Dexie {
       novel: 'id, _userID, _watch_at',
       image: 'id, _userID, _watch_at',
       post: 'id, _userID, _watch_at',
-      comic: 'id, _userID, _watch_at'
+      comic: 'id, _userID, _watch_at',
+      tiktok: 'id, _userID, _watch_at'
     })
   }
 }
 
 export const historyDb = new HistoryDb()
-export type Tables = 'game' | 'video' | 'original' | 'collect' | 'cartoon' | 'novel' | 'image' | 'post' | 'comic'
+export type Tables =
+  | 'game'
+  | 'video'
+  | 'original'
+  | 'collect'
+  | 'cartoon'
+  | 'novel'
+  | 'image'
+  | 'post'
+  | 'comic'
+  | 'tiktok'

@@ -1,150 +1,100 @@
-<!-- 
+<!--
     desc: 搜索
-    date: 2024.03.28
+    date: 2024.05.2
 -->
-<template>
-  <div class="dx dx-flex dx-flex-col container">
-    <dx-navbar right-text="搜索" :border="false" left-arrow @click-left="onBack" @click-right="onSearch">
-      <template #title>
-        <form action="/">
-          <van-search v-model="searchValue" autofocus clear-trigger="always" class="search-input"
-            placeholder="可搜索用户/视频/喜好" @search="onSearch"></van-search>
-        </form>
-      </template>
-    </dx-navbar>
-    <div class="search-container flex-1 overflow-hidden">
-      <search-result v-if="showResult" v-model:active="activeTab" :text="searchValue"></search-result>
-      <search-list v-show="!showResult" :list="searchHistory" @search="onHistrySearch"
-        @clear="onClearHistory"></search-list>
-    </div>
-  </div>
-</template>
-
 <script lang="ts" setup>
-/**
- * 当前实例
- */
 const __ = useNuxtApp()
-const searchValue = ref('')
+
 const searchHistory = ref<Array<string>>([])
-const showResult = ref(false)
-const SEARCH_HISTORY_BLUE = 'SEARCH_HISTORY_BLUE'
-const activeTab = ref(0)
 const route = useRoute()
-/**
- * 状态声明
- */
+const router = useRouter()
+const search_ref = ref()
+const main_tab = ref(0)
+const render_sidebar = ref(false)
 
-const onSearch = () => {
-  const _searchvalue = searchValue.value
+function onSearch(new_value: string) {
+  router.push(`/search/result?keyword=${new_value}&_index=${route.query._index || 0}`)
 
-  if (!_searchvalue) {
-    return __.$Toast('请输入关键字')
-  }
-  console.log(1)
-  showResult.value = false
-  if (!searchHistory.value.includes(_searchvalue) && _searchvalue.length >= 2) {
-    console.log(2)
-    const _searchlist = [...searchHistory.value, _searchvalue]
-    localStorage.setItem(SEARCH_HISTORY_BLUE, _searchlist.toString())
-    searchHistory.value = [..._searchlist]
-  }
-  console.log(3)
   nextTick(() => {
-    showResult.value = true
-  })
-}
-const onClear = () => {
-  activeTab.value = 0
-}
-const onBack = () => {
-  __.$Back()
-  nextTick(() => {
-    searchValue.value = ''
-    showResult.value = false
-    // activeTab.value = 0
-  })
-}
-
-const onHistrySearch = (val: string) => {
-  searchValue.value = val
-  showResult.value = true
-}
-
-const onClearHistory = () => {
-  searchHistory.value = []
-  localStorage.setItem(SEARCH_HISTORY_BLUE, '')
-}
-
-watch(
-  () => searchValue.value,
-  val => {
-    if (!val) {
-      showResult.value = false
+    if (!searchHistory.value.includes(new_value)) {
+      searchHistory.value = [...searchHistory.value, new_value]
     }
-  }
-)
 
-// 初始入口
-onBeforeMount(() => {
-  const history = localStorage.getItem(SEARCH_HISTORY_BLUE)
-  if (history) {
-    searchHistory.value = [...history.split(',')]
+    search_ref.value?.set_value()
+  })
+}
+
+function onBack() {
+  router.back()
+  nextTick(() => {
+    main_tab.value = 0
+  })
+}
+
+function onHistorySearch(val: string) {
+  search_ref.value?.saveHistory(val)
+  router.push(`/search/result?keyword=${val}&_index=${route.query._index || 0}`)
+}
+
+function onClearHistory() {
+  searchHistory.value = []
+  localStorage.setItem(SEARCH_HISTORY_KEY, '')
+}
+
+watchEffect(() => {
+  if (main_tab.value) {
+    render_sidebar.value = true
   }
 })
 
 onActivated(() => {
-  if (activeTab.value === 0) {
-    activeTab.value = Number(route.query._index ?? 0)
+  const history = localStorage.getItem(SEARCH_HISTORY_KEY)
+  if (history) {
+    searchHistory.value = [...history.split(',')]
+  }
+  const _type = route.query._type
+
+  if (_type) {
+    main_tab.value = Number(_type)
   }
 })
-
-useActivatiedEventListener(window, 'popstate', onClear)
 </script>
 
-<style lang="less">
-@import '@styles/search.less';
-</style>
+<template>
+  <div class="container">
+    <dx-navbar class="nav-search" :border="false" left-arrow @click-left="onBack" @click-right="onSearch">
+      <template #title>
+        <app-search ref="search_ref" @search="onSearch" />
+      </template>
+    </dx-navbar>
+    <div class="scroll-container">
+      <search-list :list="searchHistory" @search="onHistorySearch" @clear="onClearHistory" />
+    </div>
+  </div>
+</template>
 
-<style lang="less" scoped>
-.container {
-  .search-input {
-    background-color: #f6f7f8;
-    border-radius: 30px;
-    height: 36px;
-    padding: 0 15px;
+<style lang="postcss" scoped>
+:deep(.van-tabs__nav) {
+  padding-top: 7px;
+}
+
+.nav-search {
+  --van-nav-bar-height: 60px;
+
+  :deep(.van-nav-bar__left) {
+    position: static;
+    padding-right: 0;
+    padding-left: 0.25rem;
   }
-}
 
-:deep(.van-nav-bar__content) {
-  margin: 0.3rem 0;
-  height: 36px;
-}
-
-:deep(.van-nav-bar__title) {
-  max-width: 100%;
-  width: 250px;
-
-  input {
-    color: #777;
-    font-size: 14px;
-    display: flex;
+  :deep(.van-nav-bar__title) {
     flex: 1;
-    border: none;
-    background-color: transparent;
+    margin: unset;
+    max-width: unset;
+  }
+
+  :deep(.van-search__action) {
     font-weight: normal;
-  }
-
-  input::placeholder {
-    color: #777;
-  }
-
-  .van-icon.van-icon-search {
-    color: #969799;
-  }
-
-  .van-search__content {
-    padding-left: 0;
   }
 }
 </style>

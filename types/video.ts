@@ -27,6 +27,9 @@ export interface VideoItem {
   url?: string
   tags: string
   duration: number
+  video_type_id: number
+  video_tag_key: string
+  video_type_name: string
 }
 
 export interface VideoData {
@@ -63,6 +66,10 @@ export interface OriginalItem {
   video_id: number
   like_count: number
   videos: Array<VideoEpisode>
+  duration: number
+  video_type_id: number
+  video_tag_key: string
+  video_type_name: string
 }
 
 export interface OriginalData {

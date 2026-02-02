@@ -22,7 +22,7 @@ class Oauth {
 
     _this.instance = true
     _this.oauth_type = 'pwa'
-    const parmas = new URLSearchParams(location.search)
+    const params = new URLSearchParams(location.search.replaceAll('&amp;', '&'))
     // 封装
     const getdata = () => {
       return {
@@ -30,7 +30,8 @@ class Oauth {
         version: config.api.version,
         oauth_type: _this.oauth_type,
         oauth_id: _this.oauth_id,
-        trace_id: parmas.get('trace_id') || ''
+        trace_id: params.get('trace_id') || '',
+        aff_x_code: params.get('aff_code') || ''
       }
     }
 

@@ -43,7 +43,10 @@ const props = defineProps<{
               v-link="`/${props.type}?id=${cardItem.id}`" class="graphic-information">
               <div class="content">
                 <div class="thumb"><dx-image :src="cardItem.thumb_full" /></div>
+
+                <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
               </div>
+
               <div class="truncate">{{ cardItem.title }}</div>
             </div>
             <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
@@ -67,8 +70,9 @@ const props = defineProps<{
             class="graphic-information-common">
             <div class="thumb">
               <dx-image :src="cardItem.thumb_full" />
+              <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
             </div>
-            <div class="line-clamp-2">{{ cardItem.title }}</div>
+            <div class="line-clamp-1">{{ cardItem.title }}</div>
           </div>
           <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
         </div>
@@ -90,8 +94,9 @@ const props = defineProps<{
             class="graphic-information-common">
             <div class="thumb">
               <dx-image :src="cardItem.thumb_full" />
+              <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
             </div>
-            <div class="line-clamp-2">{{ cardItem.title }}</div>
+            <div class="line-clamp-1">{{ cardItem.title }}</div>
           </div>
           <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
         </div>
@@ -245,10 +250,11 @@ const props = defineProps<{
   .graphic-information-common {
     .thumb {
       width: 100%;
-      height: 4.5rem;
+      height: 4rem;
       border-radius: 5px;
       margin-bottom: 0.2rem;
       overflow: hidden;
+      position: relative;
     }
   }
 }
@@ -261,6 +267,7 @@ const props = defineProps<{
       border-radius: 5px;
       margin-bottom: 0.2rem;
       overflow: hidden;
+      position: relative;
     }
   }
 }

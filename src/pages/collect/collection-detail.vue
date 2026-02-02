@@ -19,24 +19,15 @@
         <span class="collection-desp" v-html="data.info?.desp?.replaceAll('\n', '<br/>')"></span>
       </div>
       <div class="flex gap-1">
-        <dx-button
-          :round="false"
-          class="flex-1"
-          :class="data.info?.is_like ? '!text-[#ffde00]' : '!text-white'"
-          @click="toggle"
-        >
+        <dx-button :round="false" class="flex-1" :class="data.info?.is_like ? '!text-[#ffde00]' : '!text-white'"
+          @click="toggle">
           <van-icon name="star" size="0.5rem" class="mr-0.5" />
           <template v-if="data.info?.is_like">已收藏</template>
           <template v-else>收藏合集</template>
         </dx-button>
 
-        <van-button
-          :loading="buy_loading"
-          class="flex-1"
-          :disabled="disabled_buy"
-          color="linear-gradient(to left, rgb(254,207,66),  rgb(254,183,27))"
-          @click="before_buy"
-        >
+        <van-button :loading="buy_loading" class="flex-1" :disabled="disabled_buy"
+          color="linear-gradient(to left, rgb(254,207,66),  rgb(254,183,27))" @click="before_buy">
           <span class="text-[#8c4d10]">
             <template v-if="data.info?.coins">
               {{ disabled_buy ? '已购买' : '购买合集' }}
@@ -48,13 +39,8 @@
     </div>
     <div class="scroll-container">
       <scroll-list v-model:loading="loading" :is-empty="data.list ? data.list.length === 0 : true">
-        <stack-link
-          v-for="(item, index) in data.list"
-          :key="index"
-          stack-key="colloect-detail"
-          :list="data.list"
-          :index="index"
-        >
+        <stack-link v-for="(item, index) in data.list" :key="index" stack-key="colloect-detail" :list="data.list"
+          :index="index">
           <div class="search-videoItem">
             <div class="search-videoCover">
               <dx-image :src="item.cover_thumb_url" />
@@ -95,7 +81,10 @@ const { to_recharge } = useReachage()
 const { value: buyLayer, open: showBuyLayer, close: closeBuyLayer } = useBoolean()
 const { value: shareLayer, open: showShare, close: closeShare } = useBoolean()
 const { data, execute, loading } = useMyFetch<CollectDetail>({
-  api: __.$Api.collect.mvlist
+  api: __.$Api.collect.mvlist,
+  success() {
+    useDb('collect', toRaw(data.value.info))
+  }
 })
 const disabled_buy = computed(() => {
   // 收费视频
@@ -171,10 +160,12 @@ onDeactivated(() => {
   padding: 0.3rem;
   font-size: 12px;
   color: #333;
+
   .collection-video-info {
     display: flex;
     flex-direction: row;
     align-items: center;
+
     .video-cover {
       width: 5rem;
       height: 2.8rem;
@@ -182,16 +173,20 @@ onDeactivated(() => {
       overflow: hidden;
       margin-right: 0.2rem;
     }
+
     .video-info {
       flex: 1;
+
       p {
         font-size: 0.4rem;
       }
+
       .collection-user {
         display: flex;
         flex-direction: row;
         align-items: center;
         margin: 0.2rem 0;
+
         .avatar {
           width: 0.5rem;
           height: 0.5rem;
@@ -202,14 +197,17 @@ onDeactivated(() => {
       }
     }
   }
+
   .collection-desp-container {
     margin: 0.2rem 0;
     line-height: 1.5;
+
     .collection-desp {
       font-size: 0.36rem;
       color: #666;
     }
   }
+
   .collection-is-like {
     text-align: center;
     font-size: 0.36rem;
@@ -221,11 +219,13 @@ onDeactivated(() => {
     flex-direction: row;
     align-items: center;
     justify-content: center;
+
     .islike {
       display: flex;
       flex-direction: row;
       align-items: center;
       justify-content: center;
+
       img {
         width: 0.4rem;
         height: 0.4rem;
@@ -237,12 +237,14 @@ onDeactivated(() => {
 .search-videoItem {
   padding: 0.2rem 0.3rem 0.3rem;
   display: flex;
+
   .search-videoCover {
     width: 5rem;
     height: 2.6rem;
     position: relative;
     border-radius: 5px;
     margin-right: 0.3rem;
+
     img {
       width: 100%;
       height: 100%;
@@ -250,6 +252,7 @@ onDeactivated(() => {
       position: relative;
       z-index: 1;
     }
+
     span {
       position: absolute;
       z-index: 2;
@@ -267,25 +270,30 @@ onDeactivated(() => {
     display: flex;
     flex: 1;
     flex-direction: column;
+
     .need-coins {
       color: var(--dx-yellow-color);
     }
+
     .time {
       font-size: 12px !important;
       max-width: 100% !important;
       width: 100%;
     }
+
     p {
       font-size: 14px;
       line-height: 1.5;
       text-align: left;
       margin-bottom: 4px;
     }
+
     .avatar {
       width: 24px !important;
       height: 24px !important;
       border-radius: 50%;
     }
+
     div {
       display: flex;
       align-items: center;

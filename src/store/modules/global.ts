@@ -2,6 +2,7 @@
  * desc: 基础数据管理
  * date: 2024.03.28
  */
+import type { TabItem } from '@types'
 import type { GlobalState } from '@types'
 
 const globalStore = defineStore('global', {
@@ -15,6 +16,9 @@ const globalStore = defineStore('global', {
     navbarTitle: '' //全局导航栏标题，优先显示这个，没有就展示页面路由自带的标题
   }),
   getters: {
+    mv_short_find_tab(): any {
+      return this.config.mv_short_find_tab?.map(item => ({ name: item.sort, title: item.name }))
+    },
     mv_find_tab(): any {
       return this.config.mv_find_tab?.map(item => ({ name: item.sort, title: item.name }))
     },
@@ -29,6 +33,15 @@ const globalStore = defineStore('global', {
     },
     cartoon_tab(): any[] {
       return this.config.cartoon_tab?.map(item => ({ name: item.sort, title: item.name }))
+    },
+    dy_tab(): TabItem[] {
+      return this.config.dy_tab
+    },
+    ai_tab(): Array<{ name: string; sort: number }> {
+      return this.config.ai_tab
+    },
+    mv_tag_tab(): any {
+      return this.config.mv_tag_tab?.map(item => ({ name: item.sort, title: item.name }))
     }
   },
   // 提交状态

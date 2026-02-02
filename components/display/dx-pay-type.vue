@@ -9,7 +9,7 @@ export default defineComponent({
 
   setup(props) {
     return () => (
-      <span class={`rounded-sm px-0.5 text-mini text-white ${props.coins ? 'is-coin' : 'is-vip'}`}>
+      <span class={`z-10 rounded-sm px-0.5 text-mini text-white ${props.coins ? 'is-coin' : 'is-vip'}`}>
         {props.coins ? '金币' : 'VIP'}
       </span>
     )

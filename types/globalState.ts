@@ -1,4 +1,4 @@
-import type { AdItem } from '@types'
+import type { AdItem, TabItem } from '@types'
 export type SortType = {
   name: string
   sort: string
@@ -19,6 +19,8 @@ export interface GlobalState {
     pop_ads_v2?: Array<AdItem>
 
     mv_find_tab: SortType[]
+    mv_short_find_tab: SortType[]
+    mv_tag_tab: SortType[]
     mv_nag_tab: SortType[]
     mv_original_tab: SortType[]
     cartoon_tab: SortType[]
@@ -40,6 +42,16 @@ export interface GlobalState {
     }>
     apps: Array<AdItem>
 
+    dy_tab: TabItem[]
+
+    activity: {
+      content: string
+      jump_type: 0 | 1 | 2 // 0 VIP页面 1 外部跳转链接 2 内部跳转链接
+      jump_val: string
+      time_left: number
+    }
+    search_hot_keywords: string
+    ai_tab: any[]
     click_app_id?: string
     click_transit_path: string
 

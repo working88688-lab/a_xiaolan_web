@@ -46,8 +46,28 @@ const {
   refresh: videoRefresh,
   reset: videosReset
 } = useFetchList<VideoItem>({
-  api: __.$Api.User.userVideos,
-  startRefreshEmptyData: true
+  api: 'api/users/videos',
+  startRefreshEmptyData: true,
+  params: {
+    show_type: 0
+  }
+})
+
+const {
+  listData: shorts,
+  loading: shortsLoading,
+  isEmpty: shortsEmpty,
+  isEnd: shortsEnd,
+  execute: shortsMore,
+  refresh: shortsRefresh,
+  reset: shortsReset,
+  page
+} = useFetchList<VideoItem>({
+  api: 'api/users/videos',
+  startRefreshEmptyData: true,
+  params: {
+    show_type: 1
+  }
 })
 
 const {
@@ -77,25 +97,31 @@ const {
 })
 
 const fetchMap = {
-  '0': () =>
+  '2': () =>
     likeMore({
       uid: route.query.id,
       kwy: likeSearch.value
     }),
-  '1': () =>
+  '3': () =>
     buyMore({
       uid: route.query.id,
       kwy: buySearch.value
     }),
-  '3': () =>
+  '4': () =>
     postMore({
       aff: route.query.id,
       kwy: postSearch.value
     }),
-  '2': () =>
+  '0': () =>
     videoMore({
       uid: route.query.id,
       kwy: videoSearch.value
+    }),
+
+  '1': () =>
+    shortsMore({
+      uid: route.query.id,
+      kwy: postSearch.value
     })
 }
 
@@ -106,21 +132,25 @@ const onRender = (type: keyof typeof fetchMap) => {
 }
 
 const clearMap = {
-  '0': () =>
+  '2': () =>
     likeRefresh({
       uid: route.query.id
     }),
-  '1': () =>
+  '3': () =>
     buyRefresh({
       uid: route.query.id
     }),
 
-  '3': () =>
+  '4': () =>
     postRefresh({
       aff: route.query.id
     }),
-  '2': () =>
+  '0': () =>
     videoRefresh({
+      uid: route.query.id
+    }),
+  '1': () =>
+    shortsRefresh({
       uid: route.query.id
     })
 }
@@ -133,23 +163,23 @@ const onClear = (type: keyof typeof clearMap) => {
 }
 
 const searchMap = {
-  '0': () =>
+  '2': () =>
     likeRefresh({
       uid: route.query.id,
       kwy: likeSearch.value
     }),
-  '1': () =>
+  '3': () =>
     buyRefresh({
       uid: route.query.id,
       kwy: buySearch.value
     }),
 
-  '2': () =>
+  '0': () =>
     videoRefresh({
       kwy: videoSearch.value,
       uid: route.query.id
     }),
-  '3': () =>
+  '4': () =>
     postRefresh({
       aff: route.query.id,
       kwy: postSearch.value
@@ -170,6 +200,7 @@ const back = () => {
   videosReset()
   likeReset()
   buyReset()
+  shortsReset()
 }
 onActivated(() => {
   window.addEventListener('popstate', back)
@@ -205,88 +236,101 @@ const is_show_bg = computed(() => {
 </script>
 <template>
   <div v-if="uid" :key="uid" class="container">
-    <dx-navbar
-      :title="is_show_bg ? userInfo?.nickname : ''"
-      class="transition-all duration-200"
-      :class="is_show_bg ? 'bg-white' : 'transparent'"
-      :border="false"
-    ></dx-navbar>
+    <dx-navbar style="--van-nav-bar-z-index: 10" :title="is_show_bg ? userInfo?.nickname : ''"
+      class="transition-all duration-200" :class="is_show_bg ? '!bg-white' : 'transparent'" :border="false"></dx-navbar>
 
     <scroll-list ref="list" :is-ready="!loading" class="mt-[-50px]">
       <div class="homepage-user-header">
         <div class="user-info-header">
-          <img class="background-bg" src="~/assets/image/homepage_bg.png" />
           <div class="user-info-detail">
             <div class="avatar"><img :key="userInfo?.avatar_url" v-lazyLoad="userInfo?.avatar_url" /></div>
-            <div class="flex-1">
-              <div class="nickname">{{ userInfo?.nickname }}</div>
-              <div class="vip-info">
-                <vip-icon :data="userInfo"></vip-icon>
-                <div v-if="userInfo?.auth_level >= 4" class="auth-level">
-                  <img src="~/assets/image/creator.png" />
-                  <span>制片人LV.{{ userInfo?.auth_level }}</span>
+            <div class="mt-0.5 flex-1">
+              <div class="nickname flex items-start">
+                <span class="w-[104px]">
+                  {{ userInfo?.nickname }}
+                </span>
+                <div class="vip-info !ml-1">
+                  <vip-icon :data="userInfo"></vip-icon>
+                  <div v-if="userInfo?.auth_level >= 4" class="auth-level">
+                    <img src="~/assets/image/creator.png" />
+                    <span>制片人LV.{{ userInfo?.auth_level }}</span>
+                  </div>
                 </div>
               </div>
+
               <div class="uid">ID:{{ userInfo?.uid }}</div>
             </div>
           </div>
-        </div>
-        <div class="number_info">
-          <div v-link="`/fans?uid=${userInfo?.uid}`" class="number_item cursor-pointer">
-            <div class="number">{{ $Utils.formatNumber(userInfo?.fans_count ?? 0, 'en') }}</div>
-            <div class="title">粉丝</div>
+          <div v-if="userInfo?.person_signnatrue" class="rz_text">
+            简介：
+            <div class="flex-1" v-html="userInfo.person_signnatrue.replaceAll('\n', '<br/>')"></div>
           </div>
-          <div class="number_item">
-            <div class="number">{{ userInfo.followed_count }}</div>
-            <div class="title">关注</div>
+          <div class="number_info">
+            <div v-link="`/fans?uid=${userInfo?.uid}`" class="number_item cursor-pointer">
+              <div class="number">{{ $Utils.formatNumber(userInfo?.fans_count ?? 0, 'en') }}</div>
+              <div class="title">粉丝</div>
+            </div>
+            <div class="number_item">
+              <div class="number">{{ userInfo.followed_count }}</div>
+              <div class="title">关注</div>
+            </div>
+            <div class="number_item">
+              <div class="number">{{ $Utils.formatNumber(userInfo?.fabulous_count ?? 0, 'en') }}</div>
+              <div class="title">点赞</div>
+            </div>
           </div>
-          <div class="number_item">
-            <div class="number">{{ $Utils.formatNumber(userInfo?.fabulous_count ?? 0, 'en') }}</div>
-            <div class="title">点赞</div>
-          </div>
-        </div>
-        <div v-if="userInfo?.person_signnatrue" class="rz_text">
-          <div class="flex-1" v-html="userInfo.person_signnatrue.replaceAll('\n', '<br/>')"></div>
         </div>
         <div class="user_page_box">
-          <dx-tabs
-            v-model:active="active"
-            class="dx-tabs first-no-padding"
-            line-width="20px"
-            shrink
-            sticky
-            @rendered="onRender"
-          >
-            <van-tab title="收藏">
+          <dx-tabs v-model:active="active" class="dx-tabs first-no-padding" line-width="20px" shrink sticky
+            @rendered="onRender">
+            <van-tab title="视频">
               <div class="container">
-                <van-search
-                  v-model="likeSearch"
-                  class="my-search"
-                  show-action
-                  shape="round"
-                  placeholder="请输入标题查找作品"
-                  clear-trigger="always"
-                  @search="onSearch('0')"
-                  @clear="onClear('0')"
-                >
+                <van-search v-model="videoSearch" class="my-search" show-action shape="round" clear-trigger="always"
+                  placeholder="请输入标题查找作品" @search="onSearch('0')" @clear="onClear('0')">
                   <template #action>
                     <div class="btn-search" @click="onSearch('0')">搜索</div>
                   </template>
                 </van-search>
                 <div class="scroll-container">
-                  <scroll-list
-                    v-model:loading="likeLoading"
-                    :is-end="likeEnd"
-                    :is-empty="likeEmpty"
-                    :pullup="fetchMap['0']"
-                  >
+                  <scroll-list v-model:loading="videoLoading" :pull-down-refresh="clearMap['0']" :is-end="videoEnd"
+                    :is-empty="videoEmpty" :pullup="fetchMap['0']">
                     <div class="grid grid-cols-2 gap-1 px-1">
-                      <video-card
-                        v-for="(item, index) in likes"
-                        :key="item.id"
-                        :index="index"
-                        :item="item"
-                      ></video-card>
+                      <video-card v-for="(item, index) in videos" :key="item.id" :list="videos" :index="index"
+                        :item="item"></video-card>
+                    </div>
+                  </scroll-list>
+                </div>
+              </div>
+            </van-tab>
+            <van-tab title="短视频">
+              <div class="container">
+                <scroll-list v-model:loading="shortsLoading" :pull-down-refresh="clearMap['1']" :is-end="shortsEnd"
+                  :is-empty="shortsEmpty" :pullup="fetchMap['1']">
+                  <div class="grid grid-cols-3 gap-1 px-1">
+                    <video-tiktok-item v-for="(item, index) in shorts" :key="item.id" :list="shorts" :index="index"
+                      :item="item" show-title api="api/users/videos" :params="{
+                        show_type: 1,
+                        page: page.page,
+                        uid: route.query.id
+                      }"></video-tiktok-item>
+                  </div>
+                </scroll-list>
+              </div>
+            </van-tab>
+            <van-tab title="收藏">
+              <div class="container">
+                <van-search v-model="likeSearch" class="my-search" show-action shape="round" placeholder="请输入标题查找作品"
+                  clear-trigger="always" @search="onSearch('2')" @clear="onClear('2')">
+                  <template #action>
+                    <div class="btn-search" @click="onSearch('2')">搜索</div>
+                  </template>
+                </van-search>
+                <div class="scroll-container">
+                  <scroll-list v-model:loading="likeLoading" :pull-down-refresh="clearMap['2']" :is-end="likeEnd"
+                    :is-empty="likeEmpty" :pullup="fetchMap['2']">
+                    <div class="grid grid-cols-2 gap-1 px-1">
+                      <video-card v-for="(item, index) in likes" :key="item.id" :index="index"
+                        :item="item"></video-card>
                     </div>
                   </scroll-list>
                 </div>
@@ -294,27 +338,15 @@ const is_show_bg = computed(() => {
             </van-tab>
             <van-tab title="购买">
               <div class="container">
-                <van-search
-                  v-model="buySearch"
-                  class="my-search"
-                  show-action
-                  shape="round"
-                  placeholder="请输入标题查找作品"
-                  clear-trigger="always"
-                  @search="onSearch('1')"
-                  @clear="onClear('1')"
-                >
+                <van-search v-model="buySearch" class="my-search" show-action shape="round" placeholder="请输入标题查找作品"
+                  clear-trigger="always" @search="onSearch('3')" @clear="onClear('3')">
                   <template #action>
-                    <div class="btn-search" @click="onSearch('1')">搜索</div>
+                    <div class="btn-search" @click="onSearch('3')">搜索</div>
                   </template>
                 </van-search>
                 <div class="scroll-container">
-                  <scroll-list
-                    v-model:loading="buyLoading"
-                    :is-end="buyEnd"
-                    :is-empty="buyEmpty"
-                    :pullup="fetchMap['1']"
-                  >
+                  <scroll-list v-model:loading="buyLoading" :pull-down-refresh="clearMap['3']" :is-end="buyEnd"
+                    :is-empty="buyEmpty" :pullup="fetchMap['3']">
                     <div class="grid grid-cols-2 gap-1 px-1">
                       <video-card v-for="(item, index) in buys" :key="item.id" :index="index" :item="item"></video-card>
                     </div>
@@ -322,65 +354,18 @@ const is_show_bg = computed(() => {
                 </div>
               </div>
             </van-tab>
-            <van-tab title="视频">
+
+            <van-tab title="发帖">
               <div class="container">
-                <van-search
-                  v-model="videoSearch"
-                  class="my-search"
-                  show-action
-                  shape="round"
-                  clear-trigger="always"
-                  placeholder="请输入标题查找作品"
-                  @search="onSearch('2')"
-                  @clear="onClear('2')"
-                >
+                <van-search v-model="postSearch" class="my-search" show-action shape="round" placeholder="请输入标题查找作品"
+                  clear-trigger="always" @search="onSearch('4')" @clear="onClear('4')">
                   <template #action>
-                    <div class="btn-search" @click="onSearch('2')">搜索</div>
+                    <div class="btn-search" @click="onSearch('4')">搜索</div>
                   </template>
                 </van-search>
                 <div class="scroll-container">
-                  <scroll-list
-                    v-model:loading="videoLoading"
-                    :is-end="videoEnd"
-                    :is-empty="videoEmpty"
-                    :pullup="fetchMap['2']"
-                  >
-                    <div class="grid grid-cols-2 gap-1 px-1">
-                      <video-card
-                        v-for="(item, index) in videos"
-                        :key="item.id"
-                        :list="videos"
-                        :index="index"
-                        :item="item"
-                      ></video-card>
-                    </div>
-                  </scroll-list>
-                </div>
-              </div>
-            </van-tab>
-            <van-tab title="帖子">
-              <div class="container">
-                <van-search
-                  v-model="postSearch"
-                  class="my-search"
-                  show-action
-                  shape="round"
-                  placeholder="请输入标题查找作品"
-                  clear-trigger="always"
-                  @search="onSearch('3')"
-                  @clear="onClear('3')"
-                >
-                  <template #action>
-                    <div class="btn-search" @click="onSearch('3')">搜索</div>
-                  </template>
-                </van-search>
-                <div class="scroll-container">
-                  <scroll-list
-                    v-model:loading="postLoading"
-                    :is-end="postEnd"
-                    :is-empty="postEmpty"
-                    :pullup="fetchMap['3']"
-                  >
+                  <scroll-list v-model:loading="postLoading" :is-end="postEnd" :pull-down-refresh="clearMap['4']"
+                    :is-empty="postEmpty" :pullup="fetchMap['4']">
                     <div class="dx-list">
                       <post-item v-for="item in posts" :key="item.id" show-original :item="item"></post-item>
                     </div>
@@ -393,27 +378,31 @@ const is_show_bg = computed(() => {
       </div>
     </scroll-list>
 
-    <div v-if="!isMyDetail" class="absolute bottom-3 left-0 right-0">
-      <div class="grid grid-cols-2 gap-3">
-        <btn-follow
-          :key="userInfo.uid"
-          class="place-self-end"
-          :attention="follow ? 1 : 0"
-          :uid="userInfo.uid"
-          use-toast
-        >
-          <template #default="{ text, follow: _follow }">
-            <dx-button color="linear-gradient(to right, #fd7023,  #fecf42)" class="w-[120px]">
-              <van-icon :name="_follow ? 'success' : 'plus'" />
-              {{ text }}
-            </dx-button>
-          </template>
-        </btn-follow>
-
-        <dx-button :to="`/chat/room?uid=${userInfo.uid}&name=${userInfo.nickname}`" class="w-[120px] place-self-start">
-          <van-icon name="chat" />
-          聊天
-        </dx-button>
+    <div v-if="!isMyDetail && !loading" class="absolute bottom-3 left-0 right-0">
+      <div class="flex items-center justify-around">
+        <div class="border-item">
+          <btn-follow :key="userInfo.uid" class="w-full place-self-end" :attention="follow ? 1 : 0" :uid="userInfo.uid"
+            use-toast>
+            <template #default="{ text, follow: _follow }">
+              <dx-button color="linear-gradient(to right, #FF0000,  #FDA03D)" :round="false">
+                <div class="flex w-full items-center">
+                  <nuxt-icon class="mr-0.5 text-[0.5rem]" name="my/like"></nuxt-icon>
+                  {{ text }}
+                </div>
+              </dx-button>
+            </template>
+          </btn-follow>
+        </div>
+        <div class="border-item">
+          <dx-button color="linear-gradient(to right, #00D0FF,  #3D9DFD)"
+            :to="`/chat/room?uid=${userInfo.uid}&name=${userInfo.nickname}`" :round="false"
+            class="w-full place-self-start">
+            <div class="flex items-center">
+              <nuxt-icon class="mr-0.5 text-[0.5rem]" name="my/chat"></nuxt-icon>
+              聊天
+            </div>
+          </dx-button>
+        </div>
       </div>
     </div>
   </div>
@@ -421,37 +410,52 @@ const is_show_bg = computed(() => {
 
 <style lang="less" scoped>
 .dx-tabs {
+  --van-tabs-nav-background: #fff;
+
   :deep(.van-tab__text) {
     font-size: 14px;
   }
+
   :deep(.van-tabs__wrap) {
     top: 0px;
   }
 }
+
 .transparent {
   color: #fff;
 }
+
 .homepage-user-header {
+  --van-tabs-nav-background: #fff;
   width: 100%;
+
   .user-info-header {
+    background-image: url(@/assets/image/user/user-bg.png);
     position: relative;
     width: 100%;
-    min-height: 4.3rem;
+    padding-top: 128px;
 
-    .background-bg {
+    &::after {
       position: absolute;
       top: 0;
-      width: 100%;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: block;
+      backdrop-filter: blur(3px);
+      content: '';
     }
 
     .user-info-detail {
-      position: absolute;
-      bottom: 0;
       width: 100%;
       padding: 0 0.3rem;
       display: flex;
       flex-direction: row;
       align-items: center;
+      position: relative;
+      z-index: 1;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
 
       .avatar {
         width: 2.2rem;
@@ -460,18 +464,18 @@ const is_show_bg = computed(() => {
         border: 2px solid white;
         overflow: hidden;
         margin-right: 0.3rem;
-        margin-bottom: -0.4rem;
+        margin-top: -28px;
       }
 
       .nickname {
         font-size: 0.4rem;
-        color: white;
       }
 
       .uid {
         font-size: 0.32rem;
-        color: white;
         padding-bottom: 0.1rem;
+        color: #919191;
+        margin-top: 2px;
       }
 
       .vip-info {
@@ -510,25 +514,27 @@ const is_show_bg = computed(() => {
     display: flex;
     flex-direction: row;
     align-items: center;
-    margin-top: 0.5rem;
-    padding: 0.32rem;
+    padding: 4px 12px 12px;
+    position: relative;
+    z-index: 1;
+    background: #fff;
+    justify-content: space-between;
 
     .number_item {
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      margin-right: 0.5rem;
 
       .number {
-        font-size: 0.5rem;
+        font-size: 14px;
         font-weight: bold;
         color: #333;
       }
 
       .title {
-        color: #999999;
-        font-size: 0.4rem;
+        color: #919191;
+        font-size: 12px;
         // margin-top: 0.266rem;
       }
     }
@@ -537,15 +543,17 @@ const is_show_bg = computed(() => {
 
 .rz_text {
   display: flex;
-  color: #777;
+  color: #919191;
   flex-direction: row;
   align-items: flex-start;
-  padding: 0 0.32rem;
   font-size: 12px;
-  margin-bottom: 12px;
+  background-color: #fff;
+  position: relative;
+  z-index: 1;
+  padding: 6px 12px 10px;
 }
+
 .user_page_box {
-  flex: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -553,13 +561,34 @@ const is_show_bg = computed(() => {
   width: 100%;
   overflow: hidden;
 }
+
 .my-search {
   :deep(.van-cell) {
     font-size: 12px;
   }
 }
+
 .btn-search {
   font-size: 14px;
-  color: #428af7;
+  color: var(--dx-primary-color);
+}
+
+.border-item {
+  border: 2px solid rgba(255, 255, 255, 0.4) !important;
+  width: 110px;
+  border-radius: 50px;
+  overflow: hidden;
+
+  :deep(.van-button) {
+    width: 100%;
+  }
+
+  &:nth-child(1) {
+    margin-left: 24px;
+  }
+
+  &:nth-child(2) {
+    margin-right: 24px;
+  }
 }
 </style>

@@ -1,14 +1,7 @@
 <template>
   <div class="container relative">
-    <dx-tabs
-      v-model:active="activeTab"
-      shrink
-      center
-      swipeable
-      class="main-tabs dx-tabs primary-tabs"
-      line-width="30"
-      animated
-    >
+    <dx-tabs v-model:active="activeTab" shrink center swipeable class="main-tabs dx-tabs primary-tabs" line-width="30"
+      animated>
       <van-tab title="关注" name="follow">
         <follow-tab :data="data"></follow-tab>
       </van-tab>
@@ -21,7 +14,7 @@
       </van-tab>
     </dx-tabs>
     <nuxt-link :to="`/search?_index=${search_index}`" class="search-button">
-      <img src="~/assets/image/search.png" />
+      <nuxt-icon name="search" filled class="icon-search !text-[20px] !text-[#141414]"></nuxt-icon>
     </nuxt-link>
     <div class="float-btn">
       <publish-popup>
@@ -53,7 +46,7 @@ const { data, loading } = useMyFetch<{
 // })
 
 const index_map = {
-  recomment: 2,
+  recomment: 3,
   dating: 3,
   mh: 5,
   images: 6,
@@ -84,11 +77,6 @@ const onSwipe = (index: string) => {
   flex-shrink: 0;
   position: absolute;
   right: 0;
-  background-color: #fff;
-  padding: 12px;
-  img {
-    width: 18px;
-    height: 18px;
-  }
+  padding: 10px 10px 10px 10px;
 }
 </style>

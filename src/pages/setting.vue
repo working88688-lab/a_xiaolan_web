@@ -134,43 +134,52 @@ const unBind = () => {
   background: #fff;
   border-radius: 8px;
 }
+
 .logout-button {
   width: 6.5rem;
   margin: 2rem auto 0px;
   display: block;
 }
+
 .my-icon {
   width: 0.373rem;
   height: 0.373rem;
   margin-right: 0.427rem;
   object-fit: contain;
 }
+
 :deep(.van-cell) {
   align-items: center;
   height: 1.387rem;
   font-size: 14px;
 }
+
 .submit-container {
   margin: 0.32rem auto;
 }
+
 .invite-code {
   width: 5.333rem;
   border: 1px solid #999;
+
   :deep(.van-field__control) {
     text-align: center;
   }
 }
+
 .submit-button {
   width: 7.2rem;
   margin: 0.32rem auto;
   display: block;
 }
+
 .dx-justify-center {
   padding: 0.64rem 0;
   text-align: center;
 }
+
 .cover-body {
-  width: 7.5rem;
+  width: 100%;
   height: 10.5rem;
   background: center/cover no-repeat url('~/assets/image/my/bg_set_alert.png');
   border-radius: 0.2rem;

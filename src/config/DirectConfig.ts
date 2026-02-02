@@ -54,7 +54,15 @@ export default defineNuxtPlugin(nuxtApp => {
         })
       })
   }
-
+  const decrypted_handler = (el: HTMLImageElement) => {
+    el.classList.remove('loading')
+    el.dispatchEvent(
+      new CustomEvent('decrypted', {
+        bubbles: false, // 事件是否应该冒泡
+        cancelable: true, // 事件是否可以被取消
+      }),
+    )
+  }
   const groupHandler = (el, _img, group) => {
     if (group) {
       const index = Number(el.dataset.index)
@@ -71,7 +79,9 @@ export default defineNuxtPlugin(nuxtApp => {
 
   const cacheHandler = (el, _url, preview, group) => {
     el.setAttribute('src', _url)
-    el.onload = () => el.classList.remove('loading')
+    el.onload = () => {
+      decrypted_handler(el)
+    }
     // 分组预览
     groupHandler(el, _url, group)
     // 图片浏览
@@ -188,7 +198,7 @@ export default defineNuxtPlugin(nuxtApp => {
             })
 
             el.setAttribute('src', localImage)
-            el.onload = () => el.classList.remove('loading')
+            el.onload = () => decrypted_handler(el)
 
 
             Reflect.deleteProperty($GlobalObject['_CACHE_IMAGES_MAPS'][imglink], 'pending')

@@ -1,27 +1,20 @@
 <template>
-  <div
-    :style="{
-      width: `${size}rem`,
-      height: `${size}rem`
-    }"
-    :class="[`featured-avItem-avatar ${props.boxClass}`]"
-    @click.stop="toUserPage"
-  >
+  <div :style="{
+    width: `${size}rem`,
+    height: `${size}rem`
+  }" :class="[`featured-avItem-avatar ${props.boxClass}`]" @click.stop="toUserPage">
     <slot>
       <div :class="[`avItem-avatar ${props.avatarClass}`]">
         <img :key="props.img" v-lazyLoad="props.img" :src="loading" />
       </div>
     </slot>
 
-    <img
-      v-if="isCreater"
-      :style="{
-        width: `${size * 0.4}rem`,
-        height: `${size * 0.4}rem`
-      }"
-      :class="[`avItem-chuang ${props.iconClass}`]"
-      src="~/assets/image/creator.png"
-    />
+    <img v-if="isCreater" :style="{
+      width: `${size * 0.4}rem`,
+      height: `${size * 0.4}rem`
+    }" :class="[`avItem-chuang ${props.iconClass}`]" src="~/assets/image/creator.png" />
+
+    <slot name="badge"></slot>
   </div>
 </template>
 
@@ -63,15 +56,18 @@ const toUserPage = () => {
 .featured-avItem-avatar {
   position: relative;
 }
+
 .avItem-avatar {
   width: 100%;
   height: 100%;
   border-radius: 50%;
   overflow: hidden;
+
   img {
     object-fit: cover;
   }
 }
+
 .avItem-chuang {
   position: absolute;
   bottom: 0;

@@ -9,7 +9,8 @@ const playerStore = defineStore('player', {
   // 初始状态
   state: () => ({
     autoplayMuted: true,
-    danmuOpen: false
+    danmuOpen: false,
+    expand: true
   }),
 
   actions: {
@@ -18,6 +19,9 @@ const playerStore = defineStore('player', {
     },
     toggleDanmu() {
       this.danmuOpen = !this.danmuOpen
+    },
+    toggleExpand() {
+      this.expand = !this.expand
     }
   },
 

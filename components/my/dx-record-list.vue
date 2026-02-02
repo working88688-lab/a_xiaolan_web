@@ -19,6 +19,7 @@ const { loading, runTask } = useAsync({
   asyncTask: async () => {
     const res = await fetchDataFromIndexDB()
     items.value = [...res]
+    console.log(' items.value: ', items.value)
   }
 })
 

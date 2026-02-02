@@ -211,9 +211,9 @@ onBeforeRouteUpdate(async to => {
             video_id: data.detail?.video_id,
             video_title: data.detail?.title,
             video_tag_name: data.detail?.tags,
-            video_type_id: '',
-            video_type_name: '',
-            video_tag_key: '',
+            video_type_id: data.detail?.video_type_id,
+            video_type_name: data.detail?.video_type_name,
+            video_tag_key: data.detail?.video_type_name,
             duration: 0
           }" @preview-ended="onVideoEnd" />
       </template>
@@ -244,7 +244,7 @@ onBeforeRouteUpdate(async to => {
                 <dx-btn-like :id="data.detail?.id" :key="data.detail?.id" class="action-icon" align="row"
                   :like="data.detail?.is_like === 1" :likes="data.detail?.like_count" :api="API_MAP.like[mvType]"
                   :use-toast="false" size="0.6rem" icon="like-o" active-icon="like" active-color="#ff416a" />
-                <nuxt-link class="flex items-center" to="/invite">
+                <nuxt-link class="flex items-center" to="/myinvite">
                   <div class="mr-0.5 h-[28px] w-[28px]">
                     <img src="~/assets/image-icon/share-rect.png" />
                   </div>

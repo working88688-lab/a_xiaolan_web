@@ -15,6 +15,7 @@ type IApiMap = typeof Api
 
 type IApi = PromiseifyApi<IApiMap> & {
   dynamic: ApiLike
+  createApi: ApiLike
 }
 
 class HttpApi {
@@ -37,6 +38,8 @@ class HttpApi {
 
     //动态路径api
     _this.api.dynamic = this.createDyamicApi.bind(this)
+
+    _this.api.createApi = _this.api.dynamic
   }
   // 构建动态url api
   createDyamicApi(config = {}) {

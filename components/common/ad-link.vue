@@ -6,8 +6,8 @@
       ad_slot_key: props.data.advertise_location_code,
       ad_slot_name: props.data.ad_slot_name || name || props.data.title,
       ad_id: props.data.advertise_code,
-      creative_id: props.data.creative_id || '',
-      event: 'ad_click'
+      event: 'ad_click',
+      creative_id: props.data.creative_id || ''
     }
     ">
     <div ref="link" v-bind="$attrs" class="tracker-item cursor-pointer" @click="onClick">
@@ -83,7 +83,7 @@ const onClick = () => {
       toTagList(props.data.url)
       break
     case 3:
-      toWebView()
+      __.$NavigateTo(`/webview?url=${props.data.url}`)
       break
     case 4:
       toDetail(props.data.url)

@@ -57,7 +57,7 @@ const props = withDefaults(
 
 defineSlots<{
   list(props: { items: any[] }): any
-  item(props: { item: any; index: number; items: any[] }): any
+  item(props: { item: any; index: number; items: any[]; page: any }): any
   header(props: { data: any }): any
   banner(props: { data: any }): any
 }>()
@@ -162,8 +162,9 @@ defineExpose({
     <slot name="banner" :data="init_data"></slot>
     <div v-bind="$attrs">
       <slot name="header" :data="init_data"></slot>
-      <slot v-for="(item, index) in render_list" name="item" :items="render_list" :index="index" :item="item"></slot>
+      <slot v-for="(item, index) in render_list" name="item" :items="render_list" :page="page" :index="index"
+        :item="item"></slot>
     </div>
-    <slot name="list" :items="render_list"></slot>
+    <slot name="list" :items="render_list" :page="page"></slot>
   </scroll-list>
 </template>

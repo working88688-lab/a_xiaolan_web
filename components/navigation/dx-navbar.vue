@@ -7,7 +7,7 @@ export default defineComponent({
 
     const _slots = {
       left: () => {
-        return <nuxt-icon class='text-4xl' name='arrow-left'></nuxt-icon>
+        return <van-icon class='text-4xl' size='0.6rem' name='arrow-left'></van-icon>
       }
     }
     return () => (
@@ -27,6 +27,7 @@ export default defineComponent({
 .van-nav-bar {
   color: #4d4d4d;
   font-weight: 500;
+
   .van-nav-bar__title {
     font-weight: 500;
   }

@@ -16,7 +16,7 @@
       <div class="main-container">
         <slot />
       </div>
-      <dx-open-app v-show="bottom" />
+      <dx-open-app v-if="!showOpenApp" v-show="bottom" />
     </div>
     <!-- 缓存页面 end -->
 
@@ -34,6 +34,8 @@
 
 <script lang="ts" setup>
 const _route = useRoute()
+
+const showOpenApp = import.meta.env.DEV
 
 const top = computed(() => {
   return Reflect.has(_route?.meta ?? {}, 'title')
@@ -60,11 +62,16 @@ useEmitterListener('pay', _config => {
 #xblue-container {
   display: flex;
   flex-direction: column;
-  background: var(--dx-container-color);
+  background-color: var(--dx-container-color);
   width: 100%;
   height: 100%;
   z-index: 1;
   max-width: var(--device-width);
+  background-image: url(@/assets/image/banner.png);
+  background-position: top;
+  background-repeat: no-repeat;
+  background-size: contain;
+
   .xblue-header {
     background-color: var(--default-background-color);
   }
@@ -75,6 +82,7 @@ useEmitterListener('pay', _config => {
     height: 100%;
     flex: 1;
     position: relative;
+
     .main-container {
       width: 100%;
       height: 100%;
@@ -91,5 +99,6 @@ useEmitterListener('pay', _config => {
   width: 2.55rem;
   height: 2.55rem;
 }
+
 // 底部导航 end
 </style>

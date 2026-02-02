@@ -135,7 +135,7 @@ export const useFetchList = <T>({
         // @ts-ignore
         listData.value = [...listData.value, ..._data]
 
-        if (adConfig) {
+        if (adConfig && listData.value.length >= 10) {
           const merged = [...listData.value] // 拷贝一份
           const newAds = _get(res.data, adConfig.key, [])
           const adInsertIndex1 = (page.page - 1) * 20 + 9
@@ -211,7 +211,7 @@ export const useFetchList = <T>({
         data.value = [..._data]
         // @ts-ignore
         listData.value = [..._data]
-        if (adConfig) {
+        if (adConfig && listData.value.length >= 10) {
           const merged = [...listData.value] // 拷贝一份
           const newAds = _get(res.data, adConfig.key, [])
           const adInsertIndex1 = 9

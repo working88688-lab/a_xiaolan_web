@@ -98,26 +98,8 @@ const getImg = async () => {
   }
 }
 
-const getUrlParams = (key: string) => {
-  const currentUrl = window.location.href
-  const url = new URL(currentUrl)
-  const search_string = url.search || currentUrl.split('?')[1]
-  const searchParams = new URLSearchParams(search_string)
-  const _p = searchParams.get(key)
-  return _p
-}
-
 onMounted(() => {
   getImg()
-  //获取渠道参数. aff_code=a34&trace_id=trace_vx76n422nkom
-  const affCode = getUrlParams('aff_code')
-  if (affCode && !__.$Store.user.u.invite_by_code) {
-    __.$Api.User.invitation({
-      aff: affCode
-    }).then(() => {
-      __.$Store.user.info()
-    })
-  }
 })
 </script>
 
