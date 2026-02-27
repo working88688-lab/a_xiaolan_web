@@ -667,10 +667,10 @@ export default defineAppConfig({
     }
   ],
 
-  lines: ['https://api.xigujgk.xyz/pwa.php'],
+  lines: ['https://api.fdtpzgd.com/pwa.php'],
   // 接口配置
   api: {
-    baseURL: 'https://api.xigujgk.xyz/pwa.php',
+    baseURL: 'https://api.fdtpzgd.com/pwa.php',
     withCredentials: false,
     timeout: 50000,
     version: '4.9.7',
