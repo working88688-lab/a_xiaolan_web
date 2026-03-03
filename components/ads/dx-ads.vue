@@ -23,7 +23,6 @@ const rowTwoItems = computed(() => {
 
 <template>
   <div :key="props.items?.length" class="py-0.5" @touchstart.stop @touchmove.stop @touchend.stop>
-    {{ props.items?.length }}
     <div class="grid grid-cols-6 gap-x-1 gap-y-0.5">
       <ad-link v-for="(item, index) in rowOneItems" :key="item.id" :ad-key="props.adKey" :ad-name="props.adName"
         :ad-type="props.adType" :index class="my-swipe-item" :data="item">
@@ -35,7 +34,7 @@ const rowTwoItems = computed(() => {
         </div>
       </ad-link>
     </div>
-    <MarqueeInfinite v-if="rowTwoItems.length" :items="rowTwoItems" gap="0.25rem" class="mt-1">
+    <MarqueeInfinite v-if="rowTwoItems.length" :items="rowTwoItems" gap="0.32rem" class="mt-1">
       <template #item="{ item, index }">
         <ad-link :key="item.id" :ad-key="props.adKey" :ad-name="props.adName"
           :index="index >= 0 && index < rowTwoItems.length - 1 ? index + 5 : (index % rowTwoItems.length) + 5"

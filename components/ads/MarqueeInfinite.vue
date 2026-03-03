@@ -3,7 +3,7 @@
     @pointerleave="onPointerLeave" @pointerenter="onPointerEnter">
     <div ref="track" class="track" :style="trackStyle">
       <!-- 重复渲染多份以实现无缝循环 -->
-      <div v-for="(item, index) in renderItems" :key="index" class="item" :style="{ marginRight: props.gap }">
+      <div v-for="(item, index) in renderItems" :key="index" class="item">
         <slot name="item" :item="item" :index="index"></slot>
       </div>
     </div>
@@ -54,7 +54,7 @@ const baseItems = computed(() => props.items || [])
 const renderItems = computed(() => {
   const base = baseItems.value
   if (!base.length) return []
-  if (base.length <= 5) return base
+  if (base.length <= 6) return base
   const n = Math.max(2, Math.min(6, props.copies))
   const out = new Array(base.length * n)
   for (let i = 0; i < out.length; i++) out[i] = base[i % base.length]
@@ -66,7 +66,8 @@ const trackStyle = computed(() => {
   const x = -(((offsetX.value % w) + w) % w)
   return {
     transform: `translate3d(${x}px,0,0)`,
-    transition: 'none'
+    transition: 'none',
+    gap: props.gap
   }
 })
 
@@ -97,7 +98,7 @@ async function measure() {
   await nextTick()
   if (!track.value) return
   const total = track.value.scrollWidth
-  if (baseItems.value.length <= 5) {
+  if (baseItems.value.length <= 6) {
     unitWidth = Math.max(1, Math.round(total))
   } else {
     const n = Math.max(2, Math.min(6, props.copies))
@@ -123,7 +124,7 @@ function onPointerLeave(e) {
 
 /** Pointer 事件：按下立刻暂停；超过阈值才进入拖拽态并 capture 指针 */
 function onPointerDown(e) {
-  if (baseItems.value.length > 5) {
+  if (baseItems.value.length > 6) {
     pointerId = e.pointerId
     dragging.value = false
     moved = false
@@ -201,7 +202,7 @@ onMounted(async () => {
   mql?.addEventListener?.('change', handlePRM)
   handlePRM()
 
-  if (baseItems.value.length > 5) start()
+  if (baseItems.value.length > 6) start()
 })
 
 onBeforeUnmount(() => {
@@ -218,7 +219,7 @@ watch(
   () => [props.items, props.gap, props.copies, props.speed],
   async () => {
     await measure()
-    if (baseItems.value.length > 5) {
+    if (baseItems.value.length > 6) {
       start()
     } else {
       cancel()
