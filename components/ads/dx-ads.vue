@@ -30,7 +30,7 @@ const rowTwoItems = computed(() => {
         <div class="aspect-h-1 aspect-w-1 overflow-hidden rounded">
           <dx-image fit="fill" :src="item.img_url" :alt="item.title" />
         </div>
-        <div class="ad-title mt-[2px] max-w-full truncate text-center text-sm text-base2">
+        <div class="ad-title mt-[2px] max-w-full truncate text-center text-tiny text-base2">
           {{ item.title }}
         </div>
       </ad-link>
@@ -43,7 +43,7 @@ const rowTwoItems = computed(() => {
           <div class="aspect-h-1 aspect-w-1 overflow-hidden rounded">
             <dx-image fit="fill" :src="item.img_url" :alt="item.title" />
           </div>
-          <div class="ad-title mt-[2px] max-w-full truncate text-center text-sm text-base2">
+          <div class="ad-title mt-[2px] max-w-full truncate text-center text-tiny text-base2">
             {{ item.title }}
           </div>
         </ad-link>
