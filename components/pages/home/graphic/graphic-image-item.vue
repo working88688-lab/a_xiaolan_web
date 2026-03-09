@@ -10,17 +10,25 @@ const props = defineProps<{
   <dx-hoc-list :api="props.api" fields="data" :pullup="false">
     <template #header="{ data }">
       <dx-ads class="px-1.5" :ad-key="props.type" :ad-name="props.title" :items="data?.ads ?? []"></dx-ads>
-      <div class="graphic-filter-state between" :class="props.type === 'comics' ? 'icon-type-two' : 'icon-type-one'">
-        <div v-for="(_item, index) in data?.icon" :key="index" v-link="`/home/resource-filter?${format_url_params({
-          title: props.title,
-          _type: props.type,
-          type: _item.type,
-          key: _item.key
-        })}`
-          " class="graphic-filter-item">
-          <div class="icon"><dx-image no-bg :src="_item.icon" /></div>
-          <div class="title">{{ _item.name }}</div>
-        </div>
+      <div class="graphic-filter-state" :class="props.type === 'comics' ? 'icon-type-two' : 'icon-type-one'"
+        @touchmove.stop>
+        <scroll-x-view class="graphic-filter-state-scroll">
+          <div v-for="(_item, index) in data?.icon" :key="index" v-link="`/home/resource-filter?${format_url_params({
+            title: props.title,
+            _type: props.type,
+            type: _item.type,
+            key: _item.key
+          })}`
+            " class="graphic-filter-item">
+            <div class="icon"><dx-image no-bg :src="_item.icon" /></div>
+            <div class="title">{{ _item.name }}</div>
+          </div>
+        </scroll-x-view>
+        <nuxt-link :to="'/home/male-beauty-category'" class="graphic-filter-state-more">
+          <img class="icon" src="~/assets/image/home/icon_more.png" alt="" />
+
+          <div class="title">全部</div>
+        </nuxt-link>
       </div>
       <div class="graphic-line"></div>
     </template>
@@ -56,14 +64,14 @@ const props = defineProps<{
       <div v-else-if="card.show_style === 'V-3*N'" :key="index + 1" class="graphic-layout-item">
         <div class="graphic-index-title">
           <div class="title">{{ card.tab_name }}</div>
-          <nuxt-link :to="`/query?${format_url_params({
+          <!-- <nuxt-link :to="`/query?${format_url_params({
             tab: card.tab_id,
             title: card.tab_name,
             _type: props.type,
             _sort_key: 'order'
           })}`" class="more">
             查看更多 >
-          </nuxt-link>
+          </nuxt-link> -->
         </div>
         <div class="graphic-layout-three">
           <div v-for="(cardItem, cardIndex) in card?.items" :key="cardIndex" v-link="`/${props.type}?id=${cardItem.id}`"
@@ -75,6 +83,22 @@ const props = defineProps<{
             <div class="line-clamp-1">{{ cardItem.title }}</div>
           </div>
           <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
+        </div>
+        <div class="graphic-layout-bottom">
+
+          <div class="graphic-layout-bottom-button">
+            <img class="icon" src="~/assets/image/home/icon_refresh.png" alt="" />
+            <div class="title">换一换</div>
+          </div>
+          <nuxt-link :to="`/query?${format_url_params({
+            tab: card.tab_id,
+            title: card.tab_name,
+            _type: props.type,
+            _sort_key: 'order'
+          })}`" class="graphic-layout-bottom-button">
+            <img class="icon" src="~/assets/image/home/icon_more2.png" alt="" />
+            <div class="title">查看更多</div>
+          </nuxt-link>
         </div>
       </div>
       <div v-else-if="card.show_style === 'V-2*N'" :key="index + 2" class="graphic-layout-item">
@@ -89,7 +113,7 @@ const props = defineProps<{
             查看更多 >
           </nuxt-link>
         </div>
-        <div class="graphic-layout-two grid grid-cols-2 gap-1 px-1">
+        <div class="grid grid-cols-2 gap-1 px-1 graphic-layout-two">
           <div v-for="(cardItem, cardIndex) in card?.items" :key="cardIndex" v-link="`/${props.type}?id=${cardItem.id}`"
             class="graphic-information-common">
             <div class="thumb">
@@ -106,6 +130,62 @@ const props = defineProps<{
 </template>
 
 <style lang="postcss" scoped>
+.graphic-filter-state {
+  display: flex;
+
+  .graphic-filter-state-scroll {
+    flex: 1;
+
+    .graphic-filter-item {
+      display: inline-block;
+      width: 83px !important;
+      height: 40px !important;
+      border-radius: 7px !important;
+      overflow: hidden;
+      margin-right: 6px !important;
+
+      .icon {
+        width: 100% !important;
+        margin: 0 !important;
+        height: 100% !important;
+      }
+
+      .title {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff !important;
+        font-size: 14px;
+        text-shadow: 0px 0px 5px black;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .graphic-filter-state-more {
+
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 15px;
+
+    .icon {
+      width: 25px;
+      height: 25px;
+    }
+
+    .title {
+      font-size: 10px;
+      line-height: 100%;
+      letter-spacing: 0%;
+      text-align: center;
+    }
+  }
+}
+
 .graphic-filter-state.icon-type-one {
   width: 100%;
   display: flex;
@@ -255,6 +335,35 @@ const props = defineProps<{
       margin-bottom: 0.2rem;
       overflow: hidden;
       position: relative;
+    }
+  }
+}
+.graphic-layout-bottom{
+  
+  padding: 0 12px;
+  margin-top: 15px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+  justify-content: center;
+  .graphic-layout-bottom-button{
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 39px;
+    border-radius: 100px;
+    background-color: #F3F8FF;
+    .icon{
+      width: 20px;
+      height: 20px;
+    }
+    .title{
+      color: #333333;
+      font-size: 0.32rem;
     }
   }
 }
