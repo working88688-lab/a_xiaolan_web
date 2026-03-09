@@ -533,6 +533,15 @@ export default defineAppConfig({
       }
     },
     {
+      name: 'male-beauty-category',
+      path: '/home/male-beauty-category',
+      meta: {
+        keepalive: true,
+        title: '男色',
+        trackPageName: '男色'
+      }
+    },
+    {
       name: 'live-player',
       path: '/player/live',
       meta: {
