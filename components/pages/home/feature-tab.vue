@@ -50,6 +50,7 @@ const getTabs = async () => {
     const { data } = await __.$Api.Home.tab()
 
     tabState.tabs = data
+    console.log(data)
     updateActiveTab(data)
   } catch (error) {
   } finally {

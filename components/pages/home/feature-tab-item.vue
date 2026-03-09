@@ -49,6 +49,7 @@ const { listData, execute, loading, refresh, isEmpty, isEnd, result, isError, is
 
     if (!mid_style_recommend.value.length && result.value.data?.mid_style_recommend?.length) {
       mid_style_recommend.value = result.value.data.mid_style_recommend
+      console.log(result.value.data.mid_style_recommend)
     }
   },
   immediate: true,

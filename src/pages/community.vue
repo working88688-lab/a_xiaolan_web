@@ -8,6 +8,9 @@
       <van-tab title="原创" name="recomment">
         <recomment-tab :loading="loading" :data="data" :topics="data.topic" @swipe="onSwipe"></recomment-tab>
       </van-tab>
+      <van-tab title="同圈" name="scircle">
+        <scircle-tab :loading="loading" :data="data" :topics="data.topic" @swipe="onSwipe"></scircle-tab>
+      </van-tab>
 
       <van-tab title="求片" name="film">
         <film-tab></film-tab>

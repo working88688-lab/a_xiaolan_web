@@ -25,6 +25,8 @@
 const props = defineProps<{
   item?: any
 }>()
+console.log('sssssss:',props.item)
+
 
 const active = ref('day')
 const displayList = ref<{

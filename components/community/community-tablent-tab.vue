@@ -19,6 +19,7 @@
 const props = defineProps<{
   tabs?: any[]
 }>()
+
 const route = useRoute()
 
 const active = ref(Number(route.query.index))
