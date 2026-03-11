@@ -9,7 +9,7 @@ const props = defineProps<{
 <template>
   <dx-hoc-list :api="props.api" fields="data" :pullup="false">
     <template #header="{ data }">
-      <dx-ads class="px-1.5" :ad-key="props.type" :ad-name="props.title" :items="data?.ads ?? []"></dx-ads>
+      <dx-resource-ads class="px-1.5" :ad-key="props.type" :ad-name="props.title" :items="data?.ads ?? []"></dx-resource-ads>
       <div class="graphic-filter-state" :class="props.type === 'comics' ? 'icon-type-two' : 'icon-type-one'"
         @touchmove.stop>
         <scroll-x-view class="graphic-filter-state-scroll">
@@ -47,17 +47,19 @@ const props = defineProps<{
         </div>
         <div class="dx-list" @touchmove.stop>
           <scroll-x-view>
-            <div v-for="(cardItem, cardIndex) in card?.items" :key="cardIndex"
-              v-link="`/${props.type}?id=${cardItem.id}`" class="graphic-information">
-              <div class="content">
-                <div class="thumb"><dx-image :src="cardItem.thumb_full" /></div>
+            <div class="graphic-scroll-content">
+              <div v-for="(cardItem, cardIndex) in card?.items" :key="cardIndex"
+                v-link="`/${props.type}?id=${cardItem.id}`" class="graphic-information">
+                <div class="content">
+                  <div class="thumb"><dx-image :src="cardItem.thumb_full" /></div>
 
-                <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
+                  <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
+                </div>
+
+                <div class="truncate">{{ cardItem.title }}</div>
               </div>
-
-              <div class="truncate">{{ cardItem.title }}</div>
+              <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
             </div>
-            <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
           </scroll-x-view>
         </div>
       </div>
@@ -135,6 +137,7 @@ const props = defineProps<{
 
   .graphic-filter-state-scroll {
     flex: 1;
+    padding-left: 12px;
 
     .graphic-filter-item {
       display: inline-block;
@@ -259,6 +262,10 @@ const props = defineProps<{
   }
 }
 
+.graphic-layout-item {
+  margin-bottom: 14px;
+}
+
 .graphic-index-title {
   display: flex;
   flex-direction: row;
@@ -277,10 +284,14 @@ const props = defineProps<{
   }
 }
 
+.graphic-scroll-content {
+  display: flex;
+  gap: 14px;
+}
+
 .graphic-information {
-  display: inline-block;
-  margin-right: 0.3rem;
-  width: 2.6rem;
+  flex: 0 0 calc((100% - 4 * 14px) / 5);
+  min-width: 0;
   overflow: hidden;
   text-align: center;
 
@@ -313,7 +324,7 @@ const props = defineProps<{
     color: #333333;
     font-size: 0.32rem;
     white-space: nowrap;
-    width: 2.6rem;
+    width: 100%;
     text-overflow: ellipsis;
     overflow: hidden;
   }

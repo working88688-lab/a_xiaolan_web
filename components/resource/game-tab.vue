@@ -10,7 +10,7 @@ const activeTab = ref(0)
 <template>
   <dx-tabs v-model:active="activeTab" class="dx-tabs" shrink line-width="22px" gap="4px" line-height="2px">
     <van-tab v-for="tab in data.cates" :key="tab.id" :title="tab.title">
-      <dx-resource-list :api="tab.more_api" :tabs="data.flags.map(item => ({ name: item.key, title: item.name }))"
+      <dx-resource-list :api="tab.more_api" :tabs="data.flags.map((item: any) => ({ name: item.key, title: item.name }))"
         :params="{ ...tab.api_params, size: 12 }" :show-top-banner="false">
         <template #config>
           <dx-ads :items="data.ads" ad-key="game" ad-name="黄游"></dx-ads>
