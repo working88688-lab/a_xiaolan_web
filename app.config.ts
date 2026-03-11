@@ -667,10 +667,10 @@ export default defineAppConfig({
     }
   ],
 
-  lines: ['https://api.fsajqwld.com/pwa.php'],
+  lines: ['https://a.com'],
   // 接口配置
   api: {
-    baseURL: 'https://api.fsajqwld.com/pwa.php',
+    baseURL: 'https://a.com',
     withCredentials: false,
     timeout: 50000,
     version: '4.9.7',
