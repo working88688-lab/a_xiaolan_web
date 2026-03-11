@@ -54,9 +54,17 @@ const props = defineProps<{
                   <div class="thumb"><dx-image :src="cardItem.thumb_full" /></div>
 
                   <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
+                  
+                  <div class="graphic-info-stats">
+                    <div class="stat-item">
+                      <img class="stat-icon" src="~/assets/image-icon/view.png" alt="" />
+                      <span>{{ $Utils.formatNumber(cardItem.view_count || cardItem.rating || 0) }}</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>{{ cardItem.works_num || 0 }}张</span>
+                    </div>
+                  </div>
                 </div>
-
-                <div class="truncate">{{ cardItem.title }}</div>
               </div>
               <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
             </div>
@@ -82,7 +90,6 @@ const props = defineProps<{
               <dx-image :src="cardItem.thumb_full" />
               <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
             </div>
-            <div class="line-clamp-1">{{ cardItem.title }}</div>
           </div>
           <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
         </div>
@@ -115,14 +122,13 @@ const props = defineProps<{
             查看更多 >
           </nuxt-link>
         </div>
-        <div class="grid grid-cols-2 gap-1 px-1 graphic-layout-two">
+        <div class="grid grid-cols-2 gap-3.5 px-1 graphic-layout-two">
           <div v-for="(cardItem, cardIndex) in card?.items" :key="cardIndex" v-link="`/${props.type}?id=${cardItem.id}`"
             class="graphic-information-common">
             <div class="thumb">
               <dx-image :src="cardItem.thumb_full" />
               <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
             </div>
-            <div class="line-clamp-1">{{ cardItem.title }}</div>
           </div>
           <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
         </div>
@@ -286,23 +292,24 @@ const props = defineProps<{
 
 .graphic-scroll-content {
   display: flex;
-  gap: 14px;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .graphic-information {
-  flex: 0 0 calc((100% - 4 * 14px) / 5);
+  flex: 0 0 calc((100% - 3 * 14px) / 3.25);
   min-width: 0;
   overflow: hidden;
   text-align: center;
 
   .content {
     position: relative;
-    height: 3.8rem;
+    height: 4rem;
     margin-bottom: 0.2rem;
 
     .thumb {
       width: 100%;
-      height: 3.8rem;
+      height: 100%;
       border-radius: 5px;
       overflow: hidden;
       position: absolute;
@@ -327,6 +334,27 @@ const props = defineProps<{
     width: 100%;
     text-overflow: ellipsis;
     overflow: hidden;
+    margin-bottom: 0.15rem;
+  }
+
+  .graphic-info-stats {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.28rem;
+    color: #999999;
+    padding: 0 0.1rem;
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.05rem;
+
+      .stat-icon {
+        width: 0.3rem;
+        height: 0.3rem;
+      }
+    }
   }
 }
 
@@ -334,8 +362,8 @@ const props = defineProps<{
   padding: 0 12px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  grid-row-gap: 8px;
-  grid-column-gap: 8px;
+  grid-row-gap: 14px;
+  grid-column-gap: 14px;
   overflow: hidden;
 
   .graphic-information-common {
