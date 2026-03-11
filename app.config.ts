@@ -667,7 +667,7 @@ export default defineAppConfig({
     }
   ],
 
-  lines: ['https://a.com'],
+  lines: ['https://a.com', 'https://b.com'],
   // 接口配置
   api: {
     baseURL: 'https://a.com',
