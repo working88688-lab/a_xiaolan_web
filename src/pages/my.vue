@@ -7,8 +7,12 @@
     <scroll-list :pull-down-refresh="userStore.info">
       <div class="user-content">
         <div class="user-top">
-          <nuxt-icon v-link="`/my/notice?_index=1`" class="cursor-pointer text-[24px]" name="my/notice"
-            filled></nuxt-icon>
+          <nuxt-icon
+            v-link="`/my/notice?_index=1`"
+            class="cursor-pointer text-[24px]"
+            name="my/notice"
+            filled
+          ></nuxt-icon>
           <div v-if="user.message_tip > 0" class="mark" />
         </div>
 
@@ -147,6 +151,13 @@
         <!-- 导航 end -->
         <!-- 设置 start -->
         <div class="user-server-box">
+          <div class="user-server-item" @click="showProfilePopup = true">
+            <div class="user-server-item-left">
+              <nuxt-icon name="my/info" class="s-icon" filled></nuxt-icon>
+              <div class="user-server-item-title">我的资料</div>
+            </div>
+            <div class="user-server-item-right"></div>
+          </div>
           <div v-link="`/my/afilm`" class="user-server-item">
             <div class="user-server-item-left">
               <nuxt-icon name="my/want" class="s-icon" filled></nuxt-icon>
@@ -193,6 +204,7 @@
         <!-- 设置 end -->
       </div>
     </scroll-list>
+    <MyProfilePopup v-model:show="showProfilePopup" />
   </div>
 </template>
 
@@ -202,6 +214,7 @@ const userStore = useUserStore()
 const globalStore = useGlobalStore()
 const __ = useNuxtApp()
 const { u: user } = storeToRefs(userStore)
+const showProfilePopup = ref(false)
 
 const setVipLevelItem = () => {
   const _user = user.value
@@ -269,7 +282,6 @@ useSyncCacheData(cacheData => {
 }
 
 .user-server-box {
-
   .s-icon,
   .icon {
     margin-right: 6px;

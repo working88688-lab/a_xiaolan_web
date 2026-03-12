@@ -96,6 +96,14 @@ const {
   startRefreshEmptyData: true
 })
 
+// 临时 mock 3 个标签，方便查看样式；等后端 tags_ary 接好后可删除
+const userTags = computed(() => {
+  if (userInfo.value?.tags_ary && userInfo.value.tags_ary.length > 0) {
+    return userInfo.value.tags_ary
+  }
+  return ['攻受兼备', '奶狗', '幽默']
+})
+
 const fetchMap = {
   '2': () =>
     likeMore({
@@ -277,6 +285,16 @@ const is_show_bg = computed(() => {
             <div class="number_item">
               <div class="number">{{ $Utils.formatNumber(userInfo?.fabulous_count ?? 0, 'en') }}</div>
               <div class="title">点赞</div>
+            </div>
+          </div>
+
+          <div v-if="userTags.length" class="user-tags">
+            <div
+              v-for="tag in userTags"
+              :key="tag"
+              class="user-tag"
+            >
+              {{ tag }}
             </div>
           </div>
         </div>
@@ -537,6 +555,31 @@ const is_show_bg = computed(() => {
         font-size: 12px;
         // margin-top: 0.266rem;
       }
+    }
+  }
+
+  .user-tags {
+    width: 100%;
+    padding: 4px 12px 12px;
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    background: #fff;
+    position: relative;
+    z-index: 1;
+
+    .user-tag {
+      flex-shrink: 0;
+      padding: 3px 10px;
+      height: 24px;
+      line-height: 18px;
+      border-radius: 999px;
+      background: #e6f4ff;
+      font-size: 12px;
+      color: #3da7fd;
     }
   }
 }
