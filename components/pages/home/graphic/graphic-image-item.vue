@@ -9,7 +9,8 @@ const props = defineProps<{
 <template>
   <dx-hoc-list :api="props.api" fields="data" :pullup="false">
     <template #header="{ data }">
-      <dx-resource-ads class="px-1.5" :ad-key="props.type" :ad-name="props.title" :items="data?.ads ?? []"></dx-resource-ads>
+      <dx-resource-ads class="px-1.5" :ad-key="props.type" :ad-name="props.title"
+        :items="data?.ads ?? []"></dx-resource-ads>
       <div class="graphic-filter-state" :class="props.type === 'comics' ? 'icon-type-two' : 'icon-type-one'"
         @touchmove.stop>
         <scroll-x-view class="graphic-filter-state-scroll">
@@ -51,20 +52,26 @@ const props = defineProps<{
               <div v-for="(cardItem, cardIndex) in card?.items" :key="cardIndex"
                 v-link="`/${props.type}?id=${cardItem.id}`" class="graphic-information">
                 <div class="content">
-                  <div class="thumb"><dx-image :src="cardItem.thumb_full" /></div>
+                  <div class="thumb">
+                    <dx-image :src="cardItem.thumb_full" /></div>
 
-                  <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
-                  
-                  <div class="graphic-info-stats">
-                    <div class="stat-item">
-                      <img class="stat-icon" src="~/assets/image-icon/view.png" alt="" />
-                      <span>{{ $Utils.formatNumber(cardItem.view_count || cardItem.rating || 0) }}</span>
+                    <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
+                    <div class="absolute bottom-0.5 right-0.5 left-0.5 text-white flex justify-between z-10">
+                      <div class="flex items-center gap-0.5">
+                        <van-icon name="eye-o" size="0.32rem" />
+                        <span>
+                          {{ $Utils.formatNumber(cardItem.view_count || cardItem.view_num || cardItem.rating || 0) }}
+                        </span>
+                      </div>
+                      <div>
+                        {{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张
+                      </div>
                     </div>
-                    <div class="stat-item">
-                      <span>{{ cardItem.works_num || 0 }}张</span>
-                    </div>
-                  </div>
                 </div>
+
+
+
+                <div class="truncate">{{ cardItem.title }}</div>
               </div>
               <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
             </div>
@@ -89,7 +96,19 @@ const props = defineProps<{
             <div class="thumb">
               <dx-image :src="cardItem.thumb_full" />
               <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
+              <div class="absolute bottom-0.5 right-0.5 left-0.5 text-white flex justify-between z-10 text-[0.28rem]">
+                <div class="flex items-center gap-0.5">
+                  <van-icon name="eye-o" size="0.32rem" />
+                  <span>
+                    {{ $Utils.formatNumber(cardItem.view_count || cardItem.view_num || cardItem.rating || 0) }}
+                  </span>
+                </div>
+                <div>
+                  {{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张
+                </div>
+              </div>
             </div>
+            <div class="line-clamp-1">{{ cardItem.title }}</div>
           </div>
           <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
         </div>
@@ -122,13 +141,25 @@ const props = defineProps<{
             查看更多 >
           </nuxt-link>
         </div>
-        <div class="grid grid-cols-2 gap-3.5 px-1 graphic-layout-two">
+        <div class="grid grid-cols-2 gap-1 px-1 graphic-layout-two">
           <div v-for="(cardItem, cardIndex) in card?.items" :key="cardIndex" v-link="`/${props.type}?id=${cardItem.id}`"
             class="graphic-information-common">
             <div class="thumb">
               <dx-image :src="cardItem.thumb_full" />
               <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
+              <div class="absolute bottom-0.5 right-0.5 left-0.5 text-white flex justify-between z-10 text-[0.28rem]">
+                <div class="flex items-center gap-0.5">
+                  <van-icon name="eye-o" size="0.32rem" />
+                  <span>
+                    {{ $Utils.formatNumber(cardItem.view_count || cardItem.view_num || cardItem.rating || 0) }}
+                  </span>
+                </div>
+                <div>
+                  {{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张
+                </div>
+              </div>
             </div>
+            <div class="line-clamp-1">{{ cardItem.title }}</div>
           </div>
           <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
         </div>
@@ -292,39 +323,30 @@ const props = defineProps<{
 
 .graphic-scroll-content {
   display: flex;
-  gap: 8px;
-  flex-wrap: nowrap;
+  gap: 14px;
 }
 
 .graphic-information {
-  flex: 0 0 calc((100% - 3 * 14px) / 3.25);
+  /* 外层容器减去 3 个 gap，展示 3.25 个卡片宽度 */
+  flex: 0 0 calc((100vw - 3 * 14px) / 3.25);
   min-width: 0;
   overflow: hidden;
   text-align: center;
 
   .content {
     position: relative;
-    height: 4rem;
+    height: 3.8rem;
     margin-bottom: 0.2rem;
 
     .thumb {
       width: 100%;
-      height: 100%;
+      height: 3.8rem;
       border-radius: 5px;
       overflow: hidden;
       position: absolute;
       z-index: 1;
     }
 
-    .update {
-      position: absolute;
-      z-index: 2;
-      bottom: 0.15rem;
-      right: 0.15rem;
-      color: white;
-      padding: 0.05rem 0.1rem;
-      background-color: rgba(0, 0, 0, 0.5);
-    }
   }
 
   .title {
@@ -334,36 +356,30 @@ const props = defineProps<{
     width: 100%;
     text-overflow: ellipsis;
     overflow: hidden;
-    margin-bottom: 0.15rem;
   }
+}
 
-  .graphic-info-stats {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.28rem;
-    color: #999999;
-    padding: 0 0.1rem;
+.graphic-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.1rem;
+  font-size: 0.3rem;
+  color: #999;
+}
 
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 0.05rem;
-
-      .stat-icon {
-        width: 0.3rem;
-        height: 0.3rem;
-      }
-    }
-  }
+.graphic-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
 }
 
 .graphic-layout-three {
   padding: 0 12px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  grid-row-gap: 14px;
-  grid-column-gap: 14px;
+  grid-row-gap: 8px;
+  grid-column-gap: 8px;
   overflow: hidden;
 
   .graphic-information-common {
@@ -377,8 +393,9 @@ const props = defineProps<{
     }
   }
 }
-.graphic-layout-bottom{
-  
+
+.graphic-layout-bottom {
+
   padding: 0 12px;
   margin-top: 15px;
   display: flex;
@@ -386,7 +403,8 @@ const props = defineProps<{
   align-items: center;
   gap: 7px;
   justify-content: center;
-  .graphic-layout-bottom-button{
+
+  .graphic-layout-bottom-button {
     flex: 1;
     display: flex;
     flex-direction: row;
@@ -396,11 +414,13 @@ const props = defineProps<{
     height: 39px;
     border-radius: 100px;
     background-color: #F3F8FF;
-    .icon{
+
+    .icon {
       width: 20px;
       height: 20px;
     }
-    .title{
+
+    .title {
       color: #333333;
       font-size: 0.32rem;
     }
