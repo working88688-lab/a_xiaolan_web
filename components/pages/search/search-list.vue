@@ -74,7 +74,6 @@ function iconRanking(index: number) {
             {{ item }}
           </div>
         </div>
-        <dx-empty v-if="!props.list?.length" description="您还没有搜索过哟～" />
       </div>
       <div v-if="state.ads?.length" class="px-1">
         <dx-ads :items="state.ads"></dx-ads>

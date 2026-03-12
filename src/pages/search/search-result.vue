@@ -55,7 +55,7 @@ function onTrack(data: any) {
       <app-search ref="search_ref" class="flex-1" @search="onSearch" />
     </div>
 
-    <div v-if="key" class="scroll-container">
+    <div v-if="key && searchValue" class="scroll-container">
       <dx-tabs :key="searchValue" v-model:active="activeTab" class="first-no-padding dx-tabs text-lg" shrink>
         <van-tab title="视频">
           <dx-hoc-list :on-track class="dx-grid-1" api="api/search/mv" :params="{ kwy: searchValue, show_type: 0 }">
