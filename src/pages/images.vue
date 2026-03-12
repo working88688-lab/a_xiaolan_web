@@ -1,17 +1,18 @@
 <template>
   <div class="container">
-    <dx-navbar class="custom-nav-bar" :border="false" :title="pageData?.title?.length > 15 ? '图集详情' : pageData?.title"
-      left-arrow @click-left="__.$Back"></dx-navbar>
+    <dx-navbar
+      class="custom-nav-bar"
+      :border="false"
+      :title="pageData?.title?.length > 15 ? '图集详情' : pageData?.title"
+      left-arrow
+      @click-left="__.$Back"
+    ></dx-navbar>
     <div class="scroll-container">
       <scroll-list v-model:loading="loading" :is-ready="!loading">
-        <div
-          v-for="(item, index) in pageData?.series"
-          :key="index"
-          class="image-item"
-          @click="onImageClick(index)"
-        >
+        <div v-for="(item, index) in pageData?.series" :key="index" class="image-item" @click="onImageClick(index)">
           <img
-            v-lazyLoad="item.img_url_full"
+            v-lazyLoad:[pageData?.id]="item.img_url_full"
+            :data-index="index"
             src=""
             alt=""
             :class="{ 'is-locked': isImageLocked(index) }"
@@ -20,27 +21,18 @@
           <div
             v-if="isImageLocked(index) && index === 1"
             class="image-action"
-            :class="{
-              'image-action--coins': pageData?.coins > 0,
-              'image-action--vip': !pageData?.coins
-            }"
+            :class="{ 'image-action--coins': pageData?.coins > 0, 'image-action--vip': !pageData?.coins }"
             @click.stop="handleMainAction"
           >
-            <div class="image-action-primary" v-if="pageData?.coins > 0">
-              {{ pageData?.coins }}金币
-            </div>
-            <div class="image-action-primary" v-else>
-              开通VIP
-            </div>
-            <div class="image-action-sub" v-if="pageData?.coins > 0">
+            <div v-if="pageData?.coins > 0" class="image-action-primary">{{ pageData?.coins }}金币</div>
+            <div v-else class="image-action-primary">开通VIP</div>
+            <div v-if="pageData?.coins > 0" class="image-action-sub">
               {{ pageData?.coins }}金币解锁全部{{ pageData?.total }}张
             </div>
-            <div class="image-action-sub" v-else>
-              开通VIP，即可查看全部{{ pageData?.total }}张
-            </div>
+            <div v-else class="image-action-sub">开通VIP，即可查看全部{{ pageData?.total }}张</div>
           </div>
 
-          <div class="image-footer" v-if="isImageLocked(index)">
+          <div v-if="isImageLocked(index)" class="image-footer">
             <div class="image-footer-item image-footer-item--eye">
               <span class="icon"></span>
               <span class="image-footer-label">
@@ -61,15 +53,30 @@
         </div>
       </scroll-list>
     </div>
+
+    <van-image-preview
+      v-model:show="showPreview"
+      :images="previewImages"
+      :start-position="currentIndex"
+      :show-index="false"
+      closeable
+      close-icon-position="top-right"
+      :close-on-click-image="false"
+      @change="onPreviewChange"
+    >
+      <template #cover>
+        <div class="custom-preview-footer">
+          <div class="custom-preview-index">图 {{ currentIndex + 1 }} / {{ previewImages.length }}</div>
+          <button class="custom-preview-save" type="button" @click.stop="onSaveClick">保存</button>
+        </div>
+      </template>
+    </van-image-preview>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { ImageData } from '@types'
-import { showImagePreview } from 'vant'
 import coinsicon from '~/assets/image/comics/coins.png'
-import DetailLikeIcon from '~/assets/image/comics/detail_like.png'
-import DetailLikeActiveIcon from '~/assets/image/comics/detail_like_active.png'
 
 const route = useRoute()
 const __ = useNuxtApp()
@@ -84,6 +91,10 @@ const {
     useDb('image', toRaw(pageData.value))
   }
 })
+
+const showPreview = ref(false)
+const previewImages = ref<string[]>([])
+const currentIndex = ref(0)
 
 const pageViews = computed(() => {
   const raw: any = pageData.value || {}
@@ -132,15 +143,26 @@ const onImageClick = (index: number) => {
     return
   }
 
-  const images = (pageData.value.series || []).map((item) => item.img_url_full)
+  const series = pageData.value.series || []
+  const globalObject: any = (__ as any).$GlobalObject || {}
+  const groups = globalObject._IMAGE_PREVIE_GROUPS?.get(pageData.value.id) || []
+
+  // 优先使用已经解密的本地图片地址，若不存在则回退到原始地址
+  const images = series.map((item, idx) => groups[idx] || item.img_url_full)
 
   if (!images.length) return
 
-  showImagePreview({
-    images,
-    startPosition: index,
-    closeable: true
-  })
+  previewImages.value = images
+  currentIndex.value = index
+  showPreview.value = true
+}
+
+const onPreviewChange = (index: number) => {
+  currentIndex.value = index
+}
+
+const onSaveClick = () => {
+  __.$Toast('请截图或长按图片进行保存')
 }
 
 const handleVipAction = async () => {
@@ -281,11 +303,9 @@ onBeforeMount(async () => {
 
 .image-action {
   position: absolute;
+  top: 50%;
   left: 50%;
-  bottom: 16%;
-  transform: translateX(-50%);
-  padding: 0.46rem 0.9rem 0.42rem;
-  border-radius: 16px;
+  transform: translate(-50%, -50%);
   color: #fff;
   text-align: center;
   display: flex;
@@ -294,16 +314,24 @@ onBeforeMount(async () => {
 }
 
 .image-action--vip {
-  background-image: linear-gradient(to right, #6de6fb, #428af7);
+  .image-action-primary {
+    background-color: #2494ff;
+  }
 }
 
 .image-action--coins {
-  background-image: linear-gradient(to right, #ffa142, #ff7f24);
+  .image-action-primary {
+    background-color: #ff5900;
+  }
 }
 
 .image-action-primary {
   font-size: 15px;
   font-weight: 600;
+  padding: 0 16px;
+  height: 40px;
+  line-height: 40px;
+  border-radius: 13px;
 }
 
 .image-action-sub {
@@ -351,5 +379,33 @@ onBeforeMount(async () => {
 
 .image-footer-label {
   opacity: 0.9;
+}
+
+.custom-preview-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  padding: 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.custom-preview-index {
+  pointer-events: auto;
+}
+
+.custom-preview-save {
+  pointer-events: auto;
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: none;
+  background-image: linear-gradient(to right, #6de6fb, #428af7);
+  color: #fff;
+  font-size: 14px;
 }
 </style>
