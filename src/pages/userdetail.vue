@@ -253,11 +253,11 @@ const is_show_bg = computed(() => {
           <div class="user-info-detail">
             <div class="avatar"><img :key="userInfo?.avatar_url" v-lazyLoad="userInfo?.avatar_url" /></div>
             <div class="mt-0.5 flex-1">
-              <div class="nickname flex items-start">
-                <span class="w-[104px]">
+              <div class="nickname flex items-center">
+                <span class="max-w-[140px]">
                   {{ userInfo?.nickname }}
                 </span>
-                <div class="vip-info !ml-1">
+                <div class="vip-info ml-1">
                   <vip-icon :data="userInfo"></vip-icon>
                   <div v-if="userInfo?.auth_level >= 4" class="auth-level">
                     <img src="~/assets/image/creator.png" />
@@ -273,27 +273,43 @@ const is_show_bg = computed(() => {
             简介：
             <div class="flex-1" v-html="userInfo.person_signnatrue.replaceAll('\n', '<br/>')"></div>
           </div>
-          <div class="number_info">
-            <div v-link="`/fans?uid=${userInfo?.uid}`" class="number_item cursor-pointer">
-              <div class="number">{{ $Utils.formatNumber(userInfo?.fans_count ?? 0, 'en') }}</div>
-              <div class="title">粉丝</div>
+          <div class="number_info flex items-center justify-between">
+            <div class="flex items-center space-x-[25px]">
+              <div v-link="`/fans?uid=${userInfo?.uid}`" class="number_item cursor-pointer">
+                <div class="number">{{ $Utils.formatNumber(userInfo?.fans_count ?? 0, 'en') }}</div>
+                <div class="title">粉丝</div>
+              </div>
+              <div class="number_item">
+                <div class="number">{{ userInfo.followed_count }}</div>
+                <div class="title">关注</div>
+              </div>
+              <div class="number_item">
+                <div class="number">{{ $Utils.formatNumber(userInfo?.fabulous_count ?? 0, 'en') }}</div>
+                <div class="title">点赞</div>
+              </div>
             </div>
-            <div class="number_item">
-              <div class="number">{{ userInfo.followed_count }}</div>
-              <div class="title">关注</div>
-            </div>
-            <div class="number_item">
-              <div class="number">{{ $Utils.formatNumber(userInfo?.fabulous_count ?? 0, 'en') }}</div>
-              <div class="title">点赞</div>
+
+            <div v-if="!isMyDetail && !loading" class="user-action-buttons flex">
+              <btn-follow :key="userInfo.uid" :attention="follow ? 1 : 0" :uid="userInfo.uid" use-toast>
+                <template #default="{ text }">
+                  <dx-button color="linear-gradient(to right, #FF0000,  #FDA03D)">
+                    {{ text }}
+                  </dx-button>
+                </template>
+              </btn-follow>
+
+              <dx-button
+                v-if="userInfo?.uid" 
+                color="linear-gradient(to right, #00D0FF,  #3D9DFD)"
+                :to="`/chat/room?uid=${userInfo.uid}&name=${userInfo.nickname}`"
+              >
+                聊天
+              </dx-button>
             </div>
           </div>
 
           <div v-if="userTags.length" class="user-tags">
-            <div
-              v-for="tag in userTags"
-              :key="tag"
-              class="user-tag"
-            >
+            <div v-for="tag in userTags" :key="tag" class="user-tag">
               {{ tag }}
             </div>
           </div>
@@ -395,34 +411,6 @@ const is_show_bg = computed(() => {
         </div>
       </div>
     </scroll-list>
-
-    <div v-if="!isMyDetail && !loading" class="absolute bottom-3 left-0 right-0">
-      <div class="flex items-center justify-around">
-        <div class="border-item">
-          <btn-follow :key="userInfo.uid" class="w-full place-self-end" :attention="follow ? 1 : 0" :uid="userInfo.uid"
-            use-toast>
-            <template #default="{ text, follow: _follow }">
-              <dx-button color="linear-gradient(to right, #FF0000,  #FDA03D)" :round="false">
-                <div class="flex w-full items-center">
-                  <nuxt-icon class="mr-0.5 text-[0.5rem]" name="my/like"></nuxt-icon>
-                  {{ text }}
-                </div>
-              </dx-button>
-            </template>
-          </btn-follow>
-        </div>
-        <div class="border-item">
-          <dx-button color="linear-gradient(to right, #00D0FF,  #3D9DFD)"
-            :to="`/chat/room?uid=${userInfo.uid}&name=${userInfo.nickname}`" :round="false"
-            class="w-full place-self-start">
-            <div class="flex items-center">
-              <nuxt-icon class="mr-0.5 text-[0.5rem]" name="my/chat"></nuxt-icon>
-              聊天
-            </div>
-          </dx-button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -545,15 +533,27 @@ const is_show_bg = computed(() => {
       align-items: center;
 
       .number {
-        font-size: 14px;
-        font-weight: bold;
-        color: #333;
+        font-size: 13px;
+        font-weight: 500;
+        color: #2c2c2c;
       }
 
       .title {
         color: #919191;
-        font-size: 12px;
+        font-size: 11px;
         // margin-top: 0.266rem;
+      }
+    }
+
+    .user-action-buttons {
+      align-items: baseline;
+      gap: 10px;
+      :deep(.van-button) {
+        height: 24px;
+        padding: 3px 10px;
+        border-radius: 5px !important;
+        font-size: 12px;
+        line-height: 12px;
       }
     }
   }
