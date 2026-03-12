@@ -19,6 +19,27 @@ provide(ROUTE_PARAMS, {
 const __ = useNuxtApp()
 
 const { mv_nag_tab } = useGlobalStore()
+const DARKWEB_TAB_NAME = '__darkweb__'
+
+const tabsWithDarkweb = computed(() => {
+  const tabs = mv_nag_tab ?? []
+  if (!tabs.length) return tabs
+
+  const hasDarkweb = tabs.some(tab => tab.name === DARKWEB_TAB_NAME || tab.title === '暗网')
+  if (hasDarkweb) return tabs
+
+  const index = tabs.findIndex(tab => tab.title === '独家')
+  if (index === -1) return tabs
+
+  const insertTabs = [...tabs]
+  insertTabs.splice(index + 1, 0, {
+    name: DARKWEB_TAB_NAME,
+    title: '暗网'
+  })
+
+  return insertTabs
+})
+
 const sort = ref(mv_nag_tab?.[0].name)
 
 const banners = ref<AdItem[]>([])
@@ -100,6 +121,16 @@ const refreshItemApi = __.$Api.createApi({
   url: '/api/tabnew/list_hyh_mv'
 })
 
+watch(
+  sort,
+  (value, oldValue) => {
+    if (value === DARKWEB_TAB_NAME) {
+      __.$Replace('/darkweb')
+      sort.value = oldValue ?? mv_nag_tab?.[0].name
+    }
+  }
+)
+
 async function onReplace(item: TabItem, newItems: any) {
   try {
     item.list = [...newItems]
@@ -174,7 +205,7 @@ async function onReplace(item: TabItem, newItems: any) {
     <template v-if="mid_style_category.length">
       <dx-tabs v-model:active="sort" stop-propagation line-width="0px" line-height="0px" sticky
         class="my-nest-tabs text-medium first-no-padding" title-inactive-color="#333333" shrink>
-        <van-tab v-for="item in mv_nag_tab" :key="item.name" v-bind="item"></van-tab>
+        <van-tab v-for="item in tabsWithDarkweb" :key="item.name ?? item.title" v-bind="item"></van-tab>
       </dx-tabs>
       <div class="scroll-container list-container">
         <scroll-list :loading="loading" :is-empty="isEmpty" :is-end="isEnd" :pullup="execute"

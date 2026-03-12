@@ -704,13 +704,6 @@ export default defineAppConfig({
         router: `/tiktok`
       },
       {
-        title: '暗网',
-        value: 'darkweb',
-        icon: '/images/tabbar/darkweb.png',
-        iconselect: '/images/tabbar/darkwebActive.png',
-        router: `/darkweb`
-      },
-      {
         title: '片库',
         value: 'original',
         icon: '/images/tabbar/original.png',

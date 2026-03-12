@@ -33,11 +33,31 @@ const { activeTab, duration, updateDuration, updateActiveTab } = useDefaultActiv
   defaultActive: 1
 })
 
+const DARKWEB_TAB_NAME = '暗网'
+
 const shareData = ref()
 const shareDialogVisiable = ref(false)
 const tabState = reactive({
   tabs: [] as unknown as TabItem[]
 })
+
+const insertDarkwebTab = (tabs: TabItem[]): TabItem[] => {
+  if (!tabs?.length) return tabs
+
+  const hasDarkweb = tabs.some(tab => tab.name === DARKWEB_TAB_NAME)
+  if (hasDarkweb) return tabs
+
+  const index = tabs.findIndex(tab => tab.name === '独家')
+  if (index === -1) return tabs
+
+  const newTabs = [...tabs]
+  newTabs.splice(index + 1, 0, {
+    ...tabs[index],
+    name: DARKWEB_TAB_NAME
+  } as any)
+
+  return newTabs
+}
 
 const openShareDialog = (_data: any) => {
   shareDialogVisiable.value = true
@@ -49,7 +69,7 @@ const getTabs = async () => {
   try {
     const { data } = await __.$Api.Home.tab()
 
-    tabState.tabs = data
+    tabState.tabs = insertDarkwebTab(data)
     console.log(data)
     updateActiveTab(data)
   } catch (error) {
@@ -59,6 +79,17 @@ const getTabs = async () => {
 }
 
 onBeforeMount(getTabs)
+
+watch(
+  activeTab,
+  (value, oldValue) => {
+    const current = tabState.tabs[value]
+    if (current?.name === DARKWEB_TAB_NAME) {
+      __.$Replace('/darkweb')
+      activeTab.value = oldValue ?? 1
+    }
+  }
+)
 </script>
 
 <style lang="postcss" scoped>

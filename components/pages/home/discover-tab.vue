@@ -21,6 +21,27 @@ const body = ref<any>({
 })
 
 const { mv_nag_tab } = useGlobalStore()
+const DARKWEB_TAB_NAME = '__darkweb__'
+
+const tabsWithDarkweb = computed(() => {
+  const tabs = mv_nag_tab ?? []
+  if (!tabs.length) return tabs
+
+  const hasDarkweb = tabs.some(tab => tab.name === DARKWEB_TAB_NAME || tab.title === '暗网')
+  if (hasDarkweb) return tabs
+
+  const index = tabs.findIndex(tab => tab.title === '独家')
+  if (index === -1) return tabs
+
+  const insertTabs = [...tabs]
+  insertTabs.splice(index + 1, 0, {
+    name: DARKWEB_TAB_NAME,
+    title: '暗网'
+  })
+
+  return insertTabs
+})
+
 const sort = ref(mv_nag_tab?.[0].name)
 
 const { listData, loading, refresh, result, execute, isEnd, isEmpty, isReady } = useFetchList<VideoItem>({
@@ -57,6 +78,16 @@ const { listData, loading, refresh, result, execute, isEnd, isEmpty, isReady } =
 
 const containerRef = useTemplateRef('scroll')
 const { scrollTop } = useScrollTop(containerRef)
+
+watch(
+  sort,
+  (value, oldValue) => {
+    if (value === DARKWEB_TAB_NAME) {
+      __.$Replace('/darkweb')
+      sort.value = oldValue ?? mv_nag_tab?.[0].name
+    }
+  }
+)
 </script>
 <template>
   <scroll-list ref="scroll" v-dom-rect :pull-down-refresh="refresh">
@@ -95,7 +126,7 @@ const { scrollTop } = useScrollTop(containerRef)
 
     <dx-tabs v-model:active="sort" stop-propagation line-width="0px" line-height="0px" sticky
       class="my-nest-tabs text-medium first-no-padding" title-inactive-color="#333333" shrink>
-      <van-tab v-for="item in mv_nag_tab" :key="item.name" v-bind="item"></van-tab>
+      <van-tab v-for="item in tabsWithDarkweb" :key="item.name ?? item.title" v-bind="item"></van-tab>
     </dx-tabs>
     <div class="scroll-container list-container">
       <scroll-list :loading="loading" :is-empty="isEmpty" :is-end="isEnd" :pullup="execute"
