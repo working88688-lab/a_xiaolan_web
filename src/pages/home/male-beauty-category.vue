@@ -30,11 +30,22 @@
         </dx-tabs>
       </div>
       <div class="scroll-container">
-        <scroll-list v-model:loading="loading" :pullup="_fetch" :pull-down-refresh="_refresh" :is-empty="isEmpty"
-          :is-end="isEnd">
-          <div class="grid grid-cols-2 gap-1 px-1">
-            <video-card v-for="(item, index) in listData" :key="item.id" :list="listData" :index="index"
-              :item="item"></video-card>
+        <scroll-list
+          v-model:loading="loading"
+          :pullup="_fetch"
+          :pull-down-refresh="_refresh"
+          :is-empty="isEmpty"
+          :is-end="isEnd"
+        >
+          <div class="grid grid-cols-3 gap-1 px-1">
+            <video-card
+              v-for="(item, index) in listData"
+              :key="item.id"
+              :list="listData"
+              :index="index"
+              :item="item"
+              :vertical="true"
+            ></video-card>
           </div>
         </scroll-list>
       </div>

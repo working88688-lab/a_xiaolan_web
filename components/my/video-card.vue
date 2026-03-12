@@ -2,7 +2,7 @@
   <stack-link :data="props.item" :replace="props.replace" :list="props.list" :index="props.index"
     :disabled="props.item.isAd" :mv-type="props.mvType">
     <div class="video-item-default">
-      <div class="aspect-h-9 aspect-w-16 m-0 overflow-hidden rounded-[8px]">
+      <div :class="['m-0 overflow-hidden rounded-[8px]', props.vertical ? 'aspect-h-4 aspect-w-3' : 'aspect-h-9 aspect-w-16']">
         <div>
           <ad-link v-if="props.item.isAd" :data="props.item">
             <slot name="item" :item="item">
@@ -58,6 +58,7 @@ const props = withDefaults(
     showTitle?: boolean
     mvType?: 1 | 2 | 3 | 4 // 普通视频，片库，动漫,短视频
     track?: boolean
+    vertical?: boolean
   }>(),
   {
     showDuration: true,
@@ -65,7 +66,8 @@ const props = withDefaults(
     showPlayCount: true,
     replace: false,
     showTitle: true,
-    mvType: 1
+    mvType: 1,
+    vertical: false
   }
 )
 </script>
