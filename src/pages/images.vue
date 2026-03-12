@@ -4,40 +4,69 @@
       left-arrow @click-left="__.$Back"></dx-navbar>
     <div class="scroll-container">
       <scroll-list v-model:loading="loading" :is-ready="!loading">
-        <img v-for="(item, _index) in pageData?.series" :key="_index" v-lazyLoad="item.img_url_full" src="" alt="" />
-      </scroll-list>
-    </div>
-    <div v-show="!loading" class="atlas-bottom">
-      <div class="atlas-content">
-        <div class="left">
-          <div v-if="pageData?.is_pay === 0 && pageData.coins > 0" class="no-right" @click="handleBuyAction">
-            购买即可看全套{{ pageData?.total }}张
-          </div>
-          <div v-else-if="pageData?.is_pay === 0 && pageData?.coins == 0 && !pageData?.has_right" class="no-right"
-            @click="handleVipAction">
-            会员可看全套{{ pageData?.total }}张
-          </div>
-          <div v-else>全套{{ pageData?.total }}张</div>
-        </div>
-        <div class="right">
-          <div class="action" @click="onLike">
-            <img :src="pageData?.is_like ? DetailLikeActiveIcon : DetailLikeIcon" />
-            <span>{{ $Utils.formatNumber(pageData?.favorites ?? 0) }}</span>
-          </div>
-          <dx-link to="/myinvite" class="ml-1 flex items-center">
-            <div class="mr-0.5 h-[22px] w-[22px]">
-              <img src="~/assets/image/home/share.png" />
+        <div
+          v-for="(item, index) in pageData?.series"
+          :key="index"
+          class="image-item"
+          @click="onImageClick(index)"
+        >
+          <img
+            v-lazyLoad="item.img_url_full"
+            src=""
+            alt=""
+            :class="{ 'is-locked': isImageLocked(index) }"
+          />
+          <div v-if="isImageLocked(index)" class="image-mask"></div>
+          <div
+            v-if="isImageLocked(index) && index === 1"
+            class="image-action"
+            :class="{
+              'image-action--coins': pageData?.coins > 0,
+              'image-action--vip': !pageData?.coins
+            }"
+            @click.stop="handleMainAction"
+          >
+            <div class="image-action-primary" v-if="pageData?.coins > 0">
+              {{ pageData?.coins }}金币
             </div>
-            <span>分享</span>
-          </dx-link>
+            <div class="image-action-primary" v-else>
+              开通VIP
+            </div>
+            <div class="image-action-sub" v-if="pageData?.coins > 0">
+              {{ pageData?.coins }}金币解锁全部{{ pageData?.total }}张
+            </div>
+            <div class="image-action-sub" v-else>
+              开通VIP，即可查看全部{{ pageData?.total }}张
+            </div>
+          </div>
+
+          <div class="image-footer" v-if="isImageLocked(index)">
+            <div class="image-footer-item image-footer-item--eye">
+              <span class="icon"></span>
+              <span class="image-footer-label">
+                {{ $Utils.formatNumber(pageViews) }}
+              </span>
+            </div>
+            <div class="image-footer-item image-footer-item--star" @click.stop="onLike">
+              <span class="icon"></span>
+              <span class="image-footer-label">
+                {{ $Utils.formatNumber(pageData?.favorites ?? 0) }}
+              </span>
+            </div>
+            <div class="image-footer-item image-footer-item--share" @click.stop="onShare">
+              <span class="icon"></span>
+              <span class="image-footer-label">分享</span>
+            </div>
+          </div>
         </div>
-      </div>
+      </scroll-list>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { ImageData } from '@types'
+import { showImagePreview } from 'vant'
 import coinsicon from '~/assets/image/comics/coins.png'
 import DetailLikeIcon from '~/assets/image/comics/detail_like.png'
 import DetailLikeActiveIcon from '~/assets/image/comics/detail_like_active.png'
@@ -56,6 +85,11 @@ const {
   }
 })
 
+const pageViews = computed(() => {
+  const raw: any = pageData.value || {}
+  return raw.views ?? 0
+})
+
 const onLike = async () => {
   await __.$Api.Images.liking({
     id: pageData.value!.id
@@ -64,6 +98,51 @@ const onLike = async () => {
   pageData.value!.is_like = expectLike ? 1 : 0
   pageData.value!.favorites = expectLike ? pageData.value!.favorites + 1 : pageData.value!.favorites - 1
 }
+
+const onShare = () => {
+  __.$NavigateTo('/myinvite')
+}
+
+const isImageLocked = (index: number) => {
+  if (!pageData.value) return false
+
+  // 已拥有观看权限或已购买整套，全部解锁
+  if (pageData.value.has_right || pageData.value.is_pay === 1) return false
+
+  // 未解锁时，只放开第一张，其余全部锁定
+  return index > 0
+}
+
+const handleMainAction = () => {
+  if (!pageData.value) return
+
+  if (pageData.value.coins > 0) {
+    handleBuyAction()
+  } else {
+    handleVipAction()
+  }
+}
+
+const onImageClick = (index: number) => {
+  if (!pageData.value) return
+
+  // 锁定状态下，点击图片走主 CTA（购买 / 开通会员）
+  if (isImageLocked(index)) {
+    handleMainAction()
+    return
+  }
+
+  const images = (pageData.value.series || []).map((item) => item.img_url_full)
+
+  if (!images.length) return
+
+  showImagePreview({
+    images,
+    startPosition: index,
+    closeable: true
+  })
+}
+
 const handleVipAction = async () => {
   await __.$Alert({
     title: '开通会员',
@@ -141,6 +220,17 @@ const handleBuyAction = async () => {
     execute({
       id
     })
+  } else {
+    await __.$Alert({
+      title: '金币不足',
+      message: '当前金币不足，是否前往充值？',
+      teleport: 'body',
+      closeOnClickOverlay: true,
+      confirmButtonColor: 'linear-gradient(to right, #ffce73, #ffe7bc)',
+      confirmButtonText: '去充值'
+    })
+
+    __.$NavigateTo('/recharge')
   }
 }
 
@@ -157,50 +247,109 @@ onBeforeMount(async () => {
 </script>
 
 <style lang="less" scoped>
-.atlas-bottom {
-  padding-bottom: constant(safe-area-inset-bottom);
-  padding-bottom: env(safe-area-inset-bottom);
+.container {
+  min-height: 100vh;
 }
 
-.atlas-content {
-  box-shadow: 0 0 13px rgba(0, 0, 0, 0.1);
+.scroll-container {
+  padding: 0.4rem 0.32rem 0.6rem;
+}
+
+.image-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-bottom: 14px;
+
+  img {
+    width: 100%;
+    display: block;
+    background: #000;
+  }
+
+  img.is-locked {
+    filter: blur(10px);
+    transform: scale(1.04);
+  }
+}
+
+.image-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.image-action {
+  position: absolute;
+  left: 50%;
+  bottom: 16%;
+  transform: translateX(-50%);
+  padding: 0.46rem 0.9rem 0.42rem;
+  border-radius: 16px;
+  color: #fff;
+  text-align: center;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  padding: 0.2rem 0.4rem;
+}
+
+.image-action--vip {
+  background-image: linear-gradient(to right, #6de6fb, #428af7);
+}
+
+.image-action--coins {
+  background-image: linear-gradient(to right, #ffa142, #ff7f24);
+}
+
+.image-action-primary {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.image-action-sub {
+  margin-top: 4px;
   font-size: 12px;
+  opacity: 0.86;
+}
 
-  .left {
-    flex: 1;
-    align-items: center;
-    margin-right: 0.5rem;
+.image-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px 16px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  color: #fff;
+  font-size: 11px;
+}
 
-    .no-right {
-      padding: 9.5px 17.5px 9px 17px;
-      border-radius: 35px;
-      text-align: center;
-      color: #8c4d10;
-      background-image: linear-gradient(to top, #ffce73, #ffe7bc);
-    }
-  }
+.image-footer-item {
+  display: flex;
+  align-items: center;
+}
 
-  .right {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+.image-footer-item .icon {
+  display: inline-block;
+  width: 14px;
+  margin-right: 4px;
+}
 
-    .action {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      padding: 0.2rem;
+.image-footer-item--eye .icon::before {
+  content: '👁';
+}
 
-      img {
-        width: 0.6rem;
-        height: 0.6rem;
-        margin-right: 0.2rem;
-      }
-    }
-  }
+.image-footer-item--star .icon::before {
+  content: '★';
+}
+
+.image-footer-item--share .icon::before {
+  content: '➤';
+}
+
+.image-footer-label {
+  opacity: 0.9;
 }
 </style>
