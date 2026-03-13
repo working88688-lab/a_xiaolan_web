@@ -103,7 +103,7 @@
           <div v-link="`/my/work`">
             <div class="user-active-item">
               <nuxt-icon name="my/work" class="icon" filled></nuxt-icon>
-              <p class="user-active-title">作品管理</p>
+              <p class="user-active-title">创作中心</p>
             </div>
           </div>
 
