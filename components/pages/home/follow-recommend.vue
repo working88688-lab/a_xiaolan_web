@@ -185,5 +185,12 @@ const formatDuration = (seconds: number | undefined) => {
   color: #ffffff;
   background: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, 0.7) 100%);
 }
+
+/* 首页关注 Tab 推荐列表中的“关注”按钮样式 */
+:deep(.btn_follow.has_style) {
+  background-color: #3DA7FD;
+  border-color: #3DA7FD;
+  border-radius: 4px;
+}
 </style>
 
