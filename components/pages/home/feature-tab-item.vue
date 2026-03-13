@@ -48,6 +48,11 @@ const mid_style_category = ref<any[]>([])
 const mid_style_recommend = ref<any[]>([])
 
 const is_recommend = props.tab.name === '推荐'
+// 关注 Tab：根据接口地址判断，更稳
+const is_follow_tab = computed(() => props.tab.api === '/api/mv/listOfFollow')
+
+const followRecommendList = ref<any[]>([])
+const loadingFollowRecommend = ref(false)
 
 const { listData, execute, loading, refresh, isEmpty, isEnd, result, isError, isReady } = useFetchList<any>({
   api: __.$Api.dynamic({ url: props.tab.api, method: 'post' }),
@@ -79,8 +84,8 @@ const { listData, execute, loading, refresh, isEmpty, isEnd, result, isError, is
   usePageSize: false,
   adConfig: !is_recommend
     ? {
-      key: 'list_ads'
-    }
+        key: 'list_ads'
+      }
     : undefined
 })
 
@@ -114,6 +119,85 @@ if (props.tab.type === 1) {
     }
   })
 }
+
+const hasFollowRecommend = computed(() => followRecommendList.value.length > 0)
+
+// MOCK 开关：后端接口未就绪时使用本地假数据
+const USE_MOCK_FOLLOW_RECOMMEND = true
+
+const mockFollowRecommendList = [
+  {
+    uid: 10001,
+    avatar: 'https://dummyimage.com/200x200/3b82f6/ffffff&text=U1',
+    nickname: '推荐用户一',
+    video_num: 587,
+    fans_num: 587,
+    total_play_num: 123400,
+    like_num: 587,
+    is_attention: 0,
+    videos: [
+      {
+        id: 1,
+        cover: 'https://dummyimage.com/320x180/1f2937/ffffff&text=Video1',
+        play_num: 123400,
+        duration: 60 * 23 + 4
+      },
+      {
+        id: 2,
+        cover: 'https://dummyimage.com/320x180/111827/ffffff&text=Video2',
+        play_num: 82340,
+        duration: 60 * 12 + 18
+      }
+    ]
+  },
+  {
+    uid: 10002,
+    avatar: 'https://dummyimage.com/200x200/6366f1/ffffff&text=U2',
+    nickname: '推荐用户二',
+    video_num: 321,
+    fans_num: 9987,
+    total_play_num: 456700,
+    like_num: 8099,
+    is_attention: 0,
+    videos: [
+      {
+        id: 3,
+        cover: 'https://dummyimage.com/320x180/0f766e/ffffff&text=Video3',
+        play_num: 220000,
+        duration: 60 * 15 + 9
+      }
+    ]
+  }
+]
+
+// 关注 Tab 推荐用户接口，使用动态 API，避免依赖 Home 上的强类型字段
+const followRecommendApi = __.$Api.createApi({
+  url: '/api/home/follow_recommend'
+})
+
+const fetchFollowRecommend = async () => {
+  if (!is_follow_tab.value || loadingFollowRecommend.value || hasFollowRecommend.value) return
+
+  loadingFollowRecommend.value = true
+  try {
+    if (USE_MOCK_FOLLOW_RECOMMEND) {
+      followRecommendList.value = mockFollowRecommendList
+    } else {
+      const { data } = await followRecommendApi({})
+      followRecommendList.value = (data || []).slice(0, 50)
+    }
+  } catch (error) {
+  } finally {
+    loadingFollowRecommend.value = false
+  }
+}
+
+onBeforeMount(() => {
+  // 关注 tab 提前拉推荐列表（后端好之前用 mock）
+  if (is_follow_tab.value) {
+    fetchFollowRecommend()
+  }
+})
 const containerRef = useTemplateRef('scroll')
 const { scrollTop } = useScrollTop(containerRef)
 
@@ -131,6 +215,20 @@ watch(
   }
 )
 
+watch(
+  () => ({
+    loading: loading.value,
+    length: listData.value.length
+  }),
+  state => {
+    // 任意 Tab 在接口返回且列表为空时，尝试拉取关注推荐（目前主要用于首页“关注”Tab）
+    if (!state.loading && state.length === 0 && is_follow_tab.value) {
+      fetchFollowRecommend()
+    }
+  },
+  { immediate: true }
+)
+
 async function onReplace(item: TabItem, newItems: any) {
   try {
     item.list = [...newItems]
@@ -138,86 +236,96 @@ async function onReplace(item: TabItem, newItems: any) {
 }
 </script>
 <template>
-  <scroll-list ref="scroll" v-dom-rect :is-end="is_recommend ? isEnd : false"
-    :pullup="is_recommend ? execute : undefined" :pull-down-refresh="refresh">
-    <dx-spin v-show="loading && !isReady" size="0.6rem" class="my-2 text-center"></dx-spin>
+  <!-- 关注 Tab：直接使用推荐作者卡片，不再显示原空态 -->
+  <template v-if="is_follow_tab">
+    <dx-spin v-if="loadingFollowRecommend && !hasFollowRecommend" size="0.6rem" class="my-2 text-center"></dx-spin>
+    <follow-recommend v-else :list="followRecommendList"></follow-recommend>
+  </template>
 
-    <dx-empty v-if="isError" description="暂无数据"></dx-empty>
-    <!-- 轮播 -->
-    <div v-if="banners.length" class="mb-1 px-1.5">
-      <dx-ads :items="banners"></dx-ads>
-    </div>
+  <!-- 其他 Tab：保持原有逻辑 -->
+  <template v-else>
+    <scroll-list ref="scroll" v-dom-rect :is-end="is_recommend ? isEnd : false"
+      :pullup="is_recommend ? execute : undefined" :pull-down-refresh="refresh">
+      <dx-spin v-show="loading && !isReady" size="0.6rem" class="my-2 text-center"></dx-spin>
 
-    <!-- mid_style_recommend -->
-    <div v-if="mid_style_recommend.length" class="mb-1 px-1.5">
-      <dx-scrollview-swiper>
-        <SwiperSlide v-for="(item, index) in mid_style_recommend.filter(item => item.type !== 10)" :key="item.id"
-          class="recommend-item">
-          <nuxt-link class="flex-col-center h-full" :to="navigate(item.type)">
-            <div class="mb-0.5 h-full w-full">
-              <dx-image :src="item.icon_new"></dx-image>
-            </div>
-          </nuxt-link>
-        </SwiperSlide>
-      </dx-scrollview-swiper>
-    </div>
+      <dx-empty v-if="isError" description="暂无数据"></dx-empty>
 
-    <!-- bot_style_one -->
-    <template v-if="is_recommend">
-      <div v-for="(item, index) in listData" :key="index">
-        <card-renderder :item="item" :replace-api="refreshItemApi"
-          @replace="newItems => onReplace(item, newItems)"></card-renderder>
+      <!-- 轮播 -->
+      <div v-if="banners.length" class="mb-1 px-1.5">
+        <dx-ads :items="banners"></dx-ads>
       </div>
-    </template>
 
-    <van-cell v-if="mid_style_category.length" value="查看更多" style="--van-cell-background: transparent" :border="false"
-      is-link :to="`/home/cate?${format_url_params({
-        nag_id: props.tab.id,
-        title: '发现精彩'
-      })}`">
-      <template #title>
-        <div class="flex items-center whitespace-nowrap">
-          <span class="mr-0.5 text-base7">发现精彩</span>
+      <!-- mid_style_recommend -->
+      <div v-if="mid_style_recommend.length" class="mb-1 px-1.5">
+        <dx-scrollview-swiper>
+          <SwiperSlide v-for="(item, index) in mid_style_recommend.filter(item => item.type !== 10)" :key="item.id"
+            class="recommend-item">
+            <nuxt-link class="flex-col-center h-full" :to="navigate(item.type)">
+              <div class="mb-0.5 h-full w-full">
+                <dx-image :src="item.icon_new"></dx-image>
+              </div>
+            </nuxt-link>
+          </SwiperSlide>
+        </dx-scrollview-swiper>
+      </div>
+
+      <!-- bot_style_one -->
+      <template v-if="is_recommend">
+        <div v-for="(item, index) in listData" :key="index">
+          <card-renderder :item="item" :replace-api="refreshItemApi"
+            @replace="newItems => onReplace(item, newItems)"></card-renderder>
         </div>
       </template>
-    </van-cell>
-    <!-- mid_style_category -->
-    <div v-if="mid_style_category.length" class="mb-1.5 px-1.5" @touchstart.stop>
-      <dx-scrollview-swiper>
-        <SwiperSlide v-for="item in mid_style_category" :key="item.id" class="slide-item">
-          <nuxt-link :key="item.id" :to="`/tag?_type=home&${format_url_params({
-            construct_id: item.id,
-            title: item.title,
-            has_sort: 1
-          })}`" class="block h-full w-full overflow-hidden rounded text-center">
-            <div class="relative mb-[8px] h-full">
-              <dx-image :src="item.bg_thumb"></dx-image>
-              <div class="cate-title absolute bottom-0 left-0 right-0 truncate text-center text-base">
-                {{ item.title }}
-              </div>
-            </div>
-          </nuxt-link>
-        </SwiperSlide>
-      </dx-scrollview-swiper>
-    </div>
 
-    <!-- bot_style_two -->
-    <template v-if="mid_style_category.length">
-      <dx-tabs v-model:active="sort" stop-propagation line-width="0px" line-height="0px" sticky
-        class="my-nest-tabs text-medium first-no-padding" title-inactive-color="#333333" shrink>
-        <van-tab v-for="item in tabsWithDarkweb" :key="item.name ?? item.title" v-bind="item"></van-tab>
-      </dx-tabs>
-      <div class="scroll-container list-container">
-        <scroll-list :loading="loading" :is-empty="isEmpty" :is-end="isEnd" :pullup="execute"
-          :disabled-refresh="scrollTop > 0">
-          <div class="grid grid-cols-2 gap-1 px-1 pb-1.5">
-            <video-card v-for="(item, lIndex) in listData" :key="item.id" :list="listData" :index="lIndex" :item="item"
-              lines></video-card>
+      <van-cell v-if="mid_style_category.length" value="查看更多" style="--van-cell-background: transparent"
+        :border="false" is-link :to="`/home/cate?${format_url_params({
+          nag_id: props.tab.id,
+          title: '发现精彩'
+        })}`">
+        <template #title>
+          <div class="flex items-center whitespace-nowrap">
+            <span class="mr-0.5 text-base7">发现精彩</span>
           </div>
-        </scroll-list>
+        </template>
+      </van-cell>
+      <!-- mid_style_category -->
+      <div v-if="mid_style_category.length" class="mb-1.5 px-1.5" @touchstart.stop>
+        <dx-scrollview-swiper>
+          <SwiperSlide v-for="item in mid_style_category" :key="item.id" class="slide-item">
+            <nuxt-link :key="item.id" :to="`/tag?_type=home&${format_url_params({
+              construct_id: item.id,
+              title: item.title,
+              has_sort: 1
+            })}`" class="block h-full w-full overflow-hidden rounded text-center">
+              <div class="relative mb-[8px] h-full">
+                <dx-image :src="item.bg_thumb"></dx-image>
+                <div class="cate-title absolute bottom-0 left-0 right-0 truncate text-center text-base">
+                  {{ item.title }}
+                </div>
+              </div>
+            </nuxt-link>
+          </SwiperSlide>
+        </dx-scrollview-swiper>
       </div>
-    </template>
-  </scroll-list>
+
+      <!-- bot_style_two -->
+      <template v-if="mid_style_category.length">
+        <dx-tabs v-model:active="sort" stop-propagation line-width="0px" line-height="0px" sticky
+          class="my-nest-tabs text-medium first-no-padding" title-inactive-color="#333333" shrink>
+          <van-tab v-for="item in tabsWithDarkweb" :key="item.name ?? item.title" v-bind="item"></van-tab>
+        </dx-tabs>
+        <div class="scroll-container list-container">
+          <scroll-list :loading="loading" :is-empty="isEmpty" :is-end="isEnd" :pullup="execute"
+            :disabled-refresh="scrollTop > 0">
+            <div class="grid grid-cols-2 gap-1 px-1 pb-1.5">
+              <video-card v-for="(item, lIndex) in listData" :key="item.id" :list="listData" :index="lIndex"
+                :item="item" lines></video-card>
+            </div>
+          </scroll-list>
+        </div>
+      </template>
+    </scroll-list>
+  </template>
 </template>
 
 <style lang="postcss" scoped>

@@ -7,7 +7,11 @@
     <dx-tabs v-model:active="activeTab" :duration="duration" class="dx-tabs primary-tabs first-no-padding">
       <van-tab v-for="(tab, index) in tabState.tabs" :key="index" :title="tab.name">
         <template v-if="Math.abs(activeTab - index) <= 5">
-          <discover-tab v-if="tab.type === 2" :tab="tab"></discover-tab>
+          <!-- 关注：强制走 feature-tab-item（里边有 mock 推荐逻辑） -->
+          <feature-tab-item v-if="tab.name === '关注'" :tab="tab" @share="openShareDialog"></feature-tab-item>
+
+          <!-- 其它 tab 按原规则分发 -->
+          <discover-tab v-else-if="tab.type === 2" :tab="tab"></discover-tab>
           <vip-tab-item v-else-if="tab.type === 1" :tab="tab" @share="openShareDialog"></vip-tab-item>
           <dx-webview v-else-if="tab.type === 3" :key="tab.h5_url" :url="tab.h5_url"></dx-webview>
           <video-hot-tab v-else-if="tab.type === 4"></video-hot-tab>
