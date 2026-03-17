@@ -512,6 +512,20 @@ export default defineAppConfig({
       }
     },
     {
+      name: 'checkin',
+      path: '/checkin',
+      meta: {
+        keepalive: true,
+        theme: {
+          page: {
+            backgroundColor: 'transparent',
+            backgroundImage: 'none'
+          }
+        },
+        trackPageName: ''
+      }
+    },
+    {
       name: 'chat-room',
       path: '/chat/room',
       meta: {
