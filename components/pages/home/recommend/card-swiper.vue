@@ -1,9 +1,15 @@
 <template>
   <div @touchstart.stop>
-    <Swiper :modules="[FreeMode, Mousewheel]" :slides-per-view="'auto'" :free-mode="true" direction="horizontal"
+    <Swiper
+      :modules="[FreeMode, Mousewheel]"
+      :slides-per-view="'auto'"
+      :free-mode="true"
+      direction="horizontal"
       :mousewheel="{
         forceToAxis: true
-      }" class="my-free-swiper">
+      }"
+      class="my-free-swiper"
+    >
       <SwiperSlide v-for="item in props.list" :key="item.id" class="horizontal-item">
         <video-card :item="item"></video-card>
       </SwiperSlide>

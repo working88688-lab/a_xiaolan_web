@@ -102,10 +102,10 @@ export const useFetchList = <T>({
   }
   let page: PageConfig = usePageSize
     ? {
-      ...defaultPageConfig,
-      size: params?.size ?? MAX_PAGE_SIZE,
-      limit: params?.size ?? MAX_PAGE_SIZE
-    }
+        ...defaultPageConfig,
+        size: params?.size ?? MAX_PAGE_SIZE,
+        limit: params?.size ?? MAX_PAGE_SIZE
+      }
     : defaultPageConfig
   const isEmpty = computed(() => {
     return listData.value.length === 0 && !loading.value
@@ -269,15 +269,15 @@ export const useFetchList = <T>({
     result.value = {}
     page = usePageSize
       ? {
-        ...defaultPageConfig,
-        size: params?.size ?? 20,
-        limit: params?.size ?? 20,
-        page: 1
-      }
+          ...defaultPageConfig,
+          size: params?.size ?? 20,
+          limit: params?.size ?? 20,
+          page: 1
+        }
       : {
-        ...defaultPageConfig,
-        page: 1
-      }
+          ...defaultPageConfig,
+          page: 1
+        }
   }
 
   if (_reactiveParams.length) {

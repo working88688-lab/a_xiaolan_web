@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { vSwipe } from '@utils/directives/v-swipe'
 
-const props = withDefaults(defineProps<{
-  listProps: any
-  loading?: boolean
-  isEmpty?: boolean
-  isEnd?: boolean
-  hasTabs?: boolean
-  scrollHandler?: (e: number) => void
-}>(), {
-  hasTabs: true,
-})
+const props = withDefaults(
+  defineProps<{
+    listProps: any
+    loading?: boolean
+    isEmpty?: boolean
+    isEnd?: boolean
+    hasTabs?: boolean
+    scrollHandler?: (e: number) => void
+  }>(),
+  {
+    hasTabs: true
+  }
+)
 
 const emit = defineEmits<{
   swipe: [e: 'left' | 'right']
@@ -41,7 +44,7 @@ function scrollTo(e: number) {
 }
 defineExpose({
   resetScroll,
-  scrollTo,
+  scrollTo
 })
 
 function onSwipe(d: 'left' | 'right') {
@@ -59,11 +62,7 @@ function onSwipe(d: 'left' | 'right') {
         <!-- 站位计算滚动高度用 -->
         <div ref="placeholder" />
         <div v-swipe="onSwipe" :style="{ minHeight: `${height}px` }">
-          <div
-            v-if="hasTabs"
-            ref="sticky"
-            class="tabs-stricky-bar"
-          >
+          <div v-if="hasTabs" ref="sticky" class="tabs-stricky-bar">
             <slot name="tabs" />
           </div>
           <dx-spin v-show="props.loading" />

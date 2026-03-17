@@ -19,7 +19,7 @@ const __ = useNuxtApp()
       )
     "
   >
-    <dx-cover class="aspect-w-16 aspect-h-9" :poster="item.bg_thumb"></dx-cover>
+    <dx-cover class="aspect-h-9 aspect-w-16" :poster="item.bg_thumb"></dx-cover>
     <div>
       <div class="text-default">{{ item.title }}</div>
       <div class="text-sm text-[#808080]">{{ $Utils.formatNumber(item.work_num) }}作品</div>

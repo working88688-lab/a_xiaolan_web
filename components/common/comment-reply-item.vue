@@ -1,20 +1,23 @@
 <script setup lang="ts">
 import type { CommentItem } from '@types'
 
-const props = withDefaults(defineProps<{
-  id?: string | number
-  isSub?: boolean
-  item: CommentItem
-  moreApi?: string
-  likeApi?: string
-  avatarKey?: string
-}>(), {
-  avatarKey: 'thumb_url'
-})
+const props = withDefaults(
+  defineProps<{
+    id?: string | number
+    isSub?: boolean
+    item: CommentItem
+    moreApi?: string
+    likeApi?: string
+    avatarKey?: string
+  }>(),
+  {
+    avatarKey: 'thumb_url'
+  }
+)
 
 const emit = defineEmits<{
   comment: [e: CommentItem]
-  loadMore: [e: { id: number, items: CommentItem[] }]
+  loadMore: [e: { id: number; items: CommentItem[] }]
 }>()
 
 const __ = useNuxtApp()
@@ -24,23 +27,20 @@ const show_sub_comment = ref(true)
 const getMore = __.$Api.dynamic({
   url: props.moreApi,
   axiosConfig: {
-    showSuccess: true,
-  },
+    showSuccess: true
+  }
 })
 
 async function onLoadMore() {
   try {
-    const res = await getMore({
-      comment_id: props.item.id,
-    }) as any
+    const res = (await getMore({
+      comment_id: props.item.id
+    })) as any
     console.log('res: ', res)
 
     emit('loadMore', { id: props.item.id, items: res.data.list })
-  }
-  catch (error) {
-
-  }
-  finally {
+  } catch (error) {
+  } finally {
     show_sub_comment.value = false
   }
 }
@@ -56,9 +56,8 @@ function onComment() {
     <div class="flex-1">
       <div class="flex items-start">
         <div>
-          <div class="text-normal mb-0.5">
+          <div class="mb-0.5 text-normal">
             {{ item?.user?.nickname }}
-          
           </div>
           <p class="mb-0.5 text-base text-[#4d4d4d]">
             {{ item.comment }}
@@ -70,7 +69,7 @@ function onComment() {
         <div class="text-mini text-[#808080]">
           {{ item.created_at }}
         </div>
-        <span v-if="!isSub" class="text-primary ml-3" @click="onComment">回复</span>
+        <span v-if="!isSub" class="ml-3 text-primary" @click="onComment">回复</span>
       </div>
 
       <comment-reply-item
@@ -85,8 +84,13 @@ function onComment() {
           <slot name="right" :comment="sub_item" />
         </template>
       </comment-reply-item>
-      <div v-if="item.comments?.length >= 3 && props.moreApi && show_sub_comment" class="flex-center text-sm" @click="onLoadMore">
-        <van-icon class="mr-0.5" name="arrow-down" /> 查看更多
+      <div
+        v-if="item.comments?.length >= 3 && props.moreApi && show_sub_comment"
+        class="flex-center text-sm"
+        @click="onLoadMore"
+      >
+        <van-icon class="mr-0.5" name="arrow-down" />
+        查看更多
       </div>
     </div>
   </div>

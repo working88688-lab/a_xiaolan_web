@@ -19,12 +19,12 @@ export interface RequestItem {
 
 export type PromiseifyApi<T extends RequestItem, R = any> = {
   [K in keyof T]: T[K] extends RequestConfig
-  ? (...args: any[]) => Promise<Result<R>>
-  : T[K] extends Record<string, RequestConfig>
-  ? {
-    [P in keyof T[K]]: (...args: any[]) => Promise<Result<R>>
-  }
-  : never
+    ? (...args: any[]) => Promise<Result<R>>
+    : T[K] extends Record<string, RequestConfig>
+      ? {
+          [P in keyof T[K]]: (...args: any[]) => Promise<Result<R>>
+        }
+      : never
 }
 
 export interface BaseFetchOption {

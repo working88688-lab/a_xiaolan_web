@@ -66,14 +66,23 @@ function onComment() {
         <slot name="right" :comment="props.item" />
       </div>
 
-      <ai-comment-item v-for="sub_item in item.comments" :key="sub_item.id" class="mt-1" is-sub :api="props.likeApi"
-        :item="sub_item">
+      <ai-comment-item
+        v-for="sub_item in item.comments"
+        :key="sub_item.id"
+        class="mt-1"
+        is-sub
+        :api="props.likeApi"
+        :item="sub_item"
+      >
         <template #right>
           <slot name="right" :comment="sub_item" />
         </template>
       </ai-comment-item>
-      <div v-if="item.comments?.length >= 3 && props.moreApi && show_sub_comment" class="flex-center text-sm"
-        @click="onLoadMore">
+      <div
+        v-if="item.comments?.length >= 3 && props.moreApi && show_sub_comment"
+        class="flex-center text-sm"
+        @click="onLoadMore"
+      >
         <van-icon class="mr-0.5" name="arrow-down" />
         查看更多
       </div>

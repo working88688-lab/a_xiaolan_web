@@ -297,12 +297,18 @@ defineExpose({
 </script>
 
 <template>
-  <div class="dx-xg-player is-tiktok" :class="{
-    'is-seeking-action': isSeekingAction
-  }">
-    <div class="dx-xg-player-poster flex-center" :style="{
-      backgroundImage: `url(${_poster})`
-    }" />
+  <div
+    class="dx-xg-player is-tiktok"
+    :class="{
+      'is-seeking-action': isSeekingAction
+    }"
+  >
+    <div
+      class="dx-xg-player-poster flex-center"
+      :style="{
+        backgroundImage: `url(${_poster})`
+      }"
+    />
     <div v-show="props.active && !props.disabled" ref="playerRef" class="dx-xg-player--placeholder" />
 
     <slot :seeking="isSeekingAction" />

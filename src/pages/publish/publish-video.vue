@@ -184,11 +184,11 @@ watch(showPicker, val => {
               <div class="section-desc">上传精美封面，能获取更多的关注</div>
             </div>
           </div>
-          <div class="form-section ">
+          <div class="form-section">
             <div class="section-header px-1.5">
               <div class="section-title">标题</div>
             </div>
-            <div class="section-body !rounded-[12px] overflow-hidden px-1.5">
+            <div class="section-body overflow-hidden !rounded-[12px] px-1.5">
               <van-field
                 v-model="formState.title"
                 class="title-field"
@@ -226,7 +226,7 @@ watch(showPicker, val => {
           </div>
           <van-field
             v-model="selectTagsIds"
-            class="mt-1 tag-field"
+            class="tag-field mt-1"
             is-link
             readonly
             name="picker"
@@ -259,18 +259,8 @@ watch(showPicker, val => {
             <div class="tag-sheet-body">
               <div class="tag-search">
                 <div class="tag-search-input">
-                  <input
-                    v-model="searchKeyword"
-                    type="text"
-                    class="tag-search-input-inner"
-                    placeholder="请输入"
-                  />
-                  <van-icon
-                    v-if="searchKeyword"
-                    name="cross"
-                    class="tag-search-clear"
-                    @click="clearTagSearch"
-                  />
+                  <input v-model="searchKeyword" type="text" class="tag-search-input-inner" placeholder="请输入" />
+                  <van-icon v-if="searchKeyword" name="cross" class="tag-search-clear" @click="clearTagSearch" />
                 </div>
               </div>
 

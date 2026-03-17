@@ -104,13 +104,13 @@ const tabs: TabProps[] = [
         medias: props.item.medias.map(item => {
           return item.type == 1
             ? {
-              ...item,
-              media_url_full: imageDomain + new URL(item.media_url_full as string).pathname
-            }
+                ...item,
+                media_url_full: imageDomain + new URL(item.media_url_full as string).pathname
+              }
             : {
-              ...item,
-              cover_url_full: imageDomain + new URL(item.cover_url_full as string).pathname
-            }
+                ...item,
+                cover_url_full: imageDomain + new URL(item.cover_url_full as string).pathname
+              }
         })
       }
     }
@@ -196,15 +196,22 @@ const tabs: TabProps[] = [
         <dx-record-list :table-name="tab.tableName">
           <template #list="{ items }">
             <div :class="tab.className">
-              <component :is="tab.component" v-for="(item, index) in items" :key="item.id" :item="tab.extraItemProps?.({
-                item,
-                index,
-                items
-              }) || {}
-                " v-bind="{
+              <component
+                :is="tab.component"
+                v-for="(item, index) in items"
+                :key="item.id"
+                :item="
+                  tab.extraItemProps?.({
+                    item,
+                    index,
+                    items
+                  }) || {}
+                "
+                v-bind="{
                   ...(tab.props || {}),
                   ...tab.extraProps?.({ items, item, index })
-                }" />
+                }"
+              />
             </div>
           </template>
         </dx-record-list>

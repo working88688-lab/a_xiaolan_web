@@ -9,16 +9,25 @@ const props = defineProps<{
 <template>
   <div v-if="props.item" class="user-item-default">
     <div class="item mr-auto">
-      <dx-avatar :size="1.2" :img="props.item?.avatar_url" :uid="props.item?.uid" :aff="props.item?.aff"
-        box-class="icon" />
+      <dx-avatar
+        :size="1.2"
+        :img="props.item?.avatar_url"
+        :uid="props.item?.uid"
+        :aff="props.item?.aff"
+        box-class="icon"
+      />
       <div class="ml-0.5">
         <slot name="nickname">
           <nuxt-link class="flex items-center" :to="`/userdetail?id=${props.item?.uid}`">
             <div class="max-w-14 truncate text-default font-medium">
               {{ props.item?.nickname }}
             </div>
-            <img v-if="props.item.auth_status" class="ml-0.5 h-[20px] w-[20px]"
-              src="~/assets/image/community/original.png" alt="" />
+            <img
+              v-if="props.item.auth_status"
+              class="ml-0.5 h-[20px] w-[20px]"
+              src="~/assets/image/community/original.png"
+              alt=""
+            />
           </nuxt-link>
         </slot>
         <slot name="desc" />

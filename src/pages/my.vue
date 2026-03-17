@@ -78,6 +78,13 @@
           <img src="@/assets/image/my/model.png" class="model" alt="" />
         </div>
         <!-- 用户级别 end -->
+
+        <!-- 同圈入口 banner start -->
+        <div v-link="`/community?tab=scircle`" class="user-tongquan-banner cursor-pointer">
+          <img class="user-tongquan-banner-img" src="~/assets/image/my-tongquan.png" alt="同圈" />
+        </div>
+        <!-- 同圈入口 banner end -->
+
         <!-- 导航 start -->
         <div class="user-active-box grid grid-cols-4 gap-1">
           <div v-link="`/my/collect`" class="user-active-item">
@@ -274,6 +281,18 @@ useSyncCacheData(cacheData => {
   height: 106px;
   right: 6px;
   bottom: 0;
+}
+
+.user-tongquan-banner {
+  margin: 10px 12px 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.user-tongquan-banner-img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .user-active-box.income-card {

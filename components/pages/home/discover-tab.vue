@@ -27,7 +27,7 @@ const DARKWEB_TAB_NAME = '__darkweb__'
 const is_follow_tab = computed(() => props.isFirst === true)
 
 const tabsWithDarkweb = computed(() => {
-  const tabs = mv_nag_tab ?? [] 
+  const tabs = mv_nag_tab ?? []
   if (!tabs.length) return tabs
 
   const hasDarkweb = tabs.some(tab => tab.name === DARKWEB_TAB_NAME || tab.title === '暗网')
@@ -161,15 +161,12 @@ onBeforeMount(() => {
   }
 })
 
-watch(
-  sort,
-  (value, oldValue) => {
-    if (value === DARKWEB_TAB_NAME) {
-      __.$Replace('/darkweb')
-      sort.value = oldValue ?? mv_nag_tab?.[0].name
-    }
+watch(sort, (value, oldValue) => {
+  if (value === DARKWEB_TAB_NAME) {
+    __.$Replace('/darkweb')
+    sort.value = oldValue ?? mv_nag_tab?.[0].name
   }
-)
+})
 </script>
 <template>
   <scroll-list ref="scroll" v-dom-rect :pull-down-refresh="refresh">
@@ -190,9 +187,12 @@ watch(
       <!-- <ranking-list class="my-1" page="home/rank" use-index :data="rank_list"></ranking-list> -->
       <!-- 分类 -->
       <div class="my-1 grid grid-cols-4 gap-1 px-1">
-        <nuxt-link v-for="(item, index) in icons" :key="index"
+        <nuxt-link
+          v-for="(item, index) in icons"
+          :key="index"
           :to="`/tag?_type=find&title=${item.name}&api=${item.api}&has_sort=${item.has_sort}&${format_url_params(item.params)}`"
-          class="flex-col-center">
+          class="flex-col-center"
+        >
           <div class="size-[70px]">
             <dx-image no-bg :src="item.icon"></dx-image>
           </div>
@@ -215,16 +215,35 @@ watch(
         </div>
       </div>
 
-      <dx-tabs v-model:active="sort" stop-propagation line-width="0px" line-height="0px" sticky
-        class="my-nest-tabs text-medium first-no-padding" title-inactive-color="#333333" shrink>
+      <dx-tabs
+        v-model:active="sort"
+        stop-propagation
+        line-width="0px"
+        line-height="0px"
+        sticky
+        class="my-nest-tabs text-medium first-no-padding"
+        title-inactive-color="#333333"
+        shrink
+      >
         <van-tab v-for="item in tabsWithDarkweb" :key="item.name ?? item.title" v-bind="item"></van-tab>
       </dx-tabs>
       <div class="scroll-container list-container">
-        <scroll-list :loading="loading" :is-empty="isEmpty" :is-end="isEnd" :pullup="execute"
-          :disabled-refresh="scrollTop > 0">
+        <scroll-list
+          :loading="loading"
+          :is-empty="isEmpty"
+          :is-end="isEnd"
+          :pullup="execute"
+          :disabled-refresh="scrollTop > 0"
+        >
           <div class="grid grid-cols-2 gap-1 px-1 pb-1.5">
-            <video-card v-for="(item, lIndex) in listData" :key="item.id" :list="listData" :index="lIndex"
-              :item="item" lines></video-card>
+            <video-card
+              v-for="(item, lIndex) in listData"
+              :key="item.id"
+              :list="listData"
+              :index="lIndex"
+              :item="item"
+              lines
+            ></video-card>
           </div>
         </scroll-list>
       </div>

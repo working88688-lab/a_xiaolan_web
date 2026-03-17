@@ -10,8 +10,14 @@
       </div>
       <div class="login-swiper-box">
         <van-form>
-          <van-field v-model="formState.username" class="login-input-box" :border="false" name="username" clearable
-            placeholder="请输入账号或手机号" />
+          <van-field
+            v-model="formState.username"
+            class="login-input-box"
+            :border="false"
+            name="username"
+            clearable
+            placeholder="请输入账号或手机号"
+          />
 
           <dx-password v-model="formState.password"></dx-password>
 

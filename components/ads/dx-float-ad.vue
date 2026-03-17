@@ -13,9 +13,16 @@ const props = defineProps<{
 <template>
   <div v-if="props?.items?.length" class="dx-float-ad">
     <div class="dx-float-ad-container">
-      <swiper :modules="[Controller, Autoplay]" class="swiper-container h-full w-full overflow-hidden rounded-sm"
-        :touch-move-stop-propagation="true" :loop="true" :autoplay="true" :space-between="0" :initial-slide="0"
-        :centered-slides="true">
+      <swiper
+        :modules="[Controller, Autoplay]"
+        class="swiper-container h-full w-full overflow-hidden rounded-sm"
+        :touch-move-stop-propagation="true"
+        :loop="true"
+        :autoplay="true"
+        :space-between="0"
+        :initial-slide="0"
+        :centered-slides="true"
+      >
         <swiper-slide v-for="(item, index) in props.items" :key="item.id">
           <ad-link class="my-swipe-item" :data="item">
             <div class="aspect-h-1 aspect-w-1">

@@ -1,7 +1,14 @@
 <template>
   <div class="container relative">
-    <dx-tabs v-model:active="activeTab" shrink center swipeable class="main-tabs dx-tabs primary-tabs" line-width="30"
-      animated>
+    <dx-tabs
+      v-model:active="activeTab"
+      shrink
+      center
+      swipeable
+      class="main-tabs dx-tabs primary-tabs"
+      line-width="30"
+      animated
+    >
       <van-tab title="关注" name="follow">
         <follow-tab :data="data"></follow-tab>
       </van-tab>
@@ -19,11 +26,6 @@
     <nuxt-link :to="`/search?_index=${search_index}`" class="search-button">
       <nuxt-icon name="search" filled class="icon-search !text-[20px] !text-[#141414]"></nuxt-icon>
     </nuxt-link>
-    <div class="float-btn">
-      <publish-popup>
-        <img src="~/assets/image/community/addFeedButton.svg" alt="" />
-      </publish-popup>
-    </div>
   </div>
 </template>
 
@@ -33,6 +35,7 @@ import type { BannerItem, ForumItem, TabItem } from '@types'
 const activeTab = ref('recomment')
 const graphic = ref(0)
 const __ = useNuxtApp()
+const route = useRoute()
 const { data, loading } = useMyFetch<{
   ads: BannerItem[]
   rank_list: any[]
@@ -64,17 +67,17 @@ const search_index = computed(() => {
 const onSwipe = (index: string) => {
   activeTab.value = index
 }
+
+watch(
+  () => route.query.tab,
+  tab => {
+    if (tab === 'scircle' || tab === 'follow' || tab === 'recomment' || tab === 'film') {
+      activeTab.value = String(tab)
+    }
+  },
+  { immediate: true }
+)
 </script>
-<style lang="postcss">
-.float-btn {
-  position: absolute;
-  width: 56px;
-  height: 56px;
-  right: 16px;
-  bottom: 100px;
-  cursor: pointer;
-}
-</style>
 <style lang="postcss" scoped>
 .search-button {
   flex-shrink: 0;

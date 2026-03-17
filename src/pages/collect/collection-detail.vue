@@ -19,15 +19,24 @@
         <span class="collection-desp" v-html="data.info?.desp?.replaceAll('\n', '<br/>')"></span>
       </div>
       <div class="flex gap-1">
-        <dx-button :round="false" class="flex-1" :class="data.info?.is_like ? '!text-[#ffde00]' : '!text-white'"
-          @click="toggle">
+        <dx-button
+          :round="false"
+          class="flex-1"
+          :class="data.info?.is_like ? '!text-[#ffde00]' : '!text-white'"
+          @click="toggle"
+        >
           <van-icon name="star" size="0.5rem" class="mr-0.5" />
           <template v-if="data.info?.is_like">已收藏</template>
           <template v-else>收藏合集</template>
         </dx-button>
 
-        <van-button :loading="buy_loading" class="flex-1" :disabled="disabled_buy"
-          color="linear-gradient(to left, rgb(254,207,66),  rgb(254,183,27))" @click="before_buy">
+        <van-button
+          :loading="buy_loading"
+          class="flex-1"
+          :disabled="disabled_buy"
+          color="linear-gradient(to left, rgb(254,207,66),  rgb(254,183,27))"
+          @click="before_buy"
+        >
           <span class="text-[#8c4d10]">
             <template v-if="data.info?.coins">
               {{ disabled_buy ? '已购买' : '购买合集' }}
@@ -39,8 +48,13 @@
     </div>
     <div class="scroll-container">
       <scroll-list v-model:loading="loading" :is-empty="data.list ? data.list.length === 0 : true">
-        <stack-link v-for="(item, index) in data.list" :key="index" stack-key="colloect-detail" :list="data.list"
-          :index="index">
+        <stack-link
+          v-for="(item, index) in data.list"
+          :key="index"
+          stack-key="colloect-detail"
+          :list="data.list"
+          :index="index"
+        >
           <div class="search-videoItem">
             <div class="search-videoCover">
               <dx-image :src="item.cover_thumb_url" />

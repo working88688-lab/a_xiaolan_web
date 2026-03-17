@@ -13,17 +13,37 @@
   </div>
 
   <!-- gif广告 start-->
-  <ActivityPopup v-for="(item, index) in config.pop_ads_v2" :key="index" :item="item"
-    :show="!hasShowHomeNotice && showAd && adsShowIndex === index" class="active-dialog" :close-on-click-overlay="false"
-    @close="onActivitylDialogClose" />
+  <ActivityPopup
+    v-for="(item, index) in config.pop_ads_v2"
+    :key="index"
+    :item="item"
+    :show="!hasShowHomeNotice && showAd && adsShowIndex === index"
+    class="active-dialog"
+    :close-on-click-overlay="false"
+    @close="onActivitylDialogClose"
+  />
   <!-- gif广告 end-->
   <!-- 16宫格 -->
-  <activity-popup v-if="config.apps?.length" :item="config.apps" :type="2" :show="show_16_grid_ad" class="active-dialog"
-    :close-on-click-overlay="false" @close="on_grid_ad_close" />
+  <activity-popup
+    v-if="config.apps?.length"
+    :item="config.apps"
+    :type="2"
+    :show="show_16_grid_ad"
+    class="active-dialog"
+    :close-on-click-overlay="false"
+    @close="on_grid_ad_close"
+  />
   <!-- 官方消息dialog start-->
-  <OfficialDialog v-model:show="officialNewsDialogVisiable" class="offical-dialog" title="官方消息" :lock-scroll="false"
-    close-on-click-overlay :content="config.maintain_tips" @close="onNavgaToAppCenter"
-    @confirm="onOfficailDialogClose" />
+  <OfficialDialog
+    v-model:show="officialNewsDialogVisiable"
+    class="offical-dialog"
+    title="官方消息"
+    :lock-scroll="false"
+    close-on-click-overlay
+    :content="config.maintain_tips"
+    @close="onNavgaToAppCenter"
+    @confirm="onOfficailDialogClose"
+  />
   <!-- 官方消息dialog end-->
 
   <!--  浮动广告 -->

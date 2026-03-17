@@ -7,7 +7,7 @@
 import type { CSSProperties } from 'vue'
 import 'vue-router'
 
-export { }
+export {}
 
 declare module 'vue-router' {
   interface RouteMeta {

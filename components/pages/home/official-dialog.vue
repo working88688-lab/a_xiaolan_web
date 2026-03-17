@@ -3,8 +3,15 @@
     date: 2024.03.27
 -->
 <template>
-  <van-dialog v-bind="$attrs" class="offical-dialog" :close-on-popstate="true" title="官方消息" :lock-scroll="false"
-    teleport="body" close-on-click-overlay>
+  <van-dialog
+    v-bind="$attrs"
+    class="offical-dialog"
+    :close-on-popstate="true"
+    title="官方消息"
+    :lock-scroll="false"
+    teleport="body"
+    close-on-click-overlay
+  >
     <div class="scroller">
       <scroll-list>
         <!-- eslint-disable-next-line -->
@@ -15,14 +22,24 @@
     <template #footer>
       <van-row class="dialog-footer" justify="center">
         <van-col class="dx dx-justify-center" span="12">
-          <van-button color="linear-gradient(to left, #6de6fb, #428af7)" class="btn-item" round type="primary"
-            @click="onClose">
+          <van-button
+            color="linear-gradient(to left, #6de6fb, #428af7)"
+            class="btn-item"
+            round
+            type="primary"
+            @click="onClose"
+          >
             应用中心
           </van-button>
         </van-col>
         <van-col class="dx dx-justify-center" span="12">
-          <van-button color="linear-gradient(to left, #6de6fb, #428af7)" class="btn-item" round type="primary"
-            @click="onConfrim">
+          <van-button
+            color="linear-gradient(to left, #6de6fb, #428af7)"
+            class="btn-item"
+            round
+            type="primary"
+            @click="onConfrim"
+          >
             朕知道了
           </van-button>
         </van-col>
@@ -73,7 +90,7 @@ const offcialContent = computed(() => {
   color: var(--van-button-warning-background);
   margin: 4px 0;
 
-  &+br {
+  & + br {
     display: none;
   }
 }

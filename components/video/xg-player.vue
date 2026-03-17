@@ -1,9 +1,13 @@
 <template>
   <div class="dx-xg-player">
     <div v-show="props.active" ref="playerRef" class="dx-xg-player--placeholder"></div>
-    <div v-show="!props.active" class="dx-xg-player-poster flex-center" :style="{
-      backgroundImage: `url(${_poster})`
-    }">
+    <div
+      v-show="!props.active"
+      class="dx-xg-player-poster flex-center"
+      :style="{
+        backgroundImage: `url(${_poster})`
+      }"
+    >
       <img class="icon-play" :src="play_icon" alt="播放按钮" @click="on_play" />
     </div>
   </div>

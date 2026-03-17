@@ -3,28 +3,51 @@
     date: 2024.03.27
 -->
 <template>
-  <van-popup v-bind="$attrs" class="active-dialog" transition-appear transition="modal" teleport="body"
-    :close-on-click-overlay="false" @closed="onTrackClose">
+  <van-popup
+    v-bind="$attrs"
+    class="active-dialog"
+    transition-appear
+    transition="modal"
+    teleport="body"
+    :close-on-click-overlay="false"
+    @closed="onTrackClose"
+  >
     <div class="activity-dialog-content">
-      <ad-link v-if="props.type === 1" :trace-click-data="{
-        event: 'advertising',
-        event_type: 'click',
-        advertising_key: item.advertise_location_code,
-        advertising_name: item.ad_slot_name,
-        advertising_id: item.advertise_code
-      }" :trace-show-data="{
+      <ad-link
+        v-if="props.type === 1"
+        :trace-click-data="{
+          event: 'advertising',
+          event_type: 'click',
+          advertising_key: item.advertise_location_code,
+          advertising_name: item.ad_slot_name,
+          advertising_id: item.advertise_code
+        }"
+        :trace-show-data="{
           event: 'advertising',
           event_type: 'show',
           advertising_key: item.advertise_location_code,
           advertising_name: item.ad_slot_name,
           advertising_id: item.advertise_code
-        }" class="ad-item" ad-name="首页弹框" :data="props.item" @click="onClose">
+        }"
+        class="ad-item"
+        ad-name="首页弹框"
+        :data="props.item"
+        @click="onClose"
+      >
         <dx-image class="h-full w-full" fit="fill" :src="props.item.img_url" />
       </ad-link>
       <div v-else>
         <div class="grid h-[331px] grid-cols-4 overflow-auto rounded rounded-b bg-white px-[12px] pt-2">
-          <ad-link v-for="(ad, index) in item" :key="index" :index ad-key="16grid" ad-type="popup" ad-name="16宫格弹框"
-            :data="{ ...ad, type: 1, url: ad.link_url, id: ad.id }" class="flex-col-center px-[12px]">
+          <ad-link
+            v-for="(ad, index) in item"
+            :key="index"
+            :index
+            ad-key="16grid"
+            ad-type="popup"
+            ad-name="16宫格弹框"
+            :data="{ ...ad, type: 1, url: ad.link_url, id: ad.id }"
+            class="flex-col-center px-[12px]"
+          >
             <dx-image class="!h-4.5 !w-4.5 rounded" fit="fill" :src="ad.img_url" />
             <span class="mb-[8px] mt-[7px] whitespace-nowrap text-center text-mini text-black">{{ ad.title }}</span>
           </ad-link>
@@ -76,7 +99,7 @@ function onTrackClose() {
   height: 45px;
   margin: 0px auto 0;
 
-  >img {
+  > img {
     width: 100%;
     height: 100%;
     object-fit: contain;

@@ -5,7 +5,7 @@ const { POSITIONS } = Plugin
 // 分段获取焦点显示的时候的两种class类型
 const FRAGMENT_FOCUS_CLASS = {
   POINT: 'inner-focus-point',
-  HIGHLIGHT: 'inner-focus-highlight',
+  HIGHLIGHT: 'inner-focus-highlight'
 }
 export class CustomProgress extends Plugin {
   static get pluginName() {
@@ -32,7 +32,7 @@ export class CustomProgress extends Plugin {
       miniStartStep: 2,
       onMoveStart: () => {}, // 手势开始移动回调
       onMoveEnd: () => {}, // 手势移动结束回调
-      endedDiff: 0.2,
+      endedDiff: 0.2
     }
   }
 
@@ -62,7 +62,7 @@ export class CustomProgress extends Plugin {
       now: -1,
       direc: 0,
       time: 0,
-      prePlayTime: -1,
+      prePlayTime: -1
     }
 
     this._disableBlur = false
@@ -109,18 +109,17 @@ export class CustomProgress extends Plugin {
     const _c = {
       fragments,
       ...config,
-      actionCallback: (data) => {
+      actionCallback: data => {
         this.emitUserAction('fragment_focus', 'fragment_focus', data)
-      },
+      }
     }
     if (!this.innerList) {
       this.innerList = new InnerList(_c)
       this.outer.insertBefore(this.innerList.render(), this.outer.children[0])
-      ;['findHightLight', 'unHightLight', 'setHightLight', 'findFragment'].map((item) => {
+      ;['findHightLight', 'unHightLight', 'setHightLight', 'findFragment'].map(item => {
         this[item] = this.innerList[item].bind(this.innerList)
       })
-    }
-    else {
+    } else {
       this.innerList.reset(_c)
     }
   }
@@ -139,7 +138,7 @@ export class CustomProgress extends Plugin {
       moving: false, // 是否正在移动
       isDown: false, // 是否mouseDown
       isEnter: false, // 是否触发了mouseEnter
-      isLocked: false, // 是否刚刚锁定回过进度条
+      isLocked: false // 是否刚刚锁定回过进度条
     }
     this.outer = this.find('xg-outer')
     const { fragFocusClass, fragAutoFocus, fragClass } = this.config
@@ -147,7 +146,7 @@ export class CustomProgress extends Plugin {
       fragFocusClass,
       fragAutoFocus,
       fragClass,
-      style: this.playerConfig.commonStyle || {},
+      style: this.playerConfig.commonStyle || {}
     })
     if (Sniffer.device === 'mobile') {
       this.config.isDragingSeek = false
@@ -197,7 +196,7 @@ export class CustomProgress extends Plugin {
    */
   setConfig(config) {
     let frags = null
-    Object.keys(config).forEach((key) => {
+    Object.keys(config).forEach(key => {
       this.config[key] = config[key]
       if (key === 'fragments') {
         frags = config[key]
@@ -215,9 +214,8 @@ export class CustomProgress extends Plugin {
     if (sliderBtnStyle) {
       if (typeof sliderBtnStyle === 'string') {
         progressBtn.style.boxShadow = sliderBtnStyle
-      }
-      else if (typeof sliderBtnStyle === 'object') {
-        Object.keys(sliderBtnStyle).map((key) => {
+      } else if (typeof sliderBtnStyle === 'object') {
+        Object.keys(sliderBtnStyle).map(key => {
           progressBtn.style[key] = sliderBtnStyle[key]
         })
       }
@@ -231,12 +229,11 @@ export class CustomProgress extends Plugin {
    */
   triggerCallbacks(type, data, event) {
     if (this.__dragCallBacks.length > 0) {
-      this.__dragCallBacks.map((item) => {
+      this.__dragCallBacks.map(item => {
         if (item && item.handler && item.type === type) {
           try {
             item.handler(data, event)
-          }
-          catch (error) {
+          } catch (error) {
             console.error(`[XGPLAYER][triggerCallbacks] ${item} error`, error)
           }
         }
@@ -356,7 +353,7 @@ export class CustomProgress extends Plugin {
    * @param {*} e
    * @returns
    */
-  onBodyClick = (e) => {
+  onBodyClick = e => {
     if (!this.pos.isLocked) {
       return
     }
@@ -388,7 +385,7 @@ export class CustomProgress extends Plugin {
       this._updateInnerFocus({
         ...data,
         percent,
-        currentTime: previewTime,
+        currentTime: previewTime
       })
       if (typeof playerConfig.on_preview_ended === 'function') {
         playerConfig.on_preview_ended(this.player)
@@ -402,8 +399,7 @@ export class CustomProgress extends Plugin {
     const { _state, pos, config, player } = this
     if (_state.time < data.currentTime) {
       data.forward = true
-    }
-    else {
+    } else {
       data.forward = false
     }
     _state.time = data.currentTime
@@ -418,7 +414,7 @@ export class CustomProgress extends Plugin {
     this._updateInnerFocus(data)
   }
 
-  onMouseDown = (e) => {
+  onMouseDown = e => {
     const { _state, player, pos, config, playerConfig } = this
     const _ePos = Util.getEventPos(e, player.zoom)
     const x = player.rotateDeg === 90 ? _ePos.clientY : _ePos.clientX
@@ -455,8 +451,7 @@ export class CustomProgress extends Plugin {
       this.root.addEventListener('touchmove', this.onMouseMove)
       this.root.addEventListener('touchend', this.onMouseUp)
       this.root.addEventListener('touchcancel', this.onMouseUp)
-    }
-    else {
+    } else {
       this.unbind('mousemove', this.onMoveOnly)
 
       document.addEventListener('mousemove', this.onMouseMove, false)
@@ -466,7 +461,7 @@ export class CustomProgress extends Plugin {
     return true
   }
 
-  onMouseUp = (e) => {
+  onMouseUp = e => {
     const { player, config, pos, playerConfig, _state } = this
     e.stopPropagation()
     e.preventDefault()
@@ -480,8 +475,7 @@ export class CustomProgress extends Plugin {
     if (pos.moving) {
       this.triggerCallbacks('dragend', ret, e)
       this.emitUserAction('drag', 'dragend', ret)
-    }
-    else {
+    } else {
       this.triggerCallbacks('click', ret, e)
       this.emitUserAction('click', 'click', ret)
     }
@@ -501,14 +495,12 @@ export class CustomProgress extends Plugin {
       this.root.removeEventListener('touchcancel', this.onMouseUp)
       // 交互结束 恢复控制栏的隐藏流程
       this.blur()
-    }
-    else {
+    } else {
       document.removeEventListener('mousemove', this.onMouseMove, false)
       document.removeEventListener('mouseup', this.onMouseUp, false)
       if (!pos.isEnter) {
         this.onMouseLeave(e)
-      }
-      else {
+      } else {
         playerConfig.isMobileSimulateMode !== 'mobile' && this.bind('mousemove', this.onMoveOnly)
       }
     }
@@ -518,13 +510,13 @@ export class CustomProgress extends Plugin {
       () => {
         this.resetSeekState()
       },
-      1,
+      1
     )
     // 交互结束 恢复控制栏的隐藏流程
     player.focus()
   }
 
-  onMouseMove = (e) => {
+  onMouseMove = e => {
     const { _state, pos, player, config } = this
     if (Util.checkTouchSupport()) {
       // e.stopPropagation()
@@ -543,15 +535,15 @@ export class CustomProgress extends Plugin {
     this._mouseMoveHandlerHook(e, ret)
   }
 
-  onMouseOut = (e) => {
+  onMouseOut = e => {
     this.triggerCallbacks('mouseout', null, e)
   }
 
-  onMouseOver = (e) => {
+  onMouseOver = e => {
     this.triggerCallbacks('mouseover', null, e)
   }
 
-  onMouseEnter = (e) => {
+  onMouseEnter = e => {
     const { player, pos } = this
     if (pos.isDown || pos.isEnter || player.isMini || (!player.config.allowSeekAfterEnded && player.ended)) {
       return
@@ -568,7 +560,7 @@ export class CustomProgress extends Plugin {
     this.focus()
   }
 
-  onMouseLeave = (e) => {
+  onMouseLeave = e => {
     this.triggerCallbacks('mouseleave', null, e)
     this.unlock()
     this._updateInnerFocus(null)
@@ -595,8 +587,8 @@ export class CustomProgress extends Plugin {
       return
     }
 
-    const realTime = (seekTime
-      = seekTime >= player.duration ? player.duration - config.endedDiff : Number(seekTime).toFixed(1))
+    const realTime = (seekTime =
+      seekTime >= player.duration ? player.duration - config.endedDiff : Number(seekTime).toFixed(1))
 
     this.updatePercent(percent)
 
@@ -623,8 +615,7 @@ export class CustomProgress extends Plugin {
     if (player.rotateDeg === 90) {
       rWidth = height
       rLeft = top
-    }
-    else {
+    } else {
       rWidth = width
       rLeft = left
     }
@@ -641,7 +632,7 @@ export class CustomProgress extends Plugin {
       offset,
       width: rWidth,
       left: rLeft,
-      e,
+      e
     }
   }
 
@@ -654,8 +645,7 @@ export class CustomProgress extends Plugin {
     const { player, duration } = this
     if (time > duration) {
       time = duration
-    }
-    else if (time < 0) {
+    } else if (time < 0) {
       time = 0
     }
     const timeIcon = player.plugins.time
@@ -722,8 +712,7 @@ export class CustomProgress extends Plugin {
       if ((_state.direc === 0 && abs > 300) || (_state.direc === 1 && abs > -300)) {
         _state.now = -1
         return
-      }
-      else {
+      } else {
         _state.now = -1
       }
     }

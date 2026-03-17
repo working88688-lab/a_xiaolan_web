@@ -1,11 +1,5 @@
 <template>
-  <van-popup
-    v-model:show="innerShow"
-    teleport="body"
-    position="bottom"
-    round
-    :style="{ height: '100%' }"
-  >
+  <van-popup v-model:show="innerShow" teleport="body" position="bottom" round :style="{ height: '100%' }">
     <div class="profile-popup">
       <div class="profile-popup__header">
         <div class="profile-popup__title">我的资料</div>
@@ -197,4 +191,3 @@ const onSubmit = () => {
   }
 }
 </style>
-

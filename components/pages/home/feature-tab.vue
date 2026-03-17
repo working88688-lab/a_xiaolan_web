@@ -84,16 +84,13 @@ const getTabs = async () => {
 
 onBeforeMount(getTabs)
 
-watch(
-  activeTab,
-  (value, oldValue) => {
-    const current = tabState.tabs[value]
-    if (current?.name === DARKWEB_TAB_NAME) {
-      __.$Replace('/darkweb')
-      activeTab.value = oldValue ?? 1
-    }
+watch(activeTab, (value, oldValue) => {
+  const current = tabState.tabs[value]
+  if (current?.name === DARKWEB_TAB_NAME) {
+    __.$Replace('/darkweb')
+    activeTab.value = oldValue ?? 1
   }
-)
+})
 </script>
 
 <style lang="postcss" scoped>
@@ -122,7 +119,7 @@ watch(
   height: 132px;
 }
 
-.primary-tabs> :deep(.van-tabs__nav--line) {
+.primary-tabs > :deep(.van-tabs__nav--line) {
   height: initial;
 }
 
@@ -134,7 +131,7 @@ watch(
   position: relative;
 }
 
-.primary-tabs.van-tabs> :deep(.van-tabs__wrap) {
+.primary-tabs.van-tabs > :deep(.van-tabs__wrap) {
   height: 22px;
   margin-bottom: 8px;
 

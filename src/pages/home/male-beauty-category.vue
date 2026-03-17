@@ -3,25 +3,46 @@
     <dx-spin v-if="initing"></dx-spin>
     <template v-else>
       <div class="category-header">
-        <dx-tabs v-model:active="activeTab" shrink class="mb-1 sticky-title" theme="button" @change="onTabIdChange">
+        <dx-tabs v-model:active="activeTab" shrink class="sticky-title mb-1" theme="button" @change="onTabIdChange">
           <van-tab v-for="tab in data" :key="tab.tab_id" :title="tab.tab_name"></van-tab>
         </dx-tabs>
-        <dx-tabs v-model:active="secondActiveTab" line-height="0" line-width="0" shrink theme="button"
-          class="mb-1 sticky-title" @change="onCommonChange">
+        <dx-tabs
+          v-model:active="secondActiveTab"
+          line-height="0"
+          line-width="0"
+          shrink
+          theme="button"
+          class="sticky-title mb-1"
+          @change="onCommonChange"
+        >
           <!-- <template #left>
             <span class="van-tab mr-1.5 flex-shrink-0 bg-white !pr-0.5 font-medium text-[#111111]">类型</span>
           </template> -->
           <van-tab v-for="(item, index) in secondTabs" :key="index" :title="item"></van-tab>
         </dx-tabs>
-        <dx-tabs v-model:active="typeTab" class="mb-1" line-height="0" line-width="0" shrink theme="button"
-          @change="onCommonChange">
+        <dx-tabs
+          v-model:active="typeTab"
+          class="mb-1"
+          line-height="0"
+          line-width="0"
+          shrink
+          theme="button"
+          @change="onCommonChange"
+        >
           <!-- <template #left>
             <span class="mr-1.5 flex-shrink-0 bg-white !pr-0.5 font-medium text-[#111111]">规格</span>
           </template> -->
           <van-tab v-for="(item, index) in typeList" :key="index" :title="item.name"></van-tab>
         </dx-tabs>
-        <dx-tabs v-model:active="sort" class="mb-1" line-height="0" line-width="0" shrink theme="button"
-          @change="onSort">
+        <dx-tabs
+          v-model:active="sort"
+          class="mb-1"
+          line-height="0"
+          line-width="0"
+          shrink
+          theme="button"
+          @change="onSort"
+        >
           <!-- <template #left>
             <span class="mr-1.5 flex-shrink-0 !pr-0.5 font-medium text-[#111111]">排序</span>
           </template> -->

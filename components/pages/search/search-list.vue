@@ -24,7 +24,7 @@ function onClearHistory() {
       .then(() => {
         emit('clear')
       })
-      .catch(() => { })
+      .catch(() => {})
   }
 }
 
@@ -82,8 +82,12 @@ function iconRanking(index: number) {
         <div class="ranking_box search-box">
           <p class="mb-1 text-xl font-medium">热搜排行</p>
           <div class="grid grid-cols-1 gap-1">
-            <div v-for="(item, index) in state.rank_list" :key="index" class="flex items-center"
-              @click="onSearch(item.work)">
+            <div
+              v-for="(item, index) in state.rank_list"
+              :key="index"
+              class="flex items-center"
+              @click="onSearch(item.work)"
+            >
               <div class="flex flex-1 items-center overflow-hidden">
                 <div class="mr-1 w-2 flex-shrink-0 text-center">
                   <img v-if="index < 3" :src="iconRanking(index)" />
@@ -109,8 +113,12 @@ function iconRanking(index: number) {
             </div>
           </div>
         </div>
-        <div v-for="(item, index) in state.recommend" :key="index" class="search-box"
-          :style="{ paddingTop: 10, paddingRight: 14, paddingBottom: 20 }">
+        <div
+          v-for="(item, index) in state.recommend"
+          :key="index"
+          class="search-box"
+          :style="{ paddingTop: 10, paddingRight: 14, paddingBottom: 20 }"
+        >
           <div class="mb-1 text-xl font-medium">
             {{ item.title }}
           </div>

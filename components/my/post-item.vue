@@ -2,8 +2,13 @@
   <div class="item-bg">
     <div class="use-info mb-1" @click="navigateToDetail">
       <div class="use-info_left">
-        <dx-avatar class="flex-shrink-0" :img="item.user?.avatar_url" :size="1.33" :uid="item.user?.uid"
-          :aff="item.user?.aff" />
+        <dx-avatar
+          class="flex-shrink-0"
+          :img="item.user?.avatar_url"
+          :size="1.33"
+          :uid="item.user?.uid"
+          :aff="item.user?.aff"
+        />
         <div class="info">
           <div class="flex items-center">
             <span class="text-xl">{{ item.user?.nickname }}</span>
@@ -23,8 +28,13 @@
         </div>
       </div>
 
-      <btn-follow class="fouce-bt" :uid="item?.user?.uid" :attention="item?.user?.is_attention" use-default-style
-        symbol="+"></btn-follow>
+      <btn-follow
+        class="fouce-bt"
+        :uid="item?.user?.uid"
+        :attention="item?.user?.is_attention"
+        use-default-style
+        symbol="+"
+      ></btn-follow>
     </div>
     <div class="item-bg_type text-[#1a1a1a]">
       <div class="flex">
@@ -36,8 +46,11 @@
       </p>
     </div>
 
-    <div class="img-list relative" :style="{ justifyContent: item.medias.length > 2 ? 'space-between' : 'start' }"
-      @click="navigateToDetail">
+    <div
+      class="img-list relative"
+      :style="{ justifyContent: item.medias.length > 2 ? 'space-between' : 'start' }"
+      @click="navigateToDetail"
+    >
       <template v-for="(img, iIndex) in item.medias" :key="img">
         <div v-if="iIndex < 3" class="img-list_img">
           <img v-lazyLoad="img.type == 1 ? img.media_url_full : img.cover_url_full" />

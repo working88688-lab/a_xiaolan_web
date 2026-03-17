@@ -16,15 +16,15 @@ const cryptodata = {
 function cc(e, o = true) {
   return o
     ? CryptoJS.enc.Utf8.parse(
-      e
+        e
+          .split('_')
+          .map(a => String.fromCharCode(Number.parseInt(a)))
+          .join('')
+      )
+    : e
         .split('_')
         .map(a => String.fromCharCode(Number.parseInt(a)))
         .join('')
-    )
-    : e
-      .split('_')
-      .map(a => String.fromCharCode(Number.parseInt(a)))
-      .join('')
 }
 
 // 图片解密

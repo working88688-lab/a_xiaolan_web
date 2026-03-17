@@ -244,8 +244,13 @@ const is_show_bg = computed(() => {
 </script>
 <template>
   <div v-if="uid" :key="uid" class="container">
-    <dx-navbar style="--van-nav-bar-z-index: 10" :title="is_show_bg ? userInfo?.nickname : ''"
-      class="transition-all duration-200" :class="is_show_bg ? '!bg-white' : 'transparent'" :border="false"></dx-navbar>
+    <dx-navbar
+      style="--van-nav-bar-z-index: 10"
+      :title="is_show_bg ? userInfo?.nickname : ''"
+      class="transition-all duration-200"
+      :class="is_show_bg ? '!bg-white' : 'transparent'"
+      :border="false"
+    ></dx-navbar>
 
     <scroll-list ref="list" :is-ready="!loading" class="mt-[-50px]">
       <div class="homepage-user-header">
@@ -299,7 +304,7 @@ const is_show_bg = computed(() => {
               </btn-follow>
 
               <dx-button
-                v-if="userInfo?.uid" 
+                v-if="userInfo?.uid"
                 color="linear-gradient(to right, #00D0FF,  #3D9DFD)"
                 :to="`/chat/room?uid=${userInfo.uid}&name=${userInfo.nickname}`"
               >
@@ -315,22 +320,46 @@ const is_show_bg = computed(() => {
           </div>
         </div>
         <div class="user_page_box">
-          <dx-tabs v-model:active="active" class="dx-tabs first-no-padding" line-width="20px" shrink sticky
-            @rendered="onRender">
+          <dx-tabs
+            v-model:active="active"
+            class="dx-tabs first-no-padding"
+            line-width="20px"
+            shrink
+            sticky
+            @rendered="onRender"
+          >
             <van-tab title="视频">
               <div class="container">
-                <van-search v-model="videoSearch" class="my-search" show-action shape="round" clear-trigger="always"
-                  placeholder="请输入标题查找作品" @search="onSearch('0')" @clear="onClear('0')">
+                <van-search
+                  v-model="videoSearch"
+                  class="my-search"
+                  show-action
+                  shape="round"
+                  clear-trigger="always"
+                  placeholder="请输入标题查找作品"
+                  @search="onSearch('0')"
+                  @clear="onClear('0')"
+                >
                   <template #action>
                     <div class="btn-search" @click="onSearch('0')">搜索</div>
                   </template>
                 </van-search>
                 <div class="scroll-container">
-                  <scroll-list v-model:loading="videoLoading" :pull-down-refresh="clearMap['0']" :is-end="videoEnd"
-                    :is-empty="videoEmpty" :pullup="fetchMap['0']">
+                  <scroll-list
+                    v-model:loading="videoLoading"
+                    :pull-down-refresh="clearMap['0']"
+                    :is-end="videoEnd"
+                    :is-empty="videoEmpty"
+                    :pullup="fetchMap['0']"
+                  >
                     <div class="grid grid-cols-2 gap-1 px-1">
-                      <video-card v-for="(item, index) in videos" :key="item.id" :list="videos" :index="index"
-                        :item="item"></video-card>
+                      <video-card
+                        v-for="(item, index) in videos"
+                        :key="item.id"
+                        :list="videos"
+                        :index="index"
+                        :item="item"
+                      ></video-card>
                     </div>
                   </scroll-list>
                 </div>
@@ -338,33 +367,63 @@ const is_show_bg = computed(() => {
             </van-tab>
             <van-tab title="短视频">
               <div class="container">
-                <scroll-list v-model:loading="shortsLoading" :pull-down-refresh="clearMap['1']" :is-end="shortsEnd"
-                  :is-empty="shortsEmpty" :pullup="fetchMap['1']">
+                <scroll-list
+                  v-model:loading="shortsLoading"
+                  :pull-down-refresh="clearMap['1']"
+                  :is-end="shortsEnd"
+                  :is-empty="shortsEmpty"
+                  :pullup="fetchMap['1']"
+                >
                   <div class="grid grid-cols-3 gap-1 px-1">
-                    <video-tiktok-item v-for="(item, index) in shorts" :key="item.id" :list="shorts" :index="index"
-                      :item="item" show-title api="api/users/videos" :params="{
+                    <video-tiktok-item
+                      v-for="(item, index) in shorts"
+                      :key="item.id"
+                      :list="shorts"
+                      :index="index"
+                      :item="item"
+                      show-title
+                      api="api/users/videos"
+                      :params="{
                         show_type: 1,
                         page: page.page,
                         uid: route.query.id
-                      }"></video-tiktok-item>
+                      }"
+                    ></video-tiktok-item>
                   </div>
                 </scroll-list>
               </div>
             </van-tab>
             <van-tab title="收藏">
               <div class="container">
-                <van-search v-model="likeSearch" class="my-search" show-action shape="round" placeholder="请输入标题查找作品"
-                  clear-trigger="always" @search="onSearch('2')" @clear="onClear('2')">
+                <van-search
+                  v-model="likeSearch"
+                  class="my-search"
+                  show-action
+                  shape="round"
+                  placeholder="请输入标题查找作品"
+                  clear-trigger="always"
+                  @search="onSearch('2')"
+                  @clear="onClear('2')"
+                >
                   <template #action>
                     <div class="btn-search" @click="onSearch('2')">搜索</div>
                   </template>
                 </van-search>
                 <div class="scroll-container">
-                  <scroll-list v-model:loading="likeLoading" :pull-down-refresh="clearMap['2']" :is-end="likeEnd"
-                    :is-empty="likeEmpty" :pullup="fetchMap['2']">
+                  <scroll-list
+                    v-model:loading="likeLoading"
+                    :pull-down-refresh="clearMap['2']"
+                    :is-end="likeEnd"
+                    :is-empty="likeEmpty"
+                    :pullup="fetchMap['2']"
+                  >
                     <div class="grid grid-cols-2 gap-1 px-1">
-                      <video-card v-for="(item, index) in likes" :key="item.id" :index="index"
-                        :item="item"></video-card>
+                      <video-card
+                        v-for="(item, index) in likes"
+                        :key="item.id"
+                        :index="index"
+                        :item="item"
+                      ></video-card>
                     </div>
                   </scroll-list>
                 </div>
@@ -372,15 +431,28 @@ const is_show_bg = computed(() => {
             </van-tab>
             <van-tab title="购买">
               <div class="container">
-                <van-search v-model="buySearch" class="my-search" show-action shape="round" placeholder="请输入标题查找作品"
-                  clear-trigger="always" @search="onSearch('3')" @clear="onClear('3')">
+                <van-search
+                  v-model="buySearch"
+                  class="my-search"
+                  show-action
+                  shape="round"
+                  placeholder="请输入标题查找作品"
+                  clear-trigger="always"
+                  @search="onSearch('3')"
+                  @clear="onClear('3')"
+                >
                   <template #action>
                     <div class="btn-search" @click="onSearch('3')">搜索</div>
                   </template>
                 </van-search>
                 <div class="scroll-container">
-                  <scroll-list v-model:loading="buyLoading" :pull-down-refresh="clearMap['3']" :is-end="buyEnd"
-                    :is-empty="buyEmpty" :pullup="fetchMap['3']">
+                  <scroll-list
+                    v-model:loading="buyLoading"
+                    :pull-down-refresh="clearMap['3']"
+                    :is-end="buyEnd"
+                    :is-empty="buyEmpty"
+                    :pullup="fetchMap['3']"
+                  >
                     <div class="grid grid-cols-2 gap-1 px-1">
                       <video-card v-for="(item, index) in buys" :key="item.id" :index="index" :item="item"></video-card>
                     </div>
@@ -391,15 +463,28 @@ const is_show_bg = computed(() => {
 
             <van-tab title="发帖">
               <div class="container">
-                <van-search v-model="postSearch" class="my-search" show-action shape="round" placeholder="请输入标题查找作品"
-                  clear-trigger="always" @search="onSearch('4')" @clear="onClear('4')">
+                <van-search
+                  v-model="postSearch"
+                  class="my-search"
+                  show-action
+                  shape="round"
+                  placeholder="请输入标题查找作品"
+                  clear-trigger="always"
+                  @search="onSearch('4')"
+                  @clear="onClear('4')"
+                >
                   <template #action>
                     <div class="btn-search" @click="onSearch('4')">搜索</div>
                   </template>
                 </van-search>
                 <div class="scroll-container">
-                  <scroll-list v-model:loading="postLoading" :is-end="postEnd" :pull-down-refresh="clearMap['4']"
-                    :is-empty="postEmpty" :pullup="fetchMap['4']">
+                  <scroll-list
+                    v-model:loading="postLoading"
+                    :is-end="postEnd"
+                    :pull-down-refresh="clearMap['4']"
+                    :is-empty="postEmpty"
+                    :pullup="fetchMap['4']"
+                  >
                     <div class="dx-list">
                       <post-item v-for="item in posts" :key="item.id" show-original :item="item"></post-item>
                     </div>

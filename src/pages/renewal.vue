@@ -122,10 +122,21 @@ useNoticeWithoutReg()
     </div>
     <dx-spin v-show="loading" size="0.6rem" class="my-2 text-center"></dx-spin>
     <div class="py-1" @touchstart="onTouchMove">
-      <swiper v-if="data.list?.online?.length" :modules="[Controller]" class="swiper-container"
-        :touch-move-stop-propagation="true" :loop="true" :space-between="0" :initial-slide="0" :slides-per-view="3"
-        :centered-slides="true" :slide-to-click="false" :controller="{ control: swipe_ref }" @slide-change="onChange"
-        @swiper="setSwiper">
+      <swiper
+        v-if="data.list?.online?.length"
+        :modules="[Controller]"
+        class="swiper-container"
+        :touch-move-stop-propagation="true"
+        :loop="true"
+        :space-between="0"
+        :initial-slide="0"
+        :slides-per-view="3"
+        :centered-slides="true"
+        :slide-to-click="false"
+        :controller="{ control: swipe_ref }"
+        @slide-change="onChange"
+        @swiper="setSwiper"
+      >
         <swiper-slide v-for="(item, index) in data.list?.online" :key="item.id" @click="on_select(index)">
           <div class="slide flex-col-center relative cursor-pointer px-1 py-3">
             <h2 class="name font-medium">{{ item.pname }}</h2>
@@ -157,8 +168,11 @@ useNoticeWithoutReg()
           </div>
 
           <div class="grid grid-cols-2 gap-1">
-            <div v-for="(item, index) in selectItem.right" :key="item.id"
-              class="right-item flex h-8 items-center rounded-sm p-1">
+            <div
+              v-for="(item, index) in selectItem.right"
+              :key="item.id"
+              class="right-item flex h-8 items-center rounded-sm p-1"
+            >
               <div class="mr-1 h-3 w-3">
                 <dx-image no-bg :src="item.img_url"></dx-image>
               </div>

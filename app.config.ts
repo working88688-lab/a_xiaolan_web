@@ -515,11 +515,6 @@ export default defineAppConfig({
       name: 'chat-room',
       path: '/chat/room',
       meta: {
-        theme: {
-          page: {
-            backgroundColor: '#f4f5f6'
-          }
-        },
         trackPageName: '聊天室'
       }
     },

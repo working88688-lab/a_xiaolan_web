@@ -16,8 +16,15 @@
           </template>
         </van-nav-bar>
         <div class="px-1">
-          <dx-tabs :key="params.tab" v-model:active="params.kwy" theme="button" line-height="0" line-width="0" shrink
-            class="mb-1.5">
+          <dx-tabs
+            :key="params.tab"
+            v-model:active="params.kwy"
+            theme="button"
+            line-height="0"
+            line-width="0"
+            shrink
+            class="mb-1.5"
+          >
             <van-tab v-for="tab in sub_tabs" :key="tab.key" :title="tab.name" :name="tab.key"></van-tab>
           </dx-tabs>
           <dx-tabs v-model:active="params.sort" theme="button" line-height="0" line-width="0" shrink class="mb-1.5">
@@ -26,12 +33,23 @@
         </div>
       </div>
       <div class="scroll-container">
-        <dx-hoc-list api="api/original/list" :params="params" :immediate="false" :ready="!!params.tab"
-          class="grid grid-cols-2 gap-1 px-1">
+        <dx-hoc-list
+          api="api/original/list"
+          :params="params"
+          :immediate="false"
+          :ready="!!params.tab"
+          class="grid grid-cols-2 gap-1 px-1"
+        >
           <template #item="{ item, index, items }">
-            <video-card :key="item.id" :index="index" :list="items" :show-type="false" :mv-type="2"
+            <video-card
+              :key="item.id"
+              :index="index"
+              :list="items"
+              :show-type="false"
+              :mv-type="2"
               :show-duration="false"
-              :item="{ cover_thumb_url: item.cover_full, rating: item.play_count, ...item }"></video-card>
+              :item="{ cover_thumb_url: item.cover_full, rating: item.play_count, ...item }"
+            ></video-card>
           </template>
         </dx-hoc-list>
       </div>

@@ -204,10 +204,15 @@ onBeforeRouteUpdate(async to => {
       <dx-loading v-if="loading" />
       <video-placeholder v-else-if="previewEnd" :coins="data.detail?.coins" @confirm="onVideoEnd" />
       <template v-else-if="data.detail">
-        <xg-player :active="is_player_active" :src="play_url" :poster="data.detail?.cover_full" :preview-config="{
-          mode: +!!preview_tip,
-          time: !!preview_tip ? 10 : 0
-        }" :video-info="{
+        <xg-player
+          :active="is_player_active"
+          :src="play_url"
+          :poster="data.detail?.cover_full"
+          :preview-config="{
+            mode: +!!preview_tip,
+            time: !!preview_tip ? 10 : 0
+          }"
+          :video-info="{
             video_id: data.detail?.video_id,
             video_title: data.detail?.title,
             video_tag_name: data.detail?.tags,
@@ -215,7 +220,9 @@ onBeforeRouteUpdate(async to => {
             video_type_name: data.detail?.video_type_name,
             video_tag_key: data.detail?.video_type_name,
             duration: 0
-          }" @preview-ended="onVideoEnd" />
+          }"
+          @preview-ended="onVideoEnd"
+        />
       </template>
       <div v-else class="translate-50 absolute left-1/2 top-1/2 text-xl font-semibold text-white">资源不存在</div>
 
@@ -235,15 +242,31 @@ onBeforeRouteUpdate(async to => {
               {{ data.detail?.title }}
             </p>
             <div class="flex flex-wrap gap-1">
-              <dx-tag v-for="(item, index) in data.detail?.tags" :key="index"
-                v-link="`/tag?title=${item}&tag=${item}&_type=original_tag&_sort_key=type`" :text="item" :type="1" />
+              <dx-tag
+                v-for="(item, index) in data.detail?.tags"
+                :key="index"
+                v-link="`/tag?title=${item}&tag=${item}&_type=original_tag&_sort_key=type`"
+                :text="item"
+                :type="1"
+              />
             </div>
             <div class="my-1.5 flex items-center text-sm text-base2">
               <span>{{ $Utils.formatNumber(data.detail?.play_count, 'en') }}播放</span>
               <div class="ml-auto flex items-center gap-2">
-                <dx-btn-like :id="data.detail?.id" :key="data.detail?.id" class="action-icon" align="row"
-                  :like="data.detail?.is_like === 1" :likes="data.detail?.like_count" :api="API_MAP.like[mvType]"
-                  :use-toast="false" size="0.6rem" icon="like-o" active-icon="like" active-color="#ff416a" />
+                <dx-btn-like
+                  :id="data.detail?.id"
+                  :key="data.detail?.id"
+                  class="action-icon"
+                  align="row"
+                  :like="data.detail?.is_like === 1"
+                  :likes="data.detail?.like_count"
+                  :api="API_MAP.like[mvType]"
+                  :use-toast="false"
+                  size="0.6rem"
+                  icon="like-o"
+                  active-icon="like"
+                  active-color="#ff416a"
+                />
                 <nuxt-link class="flex items-center" to="/myinvite">
                   <div class="mr-0.5 h-[28px] w-[28px]">
                     <img src="~/assets/image-icon/share-rect.png" />
@@ -261,35 +284,51 @@ onBeforeRouteUpdate(async to => {
           <div v-if="data.recommend?.length" class="info-recommend">
             <p class="info-recommend-title">为你推荐</p>
             <div class="grid grid-cols-2 gap-1">
-              <video-card v-for="(item, index) in data.recommend" :key="index" :index="index" lines replace
-                :show-type="false" :mv-type="Number(mvType || 1)" :show-duration="false"
-                :item="{ cover_thumb_url: item.cover_full, ...item, rating: item.play_count }" />
+              <video-card
+                v-for="(item, index) in data.recommend"
+                :key="index"
+                :index="index"
+                lines
+                replace
+                :show-type="false"
+                :mv-type="Number(mvType || 1)"
+                :show-duration="false"
+                :item="{ cover_thumb_url: item.cover_full, ...item, rating: item.play_count }"
+              />
             </div>
           </div>
 
           <h2 class="mb-1.5 mt-2 text-xl">全部评论（{{ data.detail?.com_count || 0 }}）</h2>
           <div class="grid grid-cols-1 gap-1.5">
-            <video-comment-item v-for="item in comments" :key="item.id" :item="{
-              ...item,
-              user: {
-                ...item.user,
-                thumb: item.user.avatar_url
-              },
-              createdAt: item.created_at,
-              hasLike: item.is_like === 1,
-              likes: item.like_num,
-              comments: item.comments.map(_comment => ({
-                ..._comment,
+            <video-comment-item
+              v-for="item in comments"
+              :key="item.id"
+              :item="{
+                ...item,
                 user: {
-                  ..._comment.user,
-                  thumb: _comment.user.avatar_url
+                  ...item.user,
+                  thumb: item.user.avatar_url
                 },
-                createdAt: _comment.created_at,
-                hasLike: _comment.is_like === 1,
-                likes: _comment.like_num
-              }))
-            }" :id-key="mvType === '2' ? 'id' : 'comment_id'" :api="API_MAP.like_comment[mvType]" sub-key="comments"
-              comment-key="content" @reply="onReply" />
+                createdAt: item.created_at,
+                hasLike: item.is_like === 1,
+                likes: item.like_num,
+                comments: item.comments.map(_comment => ({
+                  ..._comment,
+                  user: {
+                    ..._comment.user,
+                    thumb: _comment.user.avatar_url
+                  },
+                  createdAt: _comment.created_at,
+                  hasLike: _comment.is_like === 1,
+                  likes: _comment.like_num
+                }))
+              }"
+              :id-key="mvType === '2' ? 'id' : 'comment_id'"
+              :api="API_MAP.like_comment[mvType]"
+              sub-key="comments"
+              comment-key="content"
+              @reply="onReply"
+            />
           </div>
         </div>
       </scroll-list>
@@ -300,8 +339,10 @@ onBeforeRouteUpdate(async to => {
     <!-- 非vip 观看分享提示 -->
     <dx-share-popup v-model:show="shareLayer" title=""></dx-share-popup>
     <!-- 分享弹框 -->
-    <share-dialog v-model:show="shareDialogVisiable"
-      :data="{ cover_thumb_url: data.detail?.cover_full, ...data.detail }"></share-dialog>
+    <share-dialog
+      v-model:show="shareDialogVisiable"
+      :data="{ cover_thumb_url: data.detail?.cover_full, ...data.detail }"
+    ></share-dialog>
     <!-- 金币提示弹框 -->
     <buy-popup v-model:show="buyLayer" :video-info="data.detail" @submit="onPay"></buy-popup>
     <van-overlay z-index="10" :show="paying">

@@ -9,18 +9,31 @@ const props = defineProps<{
 <template>
   <dx-hoc-list :api="props.api" fields="data" :pullup="false">
     <template #header="{ data }">
-      <dx-resource-ads class="px-1.5" :ad-key="props.type" :ad-name="props.title"
-        :items="data?.ads ?? []"></dx-resource-ads>
-      <div class="graphic-filter-state" :class="props.type === 'comics' ? 'icon-type-two' : 'icon-type-one'"
-        @touchmove.stop>
+      <dx-resource-ads
+        class="px-1.5"
+        :ad-key="props.type"
+        :ad-name="props.title"
+        :items="data?.ads ?? []"
+      ></dx-resource-ads>
+      <div
+        class="graphic-filter-state"
+        :class="props.type === 'comics' ? 'icon-type-two' : 'icon-type-one'"
+        @touchmove.stop
+      >
         <scroll-x-view class="graphic-filter-state-scroll">
-          <div v-for="(_item, index) in data?.icon" :key="index" v-link="`/home/resource-filter?${format_url_params({
-            title: props.title,
-            _type: props.type,
-            type: _item.type,
-            key: _item.key
-          })}`
-            " class="graphic-filter-item">
+          <div
+            v-for="(_item, index) in data?.icon"
+            :key="index"
+            v-link="
+              `/home/resource-filter?${format_url_params({
+                title: props.title,
+                _type: props.type,
+                type: _item.type,
+                key: _item.key
+              })}`
+            "
+            class="graphic-filter-item"
+          >
             <div class="icon"><dx-image no-bg :src="_item.icon" /></div>
             <div class="title">{{ _item.name }}</div>
           </div>
@@ -37,39 +50,43 @@ const props = defineProps<{
       <div v-if="card.show_style === 'H-1*N'" :key="index" class="graphic-layout-item">
         <div class="graphic-index-title">
           <div class="title">{{ card.tab_name }}</div>
-          <nuxt-link :to="`/query?${format_url_params({
-            tab: card.tab_id,
-            title: card.tab_name,
-            _type: props.type,
-            _sort_key: 'order'
-          })}`" class="more">
+          <nuxt-link
+            :to="`/query?${format_url_params({
+              tab: card.tab_id,
+              title: card.tab_name,
+              _type: props.type,
+              _sort_key: 'order'
+            })}`"
+            class="more"
+          >
             查看更多 >
           </nuxt-link>
         </div>
         <div class="dx-list" @touchmove.stop>
           <scroll-x-view>
             <div class="graphic-scroll-content">
-              <div v-for="(cardItem, cardIndex) in card?.items" :key="cardIndex"
-                v-link="`/${props.type}?id=${cardItem.id}`" class="graphic-information">
+              <div
+                v-for="(cardItem, cardIndex) in card?.items"
+                :key="cardIndex"
+                v-link="`/${props.type}?id=${cardItem.id}`"
+                class="graphic-information"
+              >
                 <div class="content">
                   <div class="thumb">
-                    <dx-image :src="cardItem.thumb_full" /></div>
+                    <dx-image :src="cardItem.thumb_full" />
+                  </div>
 
-                    <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
-                    <div class="absolute bottom-0.5 right-0.5 left-0.5 text-white flex justify-between z-10">
-                      <div class="flex items-center gap-0.5">
-                        <van-icon name="eye-o" size="0.32rem" />
-                        <span>
-                          {{ $Utils.formatNumber(cardItem.view_count || cardItem.view_num || cardItem.rating || 0) }}
-                        </span>
-                      </div>
-                      <div>
-                        {{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张
-                      </div>
+                  <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
+                  <div class="absolute bottom-0.5 left-0.5 right-0.5 z-10 flex justify-between text-white">
+                    <div class="flex items-center gap-0.5">
+                      <van-icon name="eye-o" size="0.32rem" />
+                      <span>
+                        {{ $Utils.formatNumber(cardItem.view_count || cardItem.view_num || cardItem.rating || 0) }}
+                      </span>
                     </div>
+                    <div>{{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张</div>
+                  </div>
                 </div>
-
-
 
                 <div class="truncate">{{ cardItem.title }}</div>
               </div>
@@ -91,21 +108,23 @@ const props = defineProps<{
           </nuxt-link> -->
         </div>
         <div class="graphic-layout-three">
-          <div v-for="(cardItem, cardIndex) in card?.items" :key="cardIndex" v-link="`/${props.type}?id=${cardItem.id}`"
-            class="graphic-information-common">
+          <div
+            v-for="(cardItem, cardIndex) in card?.items"
+            :key="cardIndex"
+            v-link="`/${props.type}?id=${cardItem.id}`"
+            class="graphic-information-common"
+          >
             <div class="thumb">
               <dx-image :src="cardItem.thumb_full" />
               <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
-              <div class="absolute bottom-0.5 right-0.5 left-0.5 text-white flex justify-between z-10 text-[0.28rem]">
+              <div class="absolute bottom-0.5 left-0.5 right-0.5 z-10 flex justify-between text-[0.28rem] text-white">
                 <div class="flex items-center gap-0.5">
                   <van-icon name="eye-o" size="0.32rem" />
                   <span>
                     {{ $Utils.formatNumber(cardItem.view_count || cardItem.view_num || cardItem.rating || 0) }}
                   </span>
                 </div>
-                <div>
-                  {{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张
-                </div>
+                <div>{{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张</div>
               </div>
             </div>
             <div class="line-clamp-1">{{ cardItem.title }}</div>
@@ -113,17 +132,19 @@ const props = defineProps<{
           <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
         </div>
         <div class="graphic-layout-bottom">
-
           <div class="graphic-layout-bottom-button">
             <img class="icon" src="~/assets/image/home/icon_refresh.png" alt="" />
             <div class="title">换一换</div>
           </div>
-          <nuxt-link :to="`/query?${format_url_params({
-            tab: card.tab_id,
-            title: card.tab_name,
-            _type: props.type,
-            _sort_key: 'order'
-          })}`" class="graphic-layout-bottom-button">
+          <nuxt-link
+            :to="`/query?${format_url_params({
+              tab: card.tab_id,
+              title: card.tab_name,
+              _type: props.type,
+              _sort_key: 'order'
+            })}`"
+            class="graphic-layout-bottom-button"
+          >
             <img class="icon" src="~/assets/image/home/icon_more2.png" alt="" />
             <div class="title">查看更多</div>
           </nuxt-link>
@@ -132,31 +153,36 @@ const props = defineProps<{
       <div v-else-if="card.show_style === 'V-2*N'" :key="index + 2" class="graphic-layout-item">
         <div class="graphic-index-title">
           <div class="title">{{ card.tab_name }}</div>
-          <nuxt-link :to="`/query?${format_url_params({
-            tab: card.tab_id,
-            title: card.tab_name,
-            _type: props.type,
-            _sort_key: 'order'
-          })}`" class="more">
+          <nuxt-link
+            :to="`/query?${format_url_params({
+              tab: card.tab_id,
+              title: card.tab_name,
+              _type: props.type,
+              _sort_key: 'order'
+            })}`"
+            class="more"
+          >
             查看更多 >
           </nuxt-link>
         </div>
-        <div class="grid grid-cols-2 gap-1 px-1 graphic-layout-two">
-          <div v-for="(cardItem, cardIndex) in card?.items" :key="cardIndex" v-link="`/${props.type}?id=${cardItem.id}`"
-            class="graphic-information-common">
+        <div class="graphic-layout-two grid grid-cols-2 gap-1 px-1">
+          <div
+            v-for="(cardItem, cardIndex) in card?.items"
+            :key="cardIndex"
+            v-link="`/${props.type}?id=${cardItem.id}`"
+            class="graphic-information-common"
+          >
             <div class="thumb">
               <dx-image :src="cardItem.thumb_full" />
               <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
-              <div class="absolute bottom-0.5 right-0.5 left-0.5 text-white flex justify-between z-10 text-[0.28rem]">
+              <div class="absolute bottom-0.5 left-0.5 right-0.5 z-10 flex justify-between text-[0.28rem] text-white">
                 <div class="flex items-center gap-0.5">
                   <van-icon name="eye-o" size="0.32rem" />
                   <span>
                     {{ $Utils.formatNumber(cardItem.view_count || cardItem.view_num || cardItem.rating || 0) }}
                   </span>
                 </div>
-                <div>
-                  {{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张
-                </div>
+                <div>{{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张</div>
               </div>
             </div>
             <div class="line-clamp-1">{{ cardItem.title }}</div>
@@ -204,7 +230,6 @@ const props = defineProps<{
   }
 
   .graphic-filter-state-more {
-
     display: flex;
     flex-direction: column;
     gap: 3px;
@@ -346,7 +371,6 @@ const props = defineProps<{
       position: absolute;
       z-index: 1;
     }
-
   }
 
   .title {
@@ -395,7 +419,6 @@ const props = defineProps<{
 }
 
 .graphic-layout-bottom {
-
   padding: 0 12px;
   margin-top: 15px;
   display: flex;
@@ -413,7 +436,7 @@ const props = defineProps<{
     gap: 5px;
     height: 39px;
     border-radius: 100px;
-    background-color: #F3F8FF;
+    background-color: #f3f8ff;
 
     .icon {
       width: 20px;

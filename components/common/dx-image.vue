@@ -1,8 +1,17 @@
 <template>
   <div ref="containerRef" :class="classNames">
-    <img v-if="props.src" :key="props.src" v-lazyLoad:[props.groupId]="props.src" :style="{
-      'object-fit': fit
-    }" :data-index="props.index" :data-image-preview="preview" :alt="alt" @decrypted="onDecrypted" />
+    <img
+      v-if="props.src"
+      :key="props.src"
+      v-lazyLoad:[props.groupId]="props.src"
+      :style="{
+        'object-fit': fit
+      }"
+      :data-index="props.index"
+      :data-image-preview="preview"
+      :alt="alt"
+      @decrypted="onDecrypted"
+    />
     <img v-else style="object-fit: contain" :src="loading" alt="alt" />
   </div>
 </template>

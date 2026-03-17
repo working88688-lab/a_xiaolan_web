@@ -19,11 +19,7 @@
       </div>
       <div class="publish-popup-body">
         <div class="publish-popup-grid">
-          <div
-            v-link="`/post/publish-post`"
-            class="flex-col-center cursor-pointer publish-item"
-            @click="close"
-          >
+          <div v-link="`/post/publish-post`" class="publish-item flex-col-center cursor-pointer" @click="close">
             <div class="publish-item-icon">
               <img src="~/assets/image/community/post.png" alt="" />
             </div>
@@ -31,7 +27,7 @@
           </div>
           <div
             v-link="`/post/publish-post?type=film`"
-            class="flex-col-center cursor-pointer publish-item"
+            class="publish-item flex-col-center cursor-pointer"
             @click="close"
           >
             <div class="publish-item-icon">

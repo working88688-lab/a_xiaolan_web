@@ -24,8 +24,7 @@ export class CustomPlugin extends BasePlugin {
       }
       if (this.paused) {
         this.player.play()
-      }
-      else {
+      } else {
         this.player.pause()
       }
     }

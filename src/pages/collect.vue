@@ -40,11 +40,21 @@ const { key, activeTab } = useKeepAlive({})
     </div>
     <dx-tabs :key="key" v-model:active="activeTab" shrink class="dx-tabs first-no-padding primary-tabs">
       <van-tab v-for="tab in tabs" :key="tab.title" :title="tab.title">
-        <dx-hoc-list v-if="key" :list-props="{ disabledRefresh: scrollTop > 0 }" :params="tab.params" class="dx-grid-1"
-          :api="__.$Api.collect.list" :success="onSuccess">
+        <dx-hoc-list
+          v-if="key"
+          :list-props="{ disabledRefresh: scrollTop > 0 }"
+          :params="tab.params"
+          class="dx-grid-1"
+          :api="__.$Api.collect.list"
+          :success="onSuccess"
+        >
           <template #item="{ item, index }">
-            <collect-list-item :key="index" class="bg-white px-[12px] py-[20px]" :item="item"
-              :index="index + 1"></collect-list-item>
+            <collect-list-item
+              :key="index"
+              class="bg-white px-[12px] py-[20px]"
+              :item="item"
+              :index="index + 1"
+            ></collect-list-item>
           </template>
         </dx-hoc-list>
       </van-tab>

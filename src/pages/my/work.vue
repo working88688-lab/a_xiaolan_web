@@ -15,20 +15,14 @@
           <van-icon name="arrow-left" class="!absolute left-0 p-1 !text-2xl" @click="__.$Back"></van-icon>
         </template>
         <template #right>
-          <publish-popup v-show="nav_tab === 0" class="!absolute right-0 flex items-center p-1 original-auth-btn">
+          <publish-popup v-show="nav_tab === 0" class="original-auth-btn !absolute right-0 flex items-center p-1">
             <span class="original-auth-btn">原创认证</span>
           </publish-popup>
         </template>
         <van-tab title="视频">
           <dx-tabs v-model:active="video_tab" class="dx-tabs primary-tabs" animated swipeable>
             <van-tab title="上架中">
-              <dx-hoc-list
-                v-if="key"
-                class="px-2"
-                :filter="filter"
-                :api="__.$Api.Video.release"
-                :show-empty="false"
-              >
+              <dx-hoc-list v-if="key" class="px-2" :filter="filter" :api="__.$Api.Video.release" :show-empty="false">
                 <template #item="{ item }">
                   <div class="work-item">
                     <video-item-cover
@@ -50,11 +44,11 @@
                       </div>
                       <div class="work-footer">
                         <div class="work-footer-item">
-                          <nuxt-icon name="video/play" class="mr-[2px] work-icon"></nuxt-icon>
+                          <nuxt-icon name="video/play" class="work-icon mr-[2px]"></nuxt-icon>
                           <span>{{ $Utils.formatNumber(item.rating) || 0 }}</span>
                         </div>
                         <div class="work-footer-item">
-                          <nuxt-icon name="video/like" class="mr-[2px] work-icon"></nuxt-icon>
+                          <nuxt-icon name="video/like" class="work-icon mr-[2px]"></nuxt-icon>
                           <span>{{ item.like_count || 0 }}</span>
                         </div>
                         <div class="work-footer-item">
@@ -104,11 +98,11 @@
                       </div>
                       <div class="work-footer">
                         <div class="work-footer-item">
-                          <nuxt-icon name="video/play" class="mr-[2px] work-icon"></nuxt-icon>
+                          <nuxt-icon name="video/play" class="work-icon mr-[2px]"></nuxt-icon>
                           <span>{{ $Utils.formatNumber(item.rating) || 0 }}</span>
                         </div>
                         <div class="work-footer-item">
-                          <nuxt-icon name="video/like" class="mr-[2px] work-icon"></nuxt-icon>
+                          <nuxt-icon name="video/like" class="work-icon mr-[2px]"></nuxt-icon>
                           <span>{{ item.like_count || 0 }}</span>
                         </div>
                         <div class="work-footer-item">
@@ -159,11 +153,11 @@
                       </div>
                       <div class="work-footer">
                         <div class="work-footer-item">
-                          <nuxt-icon name="video/play" class="mr-[2px] work-icon"></nuxt-icon>
+                          <nuxt-icon name="video/play" class="work-icon mr-[2px]"></nuxt-icon>
                           <span>{{ $Utils.formatNumber(item.rating) || 0 }}</span>
                         </div>
                         <div class="work-footer-item">
-                          <nuxt-icon name="video/like" class="mr-[2px] work-icon"></nuxt-icon>
+                          <nuxt-icon name="video/like" class="work-icon mr-[2px]"></nuxt-icon>
                           <span>{{ item.like_count || 0 }}</span>
                         </div>
                         <div class="work-footer-item">
@@ -217,11 +211,11 @@
                       </div>
                       <div class="work-footer">
                         <div class="work-footer-item">
-                          <nuxt-icon name="video/play" class="mr-[2px] work-icon"></nuxt-icon>
+                          <nuxt-icon name="video/play" class="work-icon mr-[2px]"></nuxt-icon>
                           <span>{{ $Utils.formatNumber(item.rating) || 0 }}</span>
                         </div>
                         <div class="work-footer-item">
-                          <nuxt-icon name="video/like" class="mr-[2px] work-icon"></nuxt-icon>
+                          <nuxt-icon name="video/like" class="work-icon mr-[2px]"></nuxt-icon>
                           <span>{{ item.like_count || 0 }}</span>
                         </div>
                         <div class="work-footer-item">

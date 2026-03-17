@@ -1,5 +1,5 @@
 <template>
-  <div class="container grey-bg">
+  <div class="grey-bg container">
     <scroll-list v-model:loading="loading" :is-empty="isEmpty" :is-end="isEnd" :pullup="execute">
       <div v-for="(item, indx) in listData" :key="indx" class="sys-comment-item-default">
         <div class="top-box">

@@ -124,7 +124,7 @@ async function onPay() {
     }).then(() => {
       showPreviewTip.value = false
     })
-  } catch (error) { }
+  } catch (error) {}
 }
 
 function onVideoEnd() {
@@ -134,7 +134,7 @@ function onVideoEnd() {
 
   onSeeking('auto')
 }
-const seekingHandler = inject<(e: 'seeking' | 'auto') => void>('seekingHandler', _e => { })
+const seekingHandler = inject<(e: 'seeking' | 'auto') => void>('seekingHandler', _e => {})
 function onSeeking(e: 'seeking' | 'auto') {
   seekingHandler?.(e)
 }
@@ -163,28 +163,45 @@ function openShare() {
 </script>
 
 <template>
-  <xg-tk-player ref="player" :video-info="{
-    video_id: item.id,
-    video_type_id: item.video_type_id || '',
-    video_type_name: item.video_type_name || '',
-    video_tag_key: item.video_tag_key || '',
-    video_title: item.title,
-    video_tag_name: item.tags,
-    duration: item.duration
-  }" :active="props.active" :disabled="showPreviewTip" :src="play_url" :loop="item.is_pay === 1"
-    :poster="props.poster" @end="onVideoEnd" @seeking-action="onSeeking">
+  <xg-tk-player
+    ref="player"
+    :video-info="{
+      video_id: item.id,
+      video_type_id: item.video_type_id || '',
+      video_type_name: item.video_type_name || '',
+      video_tag_key: item.video_tag_key || '',
+      video_title: item.title,
+      video_tag_name: item.tags,
+      duration: item.duration
+    }"
+    :active="props.active"
+    :disabled="showPreviewTip"
+    :src="play_url"
+    :loop="item.is_pay === 1"
+    :poster="props.poster"
+    @end="onVideoEnd"
+    @seeking-action="onSeeking"
+  >
     <template #default="{ seeking }">
       <transition name="van-fade">
         <div v-show="!seeking">
           <div v-show="expand" class="layer-container absolute bottom-2 left-1 z-[999] w-[300px]">
-            <div v-if="item.is_pay === 0 && item.preview_tip" :class="{
-              'is-vip': item.coins === 0,
-              'is-coin': item.coins > 0
-            }" class="preview-tip mb-1 flex items-center truncate" @click="beforePay">
+            <div
+              v-if="item.is_pay === 0 && item.preview_tip"
+              :class="{
+                'is-vip': item.coins === 0,
+                'is-coin': item.coins > 0
+              }"
+              class="preview-tip mb-1 flex items-center truncate"
+              @click="beforePay"
+            >
               {{ item.preview_tip }} {{ item.duration_str }}
             </div>
-            <dx-link v-show="data.user?.nickname" :to="`/userdetail?id=${data.user?.uid}`"
-              class="mb-0.5 flex items-center text-xl">
+            <dx-link
+              v-show="data.user?.nickname"
+              :to="`/userdetail?id=${data.user?.uid}`"
+              class="mb-0.5 flex items-center text-xl"
+            >
               @{{ data.user?.nickname }}
               <!-- <img v-if="data.user?.auth_status" class="ml-0.5 !size-[20px]" src="~/assets/image/community/original.png"
                 alt="" /> -->
@@ -193,21 +210,40 @@ function openShare() {
               {{ data.title }}
             </h2>
             <ul v-if="tags_list.length" class="tag-list text-sm">
-              <nuxt-link v-for="tag in tags_list" :key="tag"
-                :to="`/tag?&_type=tiktok&title=${tag}&has_sort=1&tag=${tag}&type=1`" class="tag-item text-white"
-                @click="onSaveHistory(tag)">
+              <nuxt-link
+                v-for="tag in tags_list"
+                :key="tag"
+                :to="`/tag?&_type=tiktok&title=${tag}&has_sort=1&tag=${tag}&type=1`"
+                class="tag-item text-white"
+                @click="onSaveHistory(tag)"
+              >
                 #{{ tag }}
               </nuxt-link>
             </ul>
           </div>
           <div class="layer-container absolute bottom-2 right-1 z-20">
             <div class="grid w-[46px] grid-cols-1 gap-1.5 text-mini">
-              <dx-avatar v-if="item?.user" v-show="expand" :key="data.user?.is_attention" class="mb-1.5" :size="1.2"
-                :img="item?.user?.avatar_url" :uid="item?.user?.uid" :aff="item?.user?.aff" :creator="false">
+              <dx-avatar
+                v-if="item?.user"
+                v-show="expand"
+                :key="data.user?.is_attention"
+                class="mb-1.5"
+                :size="1.2"
+                :img="item?.user?.avatar_url"
+                :uid="item?.user?.uid"
+                :aff="item?.user?.aff"
+                :creator="false"
+              >
                 <template v-if="item.user.uid !== user.uid" #badge>
-                  <dx-btn-like :id="item.user?.uid" id-key="to_uid" :use-toast="false"
-                    :like="data.user?.is_attention === 1" :show-count="false"
-                    class="absolute -bottom-1 left-1/2 -translate-x-1/2" api="api/users/following">
+                  <dx-btn-like
+                    :id="item.user?.uid"
+                    id-key="to_uid"
+                    :use-toast="false"
+                    :like="data.user?.is_attention === 1"
+                    :show-count="false"
+                    class="absolute -bottom-1 left-1/2 -translate-x-1/2"
+                    api="api/users/following"
+                  >
                     <template #icon="{ isLike }">
                       <img v-show="!isLike" class="!size-[16px]" src="~/assets/image-icon/follow.png" alt="follow" />
                     </template>
@@ -220,9 +256,22 @@ function openShare() {
                 <div>{{ $Utils.formatNumber(item.rating) }}</div>
               </div>
 
-              <dx-btn-like v-show="expand" :id="item.id" style="--dx-base2-color: #fff" icon-type="nuxt"
-                class="action-icon" :like="item.is_like === 1" :likes="item.like" api="api/mv/liking" :use-toast="false"
-                size="0.8rem" icon="video/like" active-icon="video/like" color="#fff" active-color="#ff416a">
+              <dx-btn-like
+                v-show="expand"
+                :id="item.id"
+                style="--dx-base2-color: #fff"
+                icon-type="nuxt"
+                class="action-icon"
+                :like="item.is_like === 1"
+                :likes="item.like"
+                api="api/mv/liking"
+                :use-toast="false"
+                size="0.8rem"
+                icon="video/like"
+                active-icon="video/like"
+                color="#fff"
+                active-color="#ff416a"
+              >
                 <template #default="{ likes }">
                   {{ $Utils.formatNumber(likes, 'en') }}
                 </template>
@@ -240,9 +289,11 @@ function openShare() {
 
               <div class="flex-col-center" @click="playerStore.toggleExpand">
                 <nuxt-icon :name="expand ? 'video/enter' : 'video/exit'" class="text-[1rem]" />
-                <span :style="{
-                  visibility: expand ? 'visible' : 'hidden'
-                }">
+                <span
+                  :style="{
+                    visibility: expand ? 'visible' : 'hidden'
+                  }"
+                >
                   清屏
                 </span>
               </div>
@@ -255,8 +306,16 @@ function openShare() {
         <video-placeholder :coins="item?.coins" @confirm="beforePay" />
       </div>
       <!-- 购买提示弹框 -->
-      <dx-buy-popup v-model:show="payLayer" title="购买视频" api="api/chargeVideo/buy" :params="{ id: props.id }"
-        :coins="item?.coins ?? 0" type="mv" :submit-text="user.my_ticket_number ? '金币支付' : '立即支付'" @pay:success="onPay">
+      <dx-buy-popup
+        v-model:show="payLayer"
+        title="购买视频"
+        api="api/chargeVideo/buy"
+        :params="{ id: props.id }"
+        :coins="item?.coins ?? 0"
+        type="mv"
+        :submit-text="user.my_ticket_number ? '金币支付' : '立即支付'"
+        @pay:success="onPay"
+      >
         <template #default>
           <div v-if="user.my_ticket_number > 0" class="mb-1 px-1.5">
             <dx-button block :loading="buying" @click="buyByTicket">使用1张观影券</dx-button>

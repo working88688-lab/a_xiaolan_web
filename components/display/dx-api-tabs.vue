@@ -57,14 +57,29 @@ function onRendered(name: any) {
 </script>
 
 <template>
-  <dx-tabs v-model:active="activeTab" class="text-medium first-no-padding dx-tabs" line-height="2px" line-width="24px"
-    gap="8px" shrink :duration="duration" stop-propagation @rendered="onRendered">
+  <dx-tabs
+    v-model:active="activeTab"
+    class="text-medium first-no-padding dx-tabs"
+    line-height="2px"
+    line-width="24px"
+    gap="8px"
+    shrink
+    :duration="duration"
+    stop-propagation
+    @rendered="onRendered"
+  >
     <template #nav-bottom>
       <dx-spin v-show="loading" size="0.6rem" class="my-2 text-center" />
     </template>
     <van-tab v-for="(tab, index) in data" :key="index" :title="tab[props.labelKey]">
-      <slot v-if="Math.abs(activeTab - index) <= 3 && cacheMap[index]" name="tab" :is-recommend="tab.name === '推荐'"
-        :is-rec="tab.type === props.recKey" :tab :tabs="data" />
+      <slot
+        v-if="Math.abs(activeTab - index) <= 3 && cacheMap[index]"
+        name="tab"
+        :is-recommend="tab.name === '推荐'"
+        :is-rec="tab.type === props.recKey"
+        :tab
+        :tabs="data"
+      />
     </van-tab>
 
     <template #nav-left>

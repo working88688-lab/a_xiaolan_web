@@ -21,12 +21,7 @@ const aiMagicPath = '/ai/magic'
           <div class="ai-index-ads">
             <dx-hoc-list api="/api/image/index" fields="data" :pullup="false">
               <template #header="{ data }">
-                <dx-resource-ads
-                  class="px-1.5"
-                  ad-key="images"
-                  ad-name="男色"
-                  :items="data?.ads ?? []"
-                />
+                <dx-resource-ads class="px-1.5" ad-key="images" ad-name="男色" :items="data?.ads ?? []" />
               </template>
             </dx-hoc-list>
           </div>
@@ -80,4 +75,3 @@ const aiMagicPath = '/ai/magic'
   height: auto;
 }
 </style>
-

@@ -1,15 +1,19 @@
 <template>
-  <report-click-item stop-propagation :data="props.traceClickData || {
-      page_key: props.data.page_key || page_key,
-      ad_type: props.data.ad_type || ad_type,
-      page_name: props.data.page_name || page_name,
-      ad_slot_key: props.data.advertise_location_code,
-      ad_slot_name: props.data.ad_slot_name || name || props.data.title,
-      ad_id: props.data.advertise_code,
-      event: 'ad_click',
-      creative_id: props.data.creative_id || ''
-    }
-    ">
+  <report-click-item
+    stop-propagation
+    :data="
+      props.traceClickData || {
+        page_key: props.data.page_key || page_key,
+        ad_type: props.data.ad_type || ad_type,
+        page_name: props.data.page_name || page_name,
+        ad_slot_key: props.data.advertise_location_code,
+        ad_slot_name: props.data.ad_slot_name || name || props.data.title,
+        ad_id: props.data.advertise_code,
+        event: 'ad_click',
+        creative_id: props.data.creative_id || ''
+      }
+    "
+  >
     <div ref="link" v-bind="$attrs" class="tracker-item cursor-pointer" @click="onClick">
       <slot></slot>
     </div>

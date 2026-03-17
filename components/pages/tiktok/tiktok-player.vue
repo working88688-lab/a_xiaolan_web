@@ -95,13 +95,31 @@ onBeforeMount(() => {
 
 <template>
   <div class="van-safe-area-bottom container">
-    <Swiper v-if="items?.length && key" direction="vertical" :add-slides-after="1" :add-slides-before="1"
-      :modules="modules" :slides-per-view="1" :centered-slides="true" :space-between="0" virtual cache
-      :initial-slide="props.index" class="mySwiper" @swiper="setSwiperRef" @slide-change="onChange"
-      @reach-end="onReachEnd">
+    <Swiper
+      v-if="items?.length && key"
+      direction="vertical"
+      :add-slides-after="1"
+      :add-slides-before="1"
+      :modules="modules"
+      :slides-per-view="1"
+      :centered-slides="true"
+      :space-between="0"
+      virtual
+      cache
+      :initial-slide="props.index"
+      class="mySwiper"
+      @swiper="setSwiperRef"
+      @slide-change="onChange"
+      @reach-end="onReachEnd"
+    >
       <SwiperSlide v-for="(item, index) in items" :key="item.id" :virtual-index="index">
-        <tiktok-detail :id="item.id" :data="item" :poster="item.cover_thumb_url"
-          :active="props.active && activeIndex === index" @save-history="saveHistory" />
+        <tiktok-detail
+          :id="item.id"
+          :data="item"
+          :poster="item.cover_thumb_url"
+          :active="props.active && activeIndex === index"
+          @save-history="saveHistory"
+        />
       </SwiperSlide>
     </Swiper>
 

@@ -48,8 +48,15 @@ defineExpose({
 </script>
 
 <template>
-  <van-search v-model="searchValue" show-action autocomplete="off" clear-trigger="always" class="search-input"
-    :placeholder="config.search_hot_keywords" @clear="onClear">
+  <van-search
+    v-model="searchValue"
+    show-action
+    autocomplete="off"
+    clear-trigger="always"
+    class="search-input"
+    :placeholder="config.search_hot_keywords"
+    @clear="onClear"
+  >
     <template #left-icon>
       <nuxt-icon name="search" filled class="icon-search !text-[20px] !text-black"></nuxt-icon>
     </template>

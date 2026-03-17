@@ -8,5 +8,4 @@ export { CustomProgress } from './progress'
 
 export { SimpleProgress } from './progress/simple'
 
-
 export { Time } from './time'

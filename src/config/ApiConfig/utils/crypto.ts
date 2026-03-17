@@ -31,15 +31,15 @@ const appkey =
 const cc = (e, o = true) =>
   o
     ? CryptoJS.enc.Utf8.parse(
-      e
+        e
+          .split('_')
+          .map(a => String.fromCharCode(parseInt(a)))
+          .join('')
+      )
+    : e
         .split('_')
         .map(a => String.fromCharCode(parseInt(a)))
         .join('')
-    )
-    : e
-      .split('_')
-      .map(a => String.fromCharCode(parseInt(a)))
-      .join('')
 
 // 报文加密
 function Encrypt(word) {
@@ -69,12 +69,12 @@ function Encrypt(word) {
       .join('')
   ]
     .toString()
-  [
-    '116_111_85_112_112_101_114_67_97_115_101'
-      .split('_')
-      .map(a => String.fromCharCode(parseInt(a)))
-      .join('')
-  ]()
+    [
+      '116_111_85_112_112_101_114_67_97_115_101'
+        .split('_')
+        .map(a => String.fromCharCode(parseInt(a)))
+        .join('')
+    ]()
   const unix_t = new Date().getTime() / 1000
   const timestamp = parseInt(unix_t.toString())
   const sign = getSign({ client: 'pwa', data, timestamp })
@@ -115,7 +115,7 @@ function Decrypt(word) {
   })
   const decryptedStr = decrypt.toString(
     CryptoJS[String.fromCharCode(101) + String.fromCharCode(110) + String.fromCharCode(99)][
-    String.fromCharCode(85) + String.fromCharCode(116) + String.fromCharCode(102) + String.fromCharCode(56)
+      String.fromCharCode(85) + String.fromCharCode(116) + String.fromCharCode(102) + String.fromCharCode(56)
     ]
   )
   return JSON[`${String.fromCharCode(112)}arse`](decryptedStr.toString())

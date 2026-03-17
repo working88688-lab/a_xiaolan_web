@@ -1,8 +1,6 @@
 <template>
   <div class="follow-recommend">
-    <div v-if="!list.length" class="empty-text">
-      暂无推荐用户（mock）
-    </div>
+    <div v-if="!list.length" class="empty-text">暂无推荐用户（mock）</div>
 
     <div v-for="user in list" :key="user.uid" class="recommend-card">
       <div class="recommend-card-header">
@@ -10,11 +8,7 @@
           <dx-image class="avatar" :src="user.avatar" round></dx-image>
           <span class="nickname">{{ user.nickname }}</span>
         </div>
-        <btn-follow
-          :uid="user.uid"
-          :attention="user.is_attention"
-          :use-default-style="true"
-        />
+        <btn-follow :uid="user.uid" :attention="user.is_attention" :use-default-style="true" />
       </div>
 
       <div class="stats-row">
@@ -38,16 +32,10 @@
 
       <div v-if="(user.videos || []).length" class="video-list-wrapper">
         <div class="video-list">
-          <div
-            v-for="video in (user.videos || []).slice(0, 10)"
-            :key="video.id"
-            class="video-card"
-          >
+          <div v-for="video in (user.videos || []).slice(0, 10)" :key="video.id" class="video-card">
             <dx-image class="video-cover" :src="video.cover || video.thumb"></dx-image>
             <div class="video-info-overlay">
-              <span class="play-count">
-                ▶ {{ formatNumber(video.play_num || video.play_count) }}
-              </span>
+              <span class="play-count">▶ {{ formatNumber(video.play_num || video.play_count) }}</span>
               <span class="duration">
                 {{ formatDuration(video.duration || video.duration_sec) }}
               </span>
@@ -188,9 +176,8 @@ const formatDuration = (seconds: number | undefined) => {
 
 /* 首页关注 Tab 推荐列表中的“关注”按钮样式 */
 :deep(.btn_follow.has_style) {
-  background-color: #3DA7FD;
-  border-color: #3DA7FD;
+  background-color: #3da7fd;
+  border-color: #3da7fd;
   border-radius: 4px;
 }
 </style>
-

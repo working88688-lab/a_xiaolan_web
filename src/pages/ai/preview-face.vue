@@ -9,36 +9,36 @@ const items = computed(() => {
   const face_thumb = cache[CACHE_KEY.PREVIEW_AI_FACE]
   return route.query.type === '1'
     ? [
-      {
-        src: face_thumb.strip_thumb,
-        w: face_thumb.strip_thumb_w,
-        h: face_thumb.strip_thumb_h
-      },
+        {
+          src: face_thumb.strip_thumb,
+          w: face_thumb.strip_thumb_w,
+          h: face_thumb.strip_thumb_h
+        },
 
-      {
-        src: face_thumb.thumb,
-        w: face_thumb.thumb_w,
-        h: face_thumb.thumb_h
-      }
-    ]
+        {
+          src: face_thumb.thumb,
+          w: face_thumb.thumb_w,
+          h: face_thumb.thumb_h
+        }
+      ]
     : [
-      {
-        src: face_thumb.face_thumb,
-        w: face_thumb.face_thumb_w,
-        h: face_thumb.face_thumb_h
-      },
+        {
+          src: face_thumb.face_thumb,
+          w: face_thumb.face_thumb_w,
+          h: face_thumb.face_thumb_h
+        },
 
-      {
-        src: face_thumb.ground,
-        w: face_thumb.ground_w,
-        h: face_thumb.ground_h
-      },
-      {
-        src: face_thumb.thumb,
-        w: face_thumb.thumb_w,
-        h: face_thumb.thumb_h
-      }
-    ]
+        {
+          src: face_thumb.ground,
+          w: face_thumb.ground_w,
+          h: face_thumb.ground_h
+        },
+        {
+          src: face_thumb.thumb,
+          w: face_thumb.thumb_w,
+          h: face_thumb.thumb_h
+        }
+      ]
 })
 
 function swipe_to(index: number) {
@@ -56,12 +56,20 @@ function swipe_to(index: number) {
       </van-swipe-item>
 
       <template #indicator="{ active, total }">
-        <div :class="[route.query.type === '1' ? 'dx-grid-2' : 'dx-grid-3']"
-          class="custom-indicator-container mx-auto mt-3 w-[300px]">
-          <div v-for="(item, index) in total" :key="index" class="flex-center"
-            :class="{ 'is-active': active === item - 1 }">
-            <div class="custom-indicator1 w-[56px] rounded-sm px-1 py-0.5 text-center text-sm"
-              @click="swipe_to(item - 1)">
+        <div
+          :class="[route.query.type === '1' ? 'dx-grid-2' : 'dx-grid-3']"
+          class="custom-indicator-container mx-auto mt-3 w-[300px]"
+        >
+          <div
+            v-for="(item, index) in total"
+            :key="index"
+            class="flex-center"
+            :class="{ 'is-active': active === item - 1 }"
+          >
+            <div
+              class="custom-indicator1 w-[56px] rounded-sm px-1 py-0.5 text-center text-sm"
+              @click="swipe_to(item - 1)"
+            >
               {{ item === 1 ? '生成图' : item === 2 ? '原图' : '目标脸' }}
             </div>
           </div>

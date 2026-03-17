@@ -1,7 +1,15 @@
 <template>
   <div class="container">
-    <dx-tabs v-model:active="activeTab" shrink :duration="duration" swipeable class="dx-tabs primary-tabs" lazy-render
-      line-width="30" animated>
+    <dx-tabs
+      v-model:active="activeTab"
+      shrink
+      :duration="duration"
+      swipeable
+      class="dx-tabs primary-tabs"
+      lazy-render
+      line-width="30"
+      animated
+    >
       <van-tab v-for="(item, _index) in data" :key="_index" :title="item.name">
         <dx-hoc-list :api="item.api" :params="item.params">
           <template #header="{ data }">
@@ -15,8 +23,14 @@
             </div>
           </template>
           <template #item="{ item: _item, items, index }">
-            <feature-item :key="index" :index="index" :list="items" :stack-key="`dark-web_${index}`" :data="_item"
-              @share="openShareDialog"></feature-item>
+            <feature-item
+              :key="index"
+              :index="index"
+              :list="items"
+              :stack-key="`dark-web_${index}`"
+              :data="_item"
+              @share="openShareDialog"
+            ></feature-item>
           </template>
         </dx-hoc-list>
       </van-tab>
@@ -102,11 +116,11 @@ const navigateToDynamic = (item: TabItem) => {
   position: relative;
 }
 
-.dx-tabs> :deep(.van-tabs__wrap .van-tabs__nav) {
+.dx-tabs > :deep(.van-tabs__wrap .van-tabs__nav) {
   justify-content: center;
 }
 
-.dx-tabs> :deep(.van-tabs__wrap .van-tabs__line) {
+.dx-tabs > :deep(.van-tabs__wrap .van-tabs__line) {
   background: linear-gradient(to left, #6de6fb, #428af7);
 }
 

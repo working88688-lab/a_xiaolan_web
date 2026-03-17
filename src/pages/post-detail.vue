@@ -3,14 +3,22 @@
     <dx-navbar class="my-nav-bar" :border="false" :title="detailsData.data?.title" left-arrow @click-left="__.$Back">
       <template #title>
         <div class="dx dx-flex dx-align-center">
-          <dx-avatar v-show="detailsData.data?.user?.avatar_url" :size="0.6"
-            :img="detailsData.data?.user?.avatar_url"></dx-avatar>
+          <dx-avatar
+            v-show="detailsData.data?.user?.avatar_url"
+            :size="0.6"
+            :img="detailsData.data?.user?.avatar_url"
+          ></dx-avatar>
           <span class="post-detail-title van-ellipsis">{{ detailsData.data?.title }}</span>
         </div>
       </template>
       <template #right>
-        <btn-follow v-if="detailsData.data?.user?.uid" use-default-style
-          :attention="detailsData.data?.user?.is_attention" :uid="detailsData.data?.user?.uid" symbol="+"></btn-follow>
+        <btn-follow
+          v-if="detailsData.data?.user?.uid"
+          use-default-style
+          :attention="detailsData.data?.user?.is_attention"
+          :uid="detailsData.data?.user?.uid"
+          symbol="+"
+        ></btn-follow>
       </template>
     </dx-navbar>
     <div class="scroll-container">
@@ -22,17 +30,20 @@
           <div class="content-layout_txt" v-html="detailsData?.data?.content?.replaceAll?.('\n', '<br/>')"></div>
 
           <div class="banner">
-            <div v-if="detailsData?.data?.is_pay === 0" :style="{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              backdropFilter: 'blur(5px)',
-              backgroundColor: 'rgba(16, 16, 17, 0.3)',
-              zIndex: 999,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }">
+            <div
+              v-if="detailsData?.data?.is_pay === 0"
+              :style="{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                backdropFilter: 'blur(5px)',
+                backgroundColor: 'rgba(16, 16, 17, 0.3)',
+                zIndex: 999,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }"
+            >
               <div v-if="detailsData?.data?.type === 2" class="pay-item" @click="toPayCoin">
                 <img src="~/assets/image/community/gold_icon.png" style="margin: 0 auto" />
                 <span class="text-nowrap">支付{{ detailsData?.data?.price }}金币解锁帖子全部内容</span>
@@ -64,8 +75,11 @@
             <p>精彩视频</p>
 
             <div class="video-layout">
-              <xg-player :autoplay="false" :poster="videoData.cover_url_full"
-                :src="videoData.media_url_full"></xg-player>
+              <xg-player
+                :autoplay="false"
+                :poster="videoData.cover_url_full"
+                :src="videoData.media_url_full"
+              ></xg-player>
               <div v-if="detailsData?.data?.is_pay === 0" class="video-bg">
                 <div v-if="detailsData?.data.type === 2" class="pay-item" @click="toPayCoin">
                   <img src="~/assets/image/community/gold_icon.png" />
@@ -88,8 +102,13 @@
           <div class="scroll-container">
             <scroll-list :pullup="execute" :is-empty="isEmpty" :is-end="isEnd">
               <div class="dx-list">
-                <comment-item v-for="(item, index) in listData" :id="id" :key="index" :data="item"
-                  @click="onClickComment(item)"></comment-item>
+                <comment-item
+                  v-for="(item, index) in listData"
+                  :id="id"
+                  :key="index"
+                  :data="item"
+                  @click="onClickComment(item)"
+                ></comment-item>
               </div>
             </scroll-list>
           </div>
@@ -97,8 +116,14 @@
       </scroll-list>
     </div>
     <div v-show="!loading" class="comment-area">
-      <input v-if="select_comment?.id" ref="inputRef" v-model="content" type="text"
-        :placeholder="`回复${select_comment?.user?.nickname}`" @blur="onBlur" />
+      <input
+        v-if="select_comment?.id"
+        ref="inputRef"
+        v-model="content"
+        type="text"
+        :placeholder="`回复${select_comment?.user?.nickname}`"
+        @blur="onBlur"
+      />
       <input v-else ref="inputRef" v-model="content" type="text" placeholder="说点好听的...." />
       <nuxt-icon name="send" class="text-6xl text-primary" @click="createComment"></nuxt-icon>
       <div class="van-safe-area-bottom"></div>
@@ -200,7 +225,7 @@ const toPayCoin = async () => {
     }
 
     to_recharge(res)
-  } catch (error) { }
+  } catch (error) {}
 }
 </script>
 

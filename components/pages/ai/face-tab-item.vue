@@ -28,13 +28,27 @@ const { listData, loading, execute, refresh, isEmpty, isEnd, result, effect } = 
 <template>
   <dx-container v-if="activeTab >= 0" class="!block">
     <template #default="{ disabledRefresh, height }">
-      <scroll-list :disabled-refresh="disabledRefresh" :loading="loading" :pull-down-refresh="refresh" :pullup="execute"
-        :is-end="isEnd" :show-end="false">
+      <scroll-list
+        :disabled-refresh="disabledRefresh"
+        :loading="loading"
+        :pull-down-refresh="refresh"
+        :pullup="execute"
+        :is-end="isEnd"
+        :show-end="false"
+      >
         <dx-spin v-show="loading && isEmpty" />
         <dx-ads v-if="banners?.length" class="px-1" :items="banners" />
         <div :style="{ minHeight: `${height}px` }">
-          <dx-tabs v-model:active="activeTab" style="height: initial !important" stop-propagation line-width="0px"
-            line-height="0px" static class="my-nest-tabs text-medium first-no-padding dx-tabs" shrink>
+          <dx-tabs
+            v-model:active="activeTab"
+            style="height: initial !important"
+            stop-propagation
+            line-width="0px"
+            line-height="0px"
+            static
+            class="my-nest-tabs text-medium first-no-padding dx-tabs"
+            shrink
+          >
             <van-tab v-for="item in ai_tab" :key="item.name" :title="item.name" :name="item.sort" />
           </dx-tabs>
           <dx-spin v-show="effect" />

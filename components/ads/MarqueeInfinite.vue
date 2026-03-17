@@ -1,6 +1,13 @@
 <template>
-  <div ref="root" class="marquee" @pointerdown="onPointerDown" @pointerup="onPointerUp" @pointercancel="onPointerUp"
-    @pointerleave="onPointerLeave" @pointerenter="onPointerEnter">
+  <div
+    ref="root"
+    class="marquee"
+    @pointerdown="onPointerDown"
+    @pointerup="onPointerUp"
+    @pointercancel="onPointerUp"
+    @pointerleave="onPointerLeave"
+    @pointerenter="onPointerEnter"
+  >
     <div ref="track" class="track" :style="trackStyle">
       <!-- 重复渲染多份以实现无缝循环 -->
       <div v-for="(item, index) in renderItems" :key="index" class="item">

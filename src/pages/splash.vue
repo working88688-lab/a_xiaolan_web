@@ -5,15 +5,27 @@
 <template>
   <div class="container">
     <div class="welcome-ad">
-      <Swiper :modules="[Autoplay, Pagination]" :pagination="{
-        clickable: true
-      }" :autoplay="{
+      <Swiper
+        :modules="[Autoplay, Pagination]"
+        :pagination="{
+          clickable: true
+        }"
+        :autoplay="{
           delay: 2500
-        }" class="ad-swiper" style="width: 100%" :disable-on-interaction="false" :slides-per-view="1"
-        :space-between="0" loop>
+        }"
+        class="ad-swiper"
+        style="width: 100%"
+        :disable-on-interaction="false"
+        :slides-per-view="1"
+        :space-between="0"
+        loop
+      >
         <SwiperSlide v-for="(item, index) in config.ads_screen" :key="index">
-          <ad-link :data="{ ...item, url: item.index_ads_url, id: index + 1, type: 1 }" :index
-            class="block h-full w-full">
+          <ad-link
+            :data="{ ...item, url: item.index_ads_url, id: index + 1, type: 1 }"
+            :index
+            class="block h-full w-full"
+          >
             <img v-lazyLoad="item.index_ads_thumb" class="ad-image" src="@assets/image/img_loading.png" alt="" />
           </ad-link>
           <!-- <a :href="item.index_ads_url" target="__blank" class="block h-full w-full" @click="report">
@@ -23,12 +35,26 @@
       </Swiper>
       <div v-if="showBtn" class="welcome-ad-btn">
         <div class="relative h-full w-full">
-          <svg xmlns="https://www.w3.org/2000/svg" class="scroll-btn-circles h-full w-full -rotate-90" width="44"
-            height="44" viewport="0 0 44 44">
-            <circle class="progress-bar" cx="22" cy="22" r="20" stroke-linecap="round" stroke="#fff" stroke-width="2px"
-              style="stroke-dasharray: 126; stroke-dashoffset: 126" :style="{
+          <svg
+            xmlns="https://www.w3.org/2000/svg"
+            class="scroll-btn-circles h-full w-full -rotate-90"
+            width="44"
+            height="44"
+            viewport="0 0 44 44"
+          >
+            <circle
+              class="progress-bar"
+              cx="22"
+              cy="22"
+              r="20"
+              stroke-linecap="round"
+              stroke="#fff"
+              stroke-width="2px"
+              style="stroke-dasharray: 126; stroke-dashoffset: 126"
+              :style="{
                 'stroke-dashoffset': svg_dash_offset
-              }"></circle>
+              }"
+            ></circle>
           </svg>
           <span v-if="cutdown > 0" class="cut-text translate-50 absolute left-1/2 top-1/2">
             {{ cutdown + 1 }}

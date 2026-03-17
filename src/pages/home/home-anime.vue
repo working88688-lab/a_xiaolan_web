@@ -42,8 +42,12 @@ const { key, activeTab } = useKeepAlive({})
             <template #header="{ data }">
               <dx-ads class="px-1" :items="data?.ads" :ad-key="tab.type" :ad-name="tab.name" />
               <div class="mt-2 grid grid-cols-4 gap-1 px-1">
-                <dx-link v-for="item in data?.icon" :key="item.key"
-                  :to="`/home/cartoon-cate?key=${item.key}&type=${item.type}`" class="flex-col-center">
+                <dx-link
+                  v-for="item in data?.icon"
+                  :key="item.key"
+                  :to="`/home/cartoon-cate?key=${item.key}&type=${item.type}`"
+                  class="flex-col-center"
+                >
                   <dx-image class="!h-[37px] !w-[82px]" :src="item.icon"></dx-image>
                   <span>{{ item.name }}</span>
                 </dx-link>
@@ -51,12 +55,18 @@ const { key, activeTab } = useKeepAlive({})
             </template>
             <template #item="{ item }">
               <div v-if="item.list.length > 0" :key="item.id">
-                <van-cell class="!sticky left-0 top-[-2px] z-10" :border="false" :clickable="false" :to="`/tag?_type=anime&${format_url_params({
-                  has_sort: 1,
-                  api: item.more_api,
-                  title: item.title,
-                  ...item.api_params
-                })}`" is-link>
+                <van-cell
+                  class="!sticky left-0 top-[-2px] z-10"
+                  :border="false"
+                  :clickable="false"
+                  :to="`/tag?_type=anime&${format_url_params({
+                    has_sort: 1,
+                    api: item.more_api,
+                    title: item.title,
+                    ...item.api_params
+                  })}`"
+                  is-link
+                >
                   <template #title>
                     <div class="flex items-center whitespace-nowrap">
                       <span class="mr-0.5 text-xl font-semibold">{{ item.title }}</span>
@@ -65,8 +75,14 @@ const { key, activeTab } = useKeepAlive({})
                   </template>
                 </van-cell>
                 <div class="dx-grid-2 pb-0.5">
-                  <video-card v-for="card in item.list" :key="card.id" :mv-type="3" lines :show-duration="false"
-                    :item="{ cover_thumb_url: card.cover_full, rating: card.play_count, ...card }" />
+                  <video-card
+                    v-for="card in item.list"
+                    :key="card.id"
+                    :mv-type="3"
+                    lines
+                    :show-duration="false"
+                    :item="{ cover_thumb_url: card.cover_full, rating: card.play_count, ...card }"
+                  />
                 </div>
               </div>
             </template>
