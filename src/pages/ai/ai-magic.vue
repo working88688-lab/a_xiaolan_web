@@ -1,0 +1,575 @@
+<script setup lang="ts">
+import magicCover1 from '~/assets/image/ai-3.png'
+import magicCover2 from '~/assets/image/ai-1.png'
+import magicCover3 from '~/assets/image/before.png'
+import magicCover4 from '~/assets/image/undressed.png'
+
+const __ = useNuxtApp()
+const router = useRouter()
+const { u: user } = storeToRefs(useUserStore())
+
+definePageMeta({
+  keepalive: true
+})
+
+type MagicItem = {
+  id: number
+  title: string
+  cover: string
+}
+
+const list = ref<MagicItem[]>([
+  { id: 1, title: '名字名字名字名字', cover: magicCover1 },
+  { id: 2, title: '名字名字名字名字', cover: magicCover2 },
+  { id: 3, title: '名字名字名字名字', cover: magicCover3 },
+  { id: 4, title: '名字名字名字名字', cover: magicCover4 }
+])
+
+const showPopup = ref(false)
+const activeItem = ref<MagicItem | null>(null)
+
+const MAX_SIZE = 2 * 1024 * 1024
+const payCoins = 9
+const images = ref<any[]>([])
+const showPayPopup = ref(false)
+
+function open(item: MagicItem) {
+  activeItem.value = item
+  images.value = []
+  showPopup.value = true
+}
+
+function close() {
+  showPopup.value = false
+  showPayPopup.value = false
+}
+
+function onOversize() {
+  __.$Toast({
+    message: '超过2M，吐司提示：图片过大，请重新上传',
+    position: 'bottom'
+  })
+}
+
+async function afterRead(file: any) {
+  const size = file?.file?.size ?? 0
+  if (size > MAX_SIZE) {
+    images.value = []
+    onOversize()
+  }
+}
+
+function toRecharge() {
+  router.push('/coin-recharge?type=1')
+}
+
+function onPay() {
+  if (!images.value.length) {
+    return __.$Toast('请先上传图片')
+  }
+  showPayPopup.value = true
+}
+
+async function confirmPay() {
+  showPayPopup.value = false
+  showPopup.value = false
+  await __.$Alert({
+    title: '支付成功',
+    message: '正在生成，稍后请前往 AI科技-我的\n记录中查看',
+    confirmButtonText: '朕知道了',
+    confirmButtonColor: '#2494ff',
+    className: 'ai-magic-success-dialog'
+  })
+  router.push('/ai/record?_index=3')
+}
+</script>
+
+<template>
+  <div class="ai-magic-page">
+    <div class="ai-magic-content">
+      <div class="ai-magic-grid">
+        <button v-for="item in list" :key="item.id" class="ai-magic-card" type="button" @click="open(item)">
+          <img class="ai-magic-card-img" :src="item.cover" alt="" />
+          <div class="ai-magic-card-title">{{ item.title }}</div>
+        </button>
+      </div>
+    </div>
+
+    <van-popup v-model:show="showPopup" position="bottom" teleport="body" round closeable @click-overlay="close">
+      <div class="magic-popup">
+        <div class="magic-popup-title">{{ activeItem?.title ?? 'XXXXXXXXXX名称' }}</div>
+
+        <div class="magic-popup-video">
+          <img class="magic-popup-video-cover" :src="activeItem?.cover ?? magicCover1" alt="" />
+          <div class="magic-popup-play">▶</div>
+        </div>
+
+        <div class="magic-upload-card">
+          <van-field class="magic-my-upload" name="uploader" label-align="top">
+            <template #input>
+              <van-uploader
+                v-model="images"
+                reupload
+                :max-size="MAX_SIZE"
+                :preview-full-image="false"
+                accept="image/*"
+                :max-count="1"
+                :after-read="afterRead"
+                @oversize="onOversize"
+              >
+                <div v-if="images.length < 1" class="magic-uploader-empty">
+                  <img class="magic-uploader-empty-icon" src="~/assets/image-icon/upload_image_2.png" alt="icon" />
+                  <span class="magic-uploader-empty-text">
+                    点击上传人物信息
+                    <br />
+                    图片大小不超过2MB
+                  </span>
+                </div>
+                <template #preview-delete>
+                  <nuxt-icon class="magic-uploader-delete-icon" name="minus" />
+                </template>
+              </van-uploader>
+            </template>
+          </van-field>
+        </div>
+
+        <div class="magic-popup-tips">
+          <div class="magic-popup-tip">
+            <div class="magic-popup-tip-img-wrap">
+              <img class="magic-popup-tip-img" :src="magicCover3" alt="" />
+              <div class="magic-popup-tip-badge is-ok">✓</div>
+            </div>
+            <div class="magic-popup-tip-text">正面无遮挡</div>
+          </div>
+          <div class="magic-popup-tip">
+            <div class="magic-popup-tip-img-wrap">
+              <img class="magic-popup-tip-img" :src="magicCover4" alt="" />
+              <div class="magic-popup-tip-badge is-bad">✕</div>
+            </div>
+            <div class="magic-popup-tip-text">上身有遮挡</div>
+          </div>
+          <div class="magic-popup-tip">
+            <div class="magic-popup-tip-img-wrap">
+              <img class="magic-popup-tip-img" :src="magicCover2" alt="" />
+              <div class="magic-popup-tip-badge is-bad">✕</div>
+            </div>
+            <div class="magic-popup-tip-text">不是正面</div>
+          </div>
+          <div class="magic-popup-tip">
+            <div class="magic-popup-tip-img-wrap">
+              <img class="magic-popup-tip-img" :src="magicCover1" alt="" />
+              <div class="magic-popup-tip-badge is-bad">✕</div>
+            </div>
+            <div class="magic-popup-tip-text">过于模糊</div>
+          </div>
+        </div>
+
+        <button class="magic-popup-pay-btn" type="button" @click="onPay">支付9金币</button>
+        <div class="magic-popup-balance">
+          当前余额：
+          <span class="magic-popup-balance-num">{{ user?.coins ?? 0 }}</span>
+          金币
+          <button class="magic-popup-recharge" type="button" @click="toRecharge">去充值</button>
+        </div>
+      </div>
+    </van-popup>
+
+    <van-popup v-model:show="showPayPopup" position="bottom" teleport="body" round closeable @click-overlay="close">
+      <div class="pay-popup">
+        <div class="pay-popup-title">支付金币</div>
+        <div class="pay-popup-row">
+          <div class="pay-popup-label">
+            金币余额：
+            <span class="pay-popup-balance">{{ user?.coins ?? 0 }}</span>
+          </div>
+          <button class="pay-popup-recharge" type="button" @click="toRecharge">立即充值</button>
+        </div>
+        <div class="pay-popup-row">
+          <div class="pay-popup-label">支付金额</div>
+          <div class="pay-popup-value">{{ payCoins }}</div>
+        </div>
+        <div class="pay-popup-divider" />
+        <div class="pay-popup-row pay-popup-row-strong">
+          <div class="pay-popup-label">实际支付</div>
+          <div class="pay-popup-value pay-popup-value-strong">{{ payCoins }}</div>
+        </div>
+        <button class="pay-popup-btn" type="button" @click="confirmPay">立即支付</button>
+      </div>
+    </van-popup>
+  </div>
+</template>
+
+<style scoped>
+.ai-magic-page {
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.ai-magic-content {
+  padding: 12px;
+}
+
+.ai-magic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ai-magic-card {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+}
+
+.ai-magic-card-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 10px;
+  object-fit: cover;
+  display: block;
+}
+
+.ai-magic-card-title {
+  margin-top: 6px;
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.magic-popup {
+  padding: 16px 14px 22px;
+}
+
+.magic-popup-title {
+  text-align: center;
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.magic-popup-video {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #e9e9e9;
+}
+
+.magic-popup-video-cover {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+}
+
+.magic-popup-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.magic-upload-card {
+  margin-top: 12px;
+  height: 120px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f0f0f0;
+  border: 1px dashed #7a7a7a;
+}
+
+.magic-my-upload {
+  --van-cell-background: #f0f0f0;
+  padding: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: none;
+  height: 120px;
+}
+
+.magic-my-upload :deep(.van-uploader__preview),
+.magic-my-upload :deep(.van-uploader__wrapper),
+.magic-my-upload :deep(.van-field__control),
+.magic-my-upload :deep(.van-field__body),
+.magic-my-upload :deep(.van-uploader),
+.magic-my-upload :deep(.van-cell__value) {
+  width: 100%;
+  height: 120px;
+  margin: 0;
+}
+
+.magic-my-upload :deep(.van-cell),
+.magic-my-upload :deep(.van-field) {
+  padding: 0;
+}
+
+.magic-my-upload :deep(.van-field__body) {
+  width: 100% !important;
+}
+
+.magic-my-upload :deep(.van-cell__value) {
+  flex: 1 !important;
+  min-width: 0;
+  width: 100% !important;
+}
+
+.magic-my-upload :deep(.van-uploader) {
+  display: block;
+  width: 100% !important;
+}
+
+.magic-my-upload :deep(.van-uploader__wrapper) {
+  display: flex;
+  flex: 1;
+  width: 100% !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.magic-my-upload :deep(.van-uploader__upload),
+.magic-my-upload :deep(.van-uploader__preview) {
+  width: 100% !important;
+  height: 120px;
+}
+
+.magic-uploader-empty {
+  height: 120px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+}
+
+.magic-uploader-empty-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.magic-uploader-empty-text {
+  margin-top: 6px;
+  text-align: center;
+  font-size: 10px;
+  line-height: 14px;
+  color: #6c6c6c;
+}
+
+.magic-uploader-delete-icon {
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--dx-primary-color, #2494ff);
+}
+
+.magic-popup-tips {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.magic-popup-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.magic-popup-tip-img-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.magic-popup-tip-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 64px;
+  object-fit: cover;
+  display: block;
+}
+
+.magic-popup-tip-badge {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #fff;
+  line-height: 14px;
+}
+
+.magic-popup-tip-badge.is-ok {
+  background: #2ecc71;
+}
+
+.magic-popup-tip-badge.is-bad {
+  background: #ff4d4f;
+}
+
+.magic-popup-tip-text {
+  font-size: 10px;
+  color: #1a1a1a;
+}
+
+.magic-popup-pay-btn {
+  margin-top: 14px;
+  width: 100%;
+  height: 44px;
+  border-radius: 8px;
+  border: 0;
+  background: #2494ff;
+  color: #ffffff;
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.magic-popup-balance {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #a8a8a8;
+}
+
+.magic-popup-balance-num {
+  margin: 0 2px;
+  color: #a8a8a8;
+}
+
+.magic-popup-recharge {
+  margin-left: 6px;
+  color: #2494ff;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+:global(.ai-magic-success-dialog) {
+  --van-dialog-border-radius: 8px;
+}
+
+:global(.ai-magic-success-dialog .van-action-bar-button),
+:global(.ai-magic-success-dialog .van-dialog__confirm),
+:global(.ai-magic-success-dialog .van-dialog__footer .van-button) {
+  display: block !important;
+  width: calc(100% - 48px) !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: 8px !important;
+}
+
+:global(.ai-magic-success-dialog .van-dialog__footer) {
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.pay-popup {
+  padding: 20px 18px 26px;
+  background: #ffffff;
+}
+
+.pay-popup-title {
+  text-align: center;
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.2;
+  color: #111111;
+  margin-bottom: 16px;
+}
+
+.pay-popup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.pay-popup-label {
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.2;
+  color: #6c6c6c;
+}
+
+.pay-popup-balance {
+  color: #ff0000;
+  margin-left: 6px;
+  font-weight: 600;
+}
+
+.pay-popup-recharge {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #2494ff;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.pay-popup-value {
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  color: #6c6c6c;
+}
+
+.pay-popup-divider {
+  height: 0;
+  border-top: 1px dashed #d8d8d8;
+  margin: 8px 0;
+}
+
+.pay-popup-row-strong .pay-popup-label {
+  font-weight: 600;
+  color: #111111;
+}
+
+.pay-popup-value-strong {
+  font-weight: 700;
+  color: #ff0000;
+}
+
+.pay-popup-btn {
+  margin-top: 18px;
+  width: 100%;
+  height: 48px;
+  border-radius: 8px;
+  border: 0;
+  background: #2494ff;
+  color: #ffffff;
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+}
+</style>

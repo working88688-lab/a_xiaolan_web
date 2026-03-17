@@ -8,6 +8,8 @@ definePageMeta({
 })
 
 const aiFacePath = '/ai/face'
+const aiUndressPath = '/ai/undress'
+const aiMagicPath = '/ai/magic'
 </script>
 
 <template>
@@ -34,12 +36,12 @@ const aiFacePath = '/ai/face'
             <nuxt-link :to="aiFacePath" class="ai-index-banner">
               <img :src="aiBanner1" alt="AI换脸" class="ai-index-banner-img" />
             </nuxt-link>
-            <div class="ai-index-banner">
+            <nuxt-link :to="aiUndressPath" class="ai-index-banner">
               <img :src="aiBanner2" alt="AI去衣" class="ai-index-banner-img" />
-            </div>
-            <div class="ai-index-banner">
+            </nuxt-link>
+            <nuxt-link :to="aiMagicPath" class="ai-index-banner">
               <img :src="aiBanner3" alt="AI魔法" class="ai-index-banner-img" />
-            </div>
+            </nuxt-link>
           </div>
         </div>
       </template>

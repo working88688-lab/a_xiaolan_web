@@ -650,6 +650,32 @@ export default defineAppConfig({
       }
     },
     {
+      name: 'ai-undress',
+      path: '/ai/undress',
+      meta: {
+        keepalive: true,
+        title: 'AI去衣',
+        nav: {
+          rightTitle: '我的记录',
+          to: '/ai/record?_index=2'
+        },
+        trackPageName: 'AI去衣'
+      }
+    },
+    {
+      name: 'ai-magic',
+      path: '/ai/magic',
+      meta: {
+        keepalive: true,
+        title: 'AI魔法',
+        nav: {
+          rightTitle: '我的记录',
+          to: '/ai/record?_index=3'
+        },
+        trackPageName: 'AI魔法'
+      }
+    },
+    {
       name: 'replace-face',
       path: '/ai/replace',
       meta: {
@@ -667,8 +693,8 @@ export default defineAppConfig({
       path: '/ai/record',
       meta: {
         keepalive: true,
-        title: '图片换脸',
-        trackPageName: '换脸记录'
+        title: '我的记录',
+        trackPageName: '我的记录'
       }
     },
     {
