@@ -625,6 +625,19 @@ export default defineAppConfig({
       meta: { keepalive: true, trackPageName: '搜索结果' }
     },
     {
+      name: 'ai-index',
+      path: '/ai/index',
+      meta: {
+        keepalive: true,
+        title: 'AI科技',
+        nav: {
+          rightTitle: '我的记录',
+          to: '/ai/record?_index=1'
+        },
+        trackPageName: 'AI科技'
+      }
+    },
+    {
       name: 'ai-face',
       path: '/ai/face',
       meta: {

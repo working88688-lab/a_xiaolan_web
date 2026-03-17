@@ -6,7 +6,7 @@ export const NAVIGATION_MAP = {
   5: '/home/daily',
   9: '/home/anime',
   11: '/home/live',
-  12: '/ai/face',
+  12: '/ai/index',
   13: '/category'
 } as const
 
