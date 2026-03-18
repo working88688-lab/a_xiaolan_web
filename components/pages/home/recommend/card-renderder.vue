@@ -149,7 +149,7 @@ export default defineComponent({
           <div class='px-1.5'>
             <VideoCard class='mb-1' item={item.list[0]}></VideoCard>
             <div class='mb-1 grid grid-cols-2 gap-1 pb-0.5'>
-              {props.item.list.slice(0, 4).map(item => {
+              {props.item.list.slice(1, 5).map(item => {
                 return <VideoCard key={item.id} item={item} lines></VideoCard>
               })}
 
