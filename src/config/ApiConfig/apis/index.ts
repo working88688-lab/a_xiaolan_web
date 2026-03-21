@@ -2,6 +2,7 @@
  * desc: 接口配置
  * date: 2023.03.20
  */
+import AI from './modules/AI'
 import Checkin from './modules/Checkin'
 import Comics from './modules/Comics'
 import Community from './modules/Community'
@@ -20,6 +21,7 @@ import original from './modules/original'
 
 export default {
   // 模块接口引用
+  AI,
   Checkin,
   Game,
   Home,

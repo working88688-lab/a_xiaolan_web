@@ -33,6 +33,58 @@ const payCoins = 9
 const images = ref<any[]>([])
 const showPayPopup = ref(false)
 
+interface PreMagicData {
+  free_num: number,
+  coins:number,
+  coin: number
+  cost_coin: number
+  tips: string
+}
+
+const magicData = ref<PreMagicData>({
+  free_num: 0,
+  coins:0,
+  coin: 0,
+  cost_coin: payCoins,
+  tips: ''
+})
+
+async function fetchPreMagic() {
+  try {
+    const res = await __.$Api.AI.preMagic({})
+    magicData.value = res?.data as PreMagicData
+    console.log('AI魔法预检查:', magicData.value)
+  } catch (error) {
+    console.error('获取AI魔法预检查失败:', error)
+  }
+}
+
+onMounted(() => {
+  fetchPreMagic()
+  fetchMaterials()
+})
+
+interface MaterialItem {
+  id: number
+  title: string
+  cover: string
+  preview_url: string
+  sort_num: number
+  status: number
+}
+
+const materials = ref<MaterialItem[]>([])
+
+async function fetchMaterials() {
+  try {
+    const res = await __.$Api.AI.listMaterial({ page: 1, limit: 20 })
+    materials.value = res?.data as MaterialItem[]
+    console.log('AI魔法素材列表:', materials.value)
+  } catch (error) {
+    console.error('获取AI魔法素材列表失败:', error)
+  }
+}
+
 function open(item: MagicItem) {
   activeItem.value = item
   images.value = []
@@ -70,17 +122,52 @@ function onPay() {
   showPayPopup.value = true
 }
 
+async function submitMagic() {
+  if (!images.value.length) {
+    return __.$Toast('请先上传图片')
+  }
+  if (!activeItem.value) {
+    return __.$Toast('请选择魔法素材')
+  }
+  console.log(activeItem.value);
+
+  try {
+    const file = images.value[0]
+    // 获取图片尺寸
+    const img = new Image()
+    img.onload = async () => {
+      const res = await __.$Api.AI.magic({
+        thumb: file.content || file.url,
+        thumb_w: img.width,
+        thumb_h: img.height,
+        magic_id: activeItem.value?.id
+      })
+      
+      if (res?.data?.msg) {
+        __.$Toast(res.data.msg)
+      }
+      
+      showPayPopup.value = false
+      showPopup.value = false
+      await __.$Alert({
+        title: '提交成功',
+        message: '正在生成，稍后请前往 AI科技-我的\n记录中查看',
+        confirmButtonText: '朕知道了',
+        confirmButtonColor: '#2494ff',
+        className: 'ai-magic-success-dialog'
+      })
+      router.push('/ai/record?_index=3')
+    }
+    img.src = file.content || file.url
+  } catch (error: any) {
+    const errorMsg = error?.message || '提交失败'
+    __.$Toast(errorMsg)
+    console.error('提交AI魔法任务失败:', error)
+  }
+}
+
 async function confirmPay() {
-  showPayPopup.value = false
-  showPopup.value = false
-  await __.$Alert({
-    title: '支付成功',
-    message: '正在生成，稍后请前往 AI科技-我的\n记录中查看',
-    confirmButtonText: '朕知道了',
-    confirmButtonColor: '#2494ff',
-    className: 'ai-magic-success-dialog'
-  })
-  router.push('/ai/record?_index=3')
+  await submitMagic()
 }
 </script>
 
@@ -88,8 +175,8 @@ async function confirmPay() {
   <div class="ai-magic-page">
     <div class="ai-magic-content">
       <div class="ai-magic-grid">
-        <button v-for="item in list" :key="item.id" class="ai-magic-card" type="button" @click="open(item)">
-          <img class="ai-magic-card-img" :src="item.cover" alt="" />
+        <button v-for="item in materials" :key="item.id" class="ai-magic-card" type="button" @click="open(item)">
+          <img class="ai-magic-card-img" :src="item.cover" :alt="item.title" />
           <div class="ai-magic-card-title">{{ item.title }}</div>
         </button>
       </div>
@@ -164,7 +251,7 @@ async function confirmPay() {
           </div>
         </div>
 
-        <button class="magic-popup-pay-btn" type="button" @click="onPay">支付9金币</button>
+        <button class="magic-popup-pay-btn" type="button" @click="onPay">支付{{ magicData.coins }}金币</button>
         <div class="magic-popup-balance">
           当前余额：
           <span class="magic-popup-balance-num">{{ user?.coins ?? 0 }}</span>
@@ -180,18 +267,18 @@ async function confirmPay() {
         <div class="pay-popup-row">
           <div class="pay-popup-label">
             金币余额：
-            <span class="pay-popup-balance">{{ user?.coins ?? 0 }}</span>
+            <span class="pay-popup-balance">{{ user.coins }}</span>
           </div>
           <button class="pay-popup-recharge" type="button" @click="toRecharge">立即充值</button>
         </div>
         <div class="pay-popup-row">
           <div class="pay-popup-label">支付金额</div>
-          <div class="pay-popup-value">{{ payCoins }}</div>
+          <div class="pay-popup-value">{{ magicData.coins }}</div>
         </div>
         <div class="pay-popup-divider" />
         <div class="pay-popup-row pay-popup-row-strong">
           <div class="pay-popup-label">实际支付</div>
-          <div class="pay-popup-value pay-popup-value-strong">{{ payCoins }}</div>
+          <div class="pay-popup-value pay-popup-value-strong">{{ magicData.coins }}</div>
         </div>
         <button class="pay-popup-btn" type="button" @click="confirmPay">立即支付</button>
       </div>
