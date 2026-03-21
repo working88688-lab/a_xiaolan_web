@@ -8,5 +8,11 @@ export default {
   // 提交AI魔法任务
   magic: { method: 'post', url: '/api/aimagic/magic' },
   // 我的AI魔法记录列表
-  records: { method: 'post', url: '/api/aimagic/records' }
+  records: { method: 'post', url: '/api/aimagic/records' },
+  // AI去衣预检查
+  preStrip: { method: 'post', url: '/api/ai/pre_strip' },
+  // 提交AI去衣任务
+  strip: { method: 'post', url: '/api/ai/strip' },
+  // 我的AI去衣记录列表
+  stripList: { method: 'post', url: '/api/ai/strip_list' }
 }

@@ -14,6 +14,36 @@ const MAX_SIZE = 2 * 1024 * 1024
 const images = ref<any[]>([])
 const showPayPopup = ref(false)
 
+interface PreStripData {
+  free_num: number
+  coin: number
+  cost_coin: number
+  tips: string
+  coins:number
+}
+
+const stripData = ref<PreStripData>({
+  free_num: 0,
+  coins:0,
+  coin: 0,
+  cost_coin: 0,
+  tips: ''
+})
+
+async function fetchPreStrip() {
+  try {
+    const res = await __.$Api.AI.preStrip({})
+    stripData.value = res?.data as PreStripData
+    console.log('AI去衣预检查:', stripData.value)
+  } catch (error) {
+    console.error('获取AI去衣预检查失败:', error)
+  }
+}
+
+onMounted(() => {
+  fetchPreStrip()
+})
+
 const payCoins = 9
 
 function onOversize() {
@@ -44,15 +74,41 @@ function toRecharge() {
 }
 
 async function confirmPay() {
-  showPayPopup.value = false
-  await __.$Alert({
-    title: '支付成功',
-    message: '正在生成，稍后请前往 AI科技-我的\n记录中查看',
-    confirmButtonText: '朕知道了',
-    confirmButtonColor: '#2494ff',
-    className: 'ai-undress-success-dialog'
-  })
-  router.push('/ai/record?_index=2')
+  if (!images.value.length) {
+    return __.$Toast('请先上传图片')
+  }
+
+  try {
+    const file = images.value[0]
+    // 获取图片尺寸
+    const img = new Image()
+    img.onload = async () => {
+      const res = await __.$Api.AI.strip({
+        thumb: file.content || file.url,
+        thumb_w: img.width,
+        thumb_h: img.height
+      })
+      
+      if (res?.data?.msg) {
+        __.$Toast(res.data.msg)
+      }
+      
+      showPayPopup.value = false
+      await __.$Alert({
+        title: '提交成功',
+        message: '正在生成，稍后请前往 AI科技-我的\n记录中查看',
+        confirmButtonText: '朕知道了',
+        confirmButtonColor: '#2494ff',
+        className: 'ai-undress-success-dialog'
+      })
+      router.push('/ai/record?_index=2')
+    }
+    img.src = file.content || file.url
+  } catch (error: any) {
+    const errorMsg = error?.message || '提交失败'
+    __.$Toast(errorMsg)
+    console.error('提交AI去衣任务失败:', error)
+  }
 }
 </script>
 
@@ -105,7 +161,7 @@ async function confirmPay() {
           </div>
 
           <div class="action-bar">
-            <dx-button block class="action-bar-btn" color="#2494ff" :round="false" @click="onPay">支付9金币</dx-button>
+            <dx-button block class="action-bar-btn" color="#2494ff" :round="false" @click="onPay">支付{{ stripData.coins }}金币</dx-button>
             <div class="action-bar-text">
               当前余额：
               <span class="action-bar-coins">{{ user?.coins ?? 0 }}</span>
@@ -123,18 +179,18 @@ async function confirmPay() {
         <div class="pay-popup-row">
           <div class="pay-popup-label">
             金币余额：
-            <span class="pay-popup-balance">{{ user?.coins ?? 0 }}</span>
+            <span class="pay-popup-balance">{{ user?.coins }}</span>
           </div>
           <button class="pay-popup-recharge" type="button" @click="toRecharge">立即充值</button>
         </div>
         <div class="pay-popup-row">
           <div class="pay-popup-label">支付金额</div>
-          <div class="pay-popup-value">{{ payCoins }}</div>
+          <div class="pay-popup-value">{{ stripData.coins }}</div>
         </div>
         <div class="pay-popup-divider" />
         <div class="pay-popup-row pay-popup-row-strong">
           <div class="pay-popup-label">实际支付</div>
-          <div class="pay-popup-value pay-popup-value-strong">{{ payCoins }}</div>
+          <div class="pay-popup-value pay-popup-value-strong">{{ stripData.coins }}</div>
         </div>
         <button class="pay-popup-btn" type="button" @click="confirmPay">立即支付</button>
       </div>
