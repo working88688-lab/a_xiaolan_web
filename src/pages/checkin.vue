@@ -151,7 +151,26 @@ async function fetchCalendarData() {
 
 onMounted(() => {
   fetchCalendarData()
+  fetchDrawConf()
 })
+
+// 获取抽奖配置
+async function fetchDrawConf() {
+  try {
+    const res = await __.$Api.Game.drawConf({})
+    const data = res?.data as {
+      balance: string
+      rules: string[]
+    }
+    
+    // 更新抽奖积分
+    state.drawPoints = parseInt(data.balance) || 0
+    
+    console.log('抽奖配置:', data)
+  } catch (error) {
+    console.error('获取抽奖配置失败:', error)
+  }
+}
 
 type PrizeKey = 'gift' | 'coin' | 'bigcoin' | 'vip' | 'vip7' | 'vip15' | 'ai' | 'game'
 const showPrize = ref(false)
@@ -179,8 +198,26 @@ function pickRandomPrize() {
 }
 
 function onLotteryClick() {
-  prizeKey.value = pickRandomPrize()
-  showPrize.value = true
+  handleLottery()
+}
+
+async function handleLottery() {
+  try {
+    const res = await __.$Api.Game.draw()
+    const data = res?.data as {
+      prize: Record<string, any>
+      msg: string
+    }
+    
+    // 根据返回的奖品信息显示对应的奖品
+    // 暂时使用随机奖品，后续根据 prize 数据结构调整
+    prizeKey.value = pickRandomPrize()
+    showPrize.value = true
+    
+    console.log('抽奖结果:', data)
+  } catch (error) {
+    console.error('抽奖失败:', error)
+  }
 }
 
 function closePrize() {
@@ -248,14 +285,32 @@ async function fetchSignRecords() {
   }
 }
 
-const lotteryRecords = computed(() => {
-  return Array.from({ length: 18 }).map((_, i) => ({
-    id: `lr_${i}`,
-    time: '2025.09.08 12:23',
-    consume: i % 3 === 0 ? '1次抽奖机会' : '消耗50积分',
-    prize: i % 2 === 0 ? '3天会员卡' : '视频福利包'
-  }))
-})
+const lotteryRecords = ref<Array<{
+  id: string | number
+  time: string
+  consume: string
+  prize: string
+}>>([])
+
+// 获取抽奖记录
+async function fetchLotteryRecords() {
+  try {
+    const res = await __.$Api.Game.drawList({ page: 1, limit: 20 })
+    const data = res?.data as {
+      list: Array<any>
+    }
+
+    // 根据实际返回的数据结构进行转换
+    lotteryRecords.value = data.list.map((item: any, index: number) => ({
+      id: item.id || index,
+      time: item.created_at || item.time || '',
+      consume: item.consume || '消耗积分',
+      prize: item.prize_name || item.prize || ''
+    }))
+  } catch (error) {
+    console.error('获取抽奖记录失败:', error)
+  }
+}
 
 const days = computed<CheckinDay[]>(() => {
   return state.calendarData
@@ -321,7 +376,7 @@ function getDayIcon(day: CheckinDay) {
         <div class="lottery-content-top">
           <div class="lottery-head">
             <div class="lottery-title">抽奖得好礼</div>
-            <button class="lottery-link" type="button" @click="showLotteryRecord = true">抽奖记录</button>
+            <button class="lottery-link" type="button" @click="() => { showLotteryRecord = true; fetchLotteryRecords() }">抽奖记录</button>
           </div>
           <div class="lottery-meta">
             <div class="lottery-meta-item">我的抽奖机会：{{ state.drawChances }}</div>

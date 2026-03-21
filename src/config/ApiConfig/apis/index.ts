@@ -7,6 +7,7 @@ import Comics from './modules/Comics'
 import Community from './modules/Community'
 import Darkweb from './modules/Darkweb'
 import Discover from './modules/Discover'
+import Game from './modules/Game'
 import Home from './modules/Home'
 import Images from './modules/Images'
 import Search from './modules/Search'
@@ -19,6 +20,7 @@ import original from './modules/original'
 export default {
   // 模块接口引用
   Checkin,
+  Game,
   Home,
   User,
   Search,
