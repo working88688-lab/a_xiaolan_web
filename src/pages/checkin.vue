@@ -3,6 +3,8 @@ definePageMeta({
   keepalive: true
 })
 
+const __ = useNuxtApp()
+
 type RewardType = 'tx' | 'cj' | 'jf'
 type DayStatus = 'signed' | 'today' | 'future'
 
@@ -10,7 +12,27 @@ type CheckinDay = {
   day: number
   rewardType: RewardType
   rewardText: string
+  rewardName: string
+  rewardTimes: number
+  icon: string
   status: DayStatus
+  signed: boolean
+  canSign: boolean
+}
+
+interface CalendarResponse {
+  continuous_day: number
+  my_points: number
+  my_match_card_times: number
+  calendar: Array<{
+    day: number
+    reward_key: number
+    reward_name: string
+    reward_times: number
+    icon: string
+    signed: boolean
+    can_sign: boolean
+  }>
 }
 
 const qiandaoImgs = import.meta.glob('~/assets/image/qiandao/*', {
@@ -66,16 +88,69 @@ const img = {
 }
 
 const state = reactive({
-  signedDays: 5,
-  tomorrowRewardText: '15积分',
-  // todayDay：今天是第几天（示例：3=今天）
-  todayDay: 3,
-  // 是否已签到（控制按钮图）
+  signedDays: 0,
+  tomorrowRewardText: '',
   hasSignedToday: false,
+  drawChances: 0,
+  drawPoints: 0,
+  myMatchCardTimes: 0,
+  calendarData: [] as CheckinDay[]
+})
 
-  // 抽奖信息（先静态）
-  drawChances: 3,
-  drawPoints: 260
+const loading = ref(true)
+
+// 获取日历数据
+async function fetchCalendarData() {
+  try {
+    loading.value = true
+    const res = await __.$Api.Checkin.calendar()
+    const data = res.data as CalendarResponse
+
+    state.signedDays = data.continuous_day
+    state.drawPoints = data.my_points
+    state.myMatchCardTimes = data.my_match_card_times
+
+    // 转换日历数据
+    state.calendarData = data.calendar.map((item) => {
+      const rewardTypeMap: Record<number, RewardType> = {
+        1: 'tx', // 金币
+        2: 'cj'  // 匹配卡
+      }
+      const rewardType = rewardTypeMap[item.reward_key] || 'jf'
+
+      return {
+        day: item.day,
+        rewardType,
+        rewardName: item.reward_name,
+        rewardTimes: item.reward_times,
+        icon: item.icon,
+        rewardText: `${item.reward_times}${item.reward_name}`,
+        status: item.signed ? 'signed' : item.can_sign ? 'today' : 'future',
+        signed: item.signed,
+        canSign: item.can_sign
+      }
+    })
+
+    // 计算明日奖励文本
+    const tomorrowDay = state.calendarData.find((d) => d.status === 'today')
+    if (tomorrowDay) {
+      state.tomorrowRewardText = tomorrowDay.rewardText
+      state.hasSignedToday = false
+    } else {
+      const nextDay = state.calendarData.find((d) => d.status === 'future')
+      if (nextDay) {
+        state.tomorrowRewardText = nextDay.rewardText
+      }
+    }
+  } catch (error) {
+    console.error('获取签到日历失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchCalendarData()
 })
 
 type PrizeKey = 'gift' | 'coin' | 'bigcoin' | 'vip' | 'vip7' | 'vip15' | 'ai' | 'game'
@@ -120,21 +195,58 @@ const prizeMessage = computed(() => {
 
 function onSignClick() {
   if (state.hasSignedToday) return
-  state.hasSignedToday = true
-  showCheckinPopup.value = true
+  handleSign()
+}
+
+async function handleSign() {
+  try {
+    await __.$Api.Checkin.sign({})
+    state.hasSignedToday = true
+    showCheckinPopup.value = true
+    // 重新获取日历数据
+    await fetchCalendarData()
+  } catch (error) {
+    console.error('签到失败:', error)
+  }
 }
 
 function closeCheckinPopup() {
   showCheckinPopup.value = false
 }
 
-const signRecords = computed(() => {
-  return Array.from({ length: 18 }).map((_, i) => ({
-    id: `sr_${i}`,
-    time: '2025.09.08 12:23',
-    text: '抽奖积分+15'
-  }))
-})
+const signRecords = ref<Array<{
+  id: string | number
+  time: string
+  text: string
+}>>([])
+
+// 获取签到记录
+async function fetchSignRecords() {
+  try {
+    const res = await __.$Api.Checkin.records({ page: 1, limit: 20 })
+    const data = res?.data as {
+      list: Array<{
+        id: number
+        sign_date: string
+        day: number
+        reward_key: number
+        reward_name: string
+        reward_times: number
+        continuous_day: number
+        created_at: string
+      }>
+      last_ix: string
+    }
+
+    signRecords.value = data.list.map((item) => ({
+      id: item.id,
+      time: item.created_at,
+      text: `${item.reward_name}+${item.reward_times}`
+    }))
+  } catch (error) {
+    console.error('获取签到记录失败:', error)
+  }
+}
 
 const lotteryRecords = computed(() => {
   return Array.from({ length: 18 }).map((_, i) => ({
@@ -146,14 +258,7 @@ const lotteryRecords = computed(() => {
 })
 
 const days = computed<CheckinDay[]>(() => {
-  const list: CheckinDay[] = []
-  for (let d = 1; d <= 30; d++) {
-    const status: DayStatus = d < state.todayDay ? 'signed' : d === state.todayDay ? 'today' : 'future'
-    const rewardType: RewardType = d % 6 === 1 ? 'jf' : d % 6 === 2 ? 'cj' : 'tx'
-    const rewardText = rewardType === 'jf' ? '15积分' : rewardType === 'cj' ? '1次抽奖' : '1次同圈'
-    list.push({ day: d, rewardType, rewardText, status })
-  }
-  return list
+  return state.calendarData
 })
 
 function getDayIcon(day: CheckinDay) {
@@ -180,7 +285,7 @@ function getDayIcon(day: CheckinDay) {
           <div class="checkin-panel-line">明日签到可得：{{ state.tomorrowRewardText }}</div>
           <div class="checkin-panel-sub">
             <span>已连续签到：{{ state.signedDays }}天</span>
-            <button class="checkin-panel-link" type="button" @click="showSignRecord = true">签到记录</button>
+            <button class="checkin-panel-link" type="button" @click="() => { showSignRecord = true; fetchSignRecords() }">签到记录</button>
           </div>
         </div>
 
