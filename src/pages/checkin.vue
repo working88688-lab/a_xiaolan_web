@@ -93,8 +93,15 @@ const state = reactive({
   hasSignedToday: false,
   drawChances: 0,
   drawPoints: 0,
+  drawPointsPerDraw: 50,
   myMatchCardTimes: 0,
-  calendarData: [] as CheckinDay[]
+  calendarData: [] as CheckinDay[],
+  lotteryItems: [] as Array<{
+    id: number
+    title: string
+    icon: string
+    sort: number
+  }>
 })
 
 const loading = ref(true)
@@ -157,14 +164,24 @@ onMounted(() => {
 // 获取抽奖配置
 async function fetchDrawConf() {
   try {
-    const res = await __.$Api.Game.drawConf({})
-    const data = res?.data as {
-      balance: string
-      rules: string[]
+    const res = await __.$Api.TaskLottery.info({})
+    const data = res?.data?.list as {
+      items: Array<{
+        id: number
+        title: string
+        icon: string
+        sort: number
+      }>
+      my_chances: number
+      my_points: number
+      points_per_draw: number
     }
     
-    // 更新抽奖积分
-    state.drawPoints = parseInt(data.balance) || 0
+    // 更新抽奖机会次数、积分、每次抽奖消耗的积分和奖品列表
+    state.drawChances = data.my_chances || 0
+    state.drawPoints = data.my_points || 0
+    state.drawPointsPerDraw = data.points_per_draw || 50
+    state.lotteryItems = data.items || []
     
     console.log('抽奖配置:', data)
   } catch (error) {
@@ -197,13 +214,21 @@ function pickRandomPrize() {
   return keys[Math.floor(Math.random() * keys.length)] || 'gift'
 }
 
-function onLotteryClick() {
-  handleLottery()
+function onLotteryClick(type: 'chance' | 'points') {
+  handleLottery(type)
 }
 
-async function handleLottery() {
+async function handleLottery(type: 'chance' | 'points') {
   try {
-    const res = await __.$Api.Game.draw()
+    let res
+    if (type === 'chance') {
+      // 机会抽奖
+      res = await __.$Api.TaskLottery.drawByChance({})
+    } else {
+      // 积分抽奖
+      res = await __.$Api.TaskLottery.drawByPoints({})
+    }
+    
     const data = res?.data as {
       prize: Record<string, any>
       msg: string
@@ -295,7 +320,7 @@ const lotteryRecords = ref<Array<{
 // 获取抽奖记录
 async function fetchLotteryRecords() {
   try {
-    const res = await __.$Api.Game.drawList({ page: 1, limit: 20 })
+    const res = await __.$Api.TaskLottery.logs({ page: 1, limit: 20 })
     const data = res?.data as {
       list: Array<any>
     }
@@ -314,6 +339,32 @@ async function fetchLotteryRecords() {
 
 const days = computed<CheckinDay[]>(() => {
   return state.calendarData
+})
+
+// 抽奖奖品列表
+const lotteryItems = computed(() => {
+  return state.lotteryItems || []
+})
+
+// 计算奖品的位置（10项围绕中心点排列）
+const prizePositions = computed(() => {
+  const items = lotteryItems.value
+  const count = items.length
+  const radius = 130 // 距离中心的半径
+  
+  return items.map((item, index) => {
+    const angle = (index / count) * 360 - 90 // 从顶部开始
+    const rad = (angle * Math.PI) / 180
+    const x = Math.cos(rad) * radius
+    const y = Math.sin(rad) * radius
+    
+    return {
+      ...item,
+      x,
+      y,
+      angle
+    }
+  })
 })
 
 function getDayIcon(day: CheckinDay) {
@@ -386,6 +437,21 @@ function getDayIcon(day: CheckinDay) {
 
         <div class="wheel">
           <div class="wheel-stack">
+            <div class="wheel-prizes">
+              <div
+                v-for="prize in prizePositions"
+                :key="prize.id"
+                class="wheel-prize-item"
+                :style="{
+                  transform: `translate(${prize.x}px, ${prize.y}px) rotate(${prize.angle + 90}deg)`
+                }"
+              >
+                <div class="wheel-prize-icon">
+                  <img v-if="prize.icon" :src="prize.icon" :alt="prize.title" />
+                </div>
+                <div class="wheel-prize-title">{{ prize.title }}</div>
+              </div>
+            </div>
             <div class="wheel-disk">
               <img class="wheel-disk-layer" :src="img.zbBg" alt="" />
               <img class="wheel-disk-layer" :src="img.zbFront" alt="" />
@@ -398,8 +464,8 @@ function getDayIcon(day: CheckinDay) {
       </div>
     </div>
     <div class="lottery-actions">
-      <button class="lottery-btn lottery-btn-yellow" type="button" @click="onLotteryClick">抽奖机会</button>
-      <button class="lottery-btn lottery-btn-blue" type="button" @click="onLotteryClick">50积分抽奖</button>
+      <button class="lottery-btn lottery-btn-yellow" type="button" @click="onLotteryClick('chance')">抽奖机会</button>
+      <button class="lottery-btn lottery-btn-blue" type="button" @click="onLotteryClick('points')">{{ state.drawPointsPerDraw }}积分抽奖</button>
     </div>
   </div>
 
@@ -794,6 +860,52 @@ function getDayIcon(day: CheckinDay) {
   position: relative;
   flex: 0 0 auto;
   flex-direction: column;
+}
+
+.wheel-prizes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.wheel-prize-item {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform-origin: 0 0;
+}
+
+.wheel-prize-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.wheel-prize-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.wheel-prize-title {
+  font-size: 10px;
+  color: #d81e06;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
 }
 
 .wheel-disk-layer {

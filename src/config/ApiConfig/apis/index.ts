@@ -12,6 +12,7 @@ import Home from './modules/Home'
 import Images from './modules/Images'
 import Search from './modules/Search'
 import Story from './modules/Story'
+import TaskLottery from './modules/TaskLottery'
 import User from './modules/User'
 import Video from './modules/Video'
 import collect from './modules/collect'
@@ -22,6 +23,7 @@ export default {
   Checkin,
   Game,
   Home,
+  TaskLottery,
   User,
   Search,
   Video,
