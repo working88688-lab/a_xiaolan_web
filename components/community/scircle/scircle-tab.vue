@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="scircle-root">
     <scroll-list ref="list">
       <!-- 顶部：两行5列广告组件（样式参考 /home/resource 男色选中态） -->
@@ -36,7 +36,7 @@
         <div class="scircle-bottom">
           <div class="scircle-left">
             可匹配次数：
-            <span class="scircle-count">3</span>
+            <span class="scircle-count">{{ talkHomeData.info?.match_num ?? 3 }}</span>
             <a class="scircle-recharge" href="javascript:void(0)">充值</a>
           </div>
           <button class="scircle-right" type="button" @click="openSettings">匹配设置 ></button>
@@ -64,11 +64,14 @@
       <div class="scircle-help-popup">
         <div class="scircle-help-popup-title">速配说明</div>
         <div class="scircle-help-popup-content">
-          <div>1、xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
-          <div>2、xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
-          <div>3、xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
-          <div>4、xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
-          <div>5、xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
+          <template v-if="talkHomeData.readme.length">
+            <div v-for="(item, idx) in talkHomeData.readme" :key="idx">
+              {{ idx + 1 }}、{{ typeof item === 'string' ? item : item.content ?? item.title ?? JSON.stringify(item) }}
+            </div>
+          </template>
+          <template v-else>
+            <div>暂无说明</div>
+          </template>
         </div>
         <button class="scircle-help-popup-btn" type="button" @click="showHelp = false">我知道了</button>
       </div>
@@ -359,6 +362,36 @@ const props = defineProps<{
 }>()
 const listRef = useTemplateRef('list')
 const { scrollTop } = useScrollTop(listRef)
+const __ = useNuxtApp()
+
+// 匹配首页配置
+interface TalkHomeData {
+  info: Record<string, any>
+  online_count: number
+  readme: any[]
+}
+const talkHomeData = ref<TalkHomeData>({
+  info: {},
+  online_count: 0,
+  readme: []
+})
+
+async function fetchTalkHome() {
+  try {
+    const res = await __.$Api.Community.talkConf()
+    if (res?.data) {
+      talkHomeData.value = res.data as TalkHomeData
+    }
+    console.error('测试接口:',"成功")
+
+  } catch (error) {
+    console.error('测试接口:', error)
+  }
+}
+
+onMounted(() => {
+  fetchTalkHome()
+})
 
 const showHelp = ref(false)
 const isMatching = ref(false)

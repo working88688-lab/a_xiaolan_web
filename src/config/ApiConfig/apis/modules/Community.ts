@@ -84,5 +84,7 @@ export default {
   // 帖子点赞
   like_comment: { method: 'post', url: '/api/community/like_comment' },
   // 搜索帖子
-  search: { method: 'post', url: '/api/community/search' }
+  search: { method: 'post', url: '/api/community/search' },
+  // 匹配首页配置
+  talkConf: { method: 'post', url: '/api/recommend/recommendUsers' }
 }
