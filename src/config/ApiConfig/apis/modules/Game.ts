@@ -6,6 +6,8 @@ export default {
   // 游戏抽奖
   draw: { method: 'post', url: '/api/game/draw' },
   // 游戏抽奖记录
+  drawRecords: { method: 'post', url: '/api/game/drawRecords' },
+  // 兼容旧路径
   drawList: { method: 'post', url: '/api/game/drawList' },
   // 游戏产品列表
   products: { method: 'post', url: '/api/game/products' },

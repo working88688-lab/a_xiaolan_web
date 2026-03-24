@@ -50,7 +50,7 @@ const { activeTab, duration, updateDuration, updateActiveTab } = useDefaultActiv
 const __ = useNuxtApp()
 const { config } = storeToRefs(useGlobalStore())
 const { data } = useMyFetch<TabItem[]>({
-  api: __.$Api.Darkweb.index_aw,
+  api: __.$Api.Darkweb.darkWebInfo,
   immediate: true,
   success() {
     updateActiveTab(data.value)

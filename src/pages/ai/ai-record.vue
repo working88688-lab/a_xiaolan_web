@@ -24,26 +24,25 @@ const STATUS_TABS: Array<{ key: StatusKey; title: string; status: number }> = [
 
 const API_MAP: Record<AiTypeKey, string> = {
   face: 'api/ai/my_face',
-  // TODO: 后端接口名对齐后替换
-  undress: 'api/ai/my_face',
-  magic: 'api/ai/my_face'
+  undress: 'api/ai/my_strip',
+  magic: 'api/aimagic/my_magic'
 }
 
-const POSTER_MAP: Record<AiTypeKey, Record<StatusKey, string>> = {
+const POSTER_FIELDS: Record<AiTypeKey, Record<StatusKey, string[]>> = {
   face: {
-    processing: 'ground',
-    done: 'face_thumb',
-    failed: 'ground'
+    processing: ['ground', 'thumb'],
+    done: ['face_thumb', 'result_image', 'thumb'],
+    failed: ['ground', 'thumb']
   },
   undress: {
-    processing: 'thumb',
-    done: 'strip_thumb',
-    failed: 'thumb'
+    processing: ['thumb', 'ground'],
+    done: ['result_image', 'strip_thumb', 'thumb'],
+    failed: ['thumb', 'ground']
   },
   magic: {
-    processing: 'thumb',
-    done: 'thumb',
-    failed: 'thumb'
+    processing: ['thumb'],
+    done: ['result_video', 'result_image', 'thumb'],
+    failed: ['thumb']
   }
 }
 
@@ -74,7 +73,14 @@ const { key } = useKeepAlive({
 
 const activeApi = computed(() => API_MAP[aiType.value])
 const activeStatus = computed(() => STATUS_TABS.find(t => t.key === statusTab.value)!)
-const activePosterField = computed(() => POSTER_MAP[aiType.value][statusTab.value])
+
+function resolvePoster(item: Record<string, any>) {
+  const fields = POSTER_FIELDS[aiType.value][statusTab.value] || []
+  for (const field of fields) {
+    if (item?.[field]) return item[field]
+  }
+  return ''
+}
 </script>
 
 <template>
@@ -110,7 +116,7 @@ const activePosterField = computed(() => POSTER_MAP[aiType.value][statusTab.valu
         <div class="ai-record-item">
           <dx-cover
             class="ai-record-cover"
-            :poster="item[activePosterField]"
+            :poster="resolvePoster(item)"
             @click="onPreview(item, activeStatus.status, aiType)"
           >
             <div v-if="activeStatus.status === 1" class="ai-record-cover-mask">

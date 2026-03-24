@@ -164,8 +164,8 @@ onMounted(() => {
 // 获取抽奖配置
 async function fetchDrawConf() {
   try {
-    const res = await __.$Api.TaskLottery.info({})
-    const data = res?.data?.list as {
+    const res = await __.$Api.Game.drawConf({})
+    const data = (res?.data?.list || res?.data || {}) as {
       items: Array<{
         id: number
         title: string
@@ -220,14 +220,7 @@ function onLotteryClick(type: 'chance' | 'points') {
 
 async function handleLottery(type: 'chance' | 'points') {
   try {
-    let res
-    if (type === 'chance') {
-      // 机会抽奖
-      res = await __.$Api.TaskLottery.drawByChance({})
-    } else {
-      // 积分抽奖
-      res = await __.$Api.TaskLottery.drawByPoints({})
-    }
+    const res = await __.$Api.Game.draw({ type })
 
     const data = res?.data as {
       prize: Record<string, any>
@@ -320,7 +313,7 @@ const lotteryRecords = ref<Array<{
 // 获取抽奖记录
 async function fetchLotteryRecords() {
   try {
-    const res = await __.$Api.TaskLottery.logs({ page: 1, limit: 20 })
+    const res = await __.$Api.Game.drawList({ page: 1, limit: 20 })
     const data = res?.data as {
       list: Array<any>
     }

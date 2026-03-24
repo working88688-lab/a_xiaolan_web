@@ -68,12 +68,6 @@ const { validate } = useValidator({
   ]
 })
 
-const publishVideo = __.$Api.dynamic({
-  url: '/api/mv/upload',
-  axiosConfig: {
-    showSuccess: true
-  }
-})
 const publishing = ref(false)
 async function onSubmit() {
   try {
@@ -96,7 +90,7 @@ async function onSubmit() {
     console.log('thumb_height: ', thumb_height)
     console.log('thumb_width: ', thumb_width)
 
-    await publishVideo({
+    await __.$Api.Video.upload({
       title,
       coins,
       tags,
@@ -120,7 +114,7 @@ const {
   execute: preUpload,
   loading
 } = useMyFetch<any>({
-  api: '/api/mv/preUpload'
+  api: __.$Api.Video.preUpload
 })
 
 function reset() {

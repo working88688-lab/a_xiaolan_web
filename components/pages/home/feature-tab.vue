@@ -71,7 +71,7 @@ const openShareDialog = (_data: any) => {
 // 数据tabs获取
 const getTabs = async () => {
   try {
-    const { data } = await __.$Api.Home.tab()
+    const { data } = await __.$Api.Home.tabIndex()
 
     tabState.tabs = insertDarkwebTab(data)
     console.log(data)

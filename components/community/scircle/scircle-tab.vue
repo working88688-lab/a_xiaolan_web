@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="scircle-root">
     <scroll-list ref="list">
       <!-- 顶部：两行5列广告组件（样式参考 /home/resource 男色选中态） -->
@@ -88,46 +88,61 @@
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">个人标签（可多选）</div>
               <div class="scircle-settings-tags">
-                <button class="scircle-tag" type="button">教练</button>
-                <button class="scircle-tag" type="button">奶狗</button>
-                <button class="scircle-tag is-active" type="button">XXX</button>
-                <button class="scircle-tag" type="button">XXXXXX</button>
-                <button class="scircle-tag" type="button">教练</button>
-                <button class="scircle-tag" type="button">奶狗</button>
-                <button class="scircle-tag" type="button">xxx</button>
-                <button class="scircle-tag" type="button">xxxxxx</button>
+                <button
+                  v-for="item in myProfileTags1"
+                  :key="`my-1-${item.id}`"
+                  class="scircle-tag"
+                  :class="{ 'is-active': isTagSelected(myProfileSelected, item.id) }"
+                  type="button"
+                  @click="toggleMyTag(item.id)"
+                >
+                  {{ item.name }}
+                </button>
+                <span v-if="!myProfileTags1.length" class="scircle-tag-empty">暂无标签</span>
               </div>
             </div>
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">个人倾向（可多选）</div>
               <div class="scircle-settings-tags scircle-settings-tags--small">
-                <button class="scircle-tag scircle-tag--small" type="button">1</button>
-                <button class="scircle-tag scircle-tag--small" type="button">0</button>
-                <button class="scircle-tag scircle-tag--small is-active" type="button">0.5</button>
-                <button class="scircle-tag scircle-tag--small" type="button">side</button>
+                <button
+                  v-for="item in myProfileTags2"
+                  :key="`my-2-${item.id}`"
+                  class="scircle-tag scircle-tag--small"
+                  :class="{ 'is-active': isTagSelected(myProfileSelected, item.id) }"
+                  type="button"
+                  @click="toggleMyTag(item.id)"
+                >
+                  {{ item.name }}
+                </button>
+                <span v-if="!myProfileTags2.length" class="scircle-tag-empty">暂无倾向</span>
               </div>
             </div>
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">个人性癖好（可多选）</div>
               <div class="scircle-settings-tags">
-                <button class="scircle-tag" type="button">教练</button>
-                <button class="scircle-tag" type="button">奶狗</button>
-                <button class="scircle-tag is-active" type="button">XXX</button>
-                <button class="scircle-tag" type="button">XXXXXX</button>
-                <button class="scircle-tag" type="button">教练</button>
-                <button class="scircle-tag" type="button">奶狗</button>
-                <button class="scircle-tag" type="button">xxx</button>
-                <button class="scircle-tag" type="button">xxxxxx</button>
+                <button
+                  v-for="item in myProfileTags3"
+                  :key="`my-3-${item.id}`"
+                  class="scircle-tag"
+                  :class="{ 'is-active': isTagSelected(myProfileSelected, item.id) }"
+                  type="button"
+                  @click="toggleMyTag(item.id)"
+                >
+                  {{ item.name }}
+                </button>
+                <span v-if="!myProfileTags3.length" class="scircle-tag-empty">暂无标签</span>
               </div>
             </div>
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">个人照片</div>
               <div class="scircle-settings-photo">
-                <div class="scircle-settings-photo-box">
+                <button class="scircle-settings-photo-box" type="button" @click="onPickProfileImage">
+                  <img v-if="profileImg" class="scircle-settings-photo-preview" :src="profileImg" alt="个人照片" />
                   <svg
+                    v-else
                     class="scircle-settings-photo-cloud"
                     width="34"
                     height="34"
@@ -149,12 +164,30 @@
                     <br />
                     不大于2M
                   </div>
-                </div>
+                </button>
+                <input
+                  ref="profileImageInputRef"
+                  class="scircle-hidden-input"
+                  type="file"
+                  accept="image/*"
+                  @change="onProfileImageChange"
+                />
               </div>
             </div>
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">个人语音（可选）</div>
+              <div class="scircle-settings-voice-actions">
+                <button class="scircle-settings-voice-btn" type="button" @click="onPickProfileVoice">上传语音</button>
+                <span class="scircle-settings-voice-tip">{{ profileVoiceLabel }}</span>
+              </div>
+              <input
+                ref="profileVoiceInputRef"
+                class="scircle-hidden-input"
+                type="file"
+                accept="audio/*"
+                @change="onProfileVoiceChange"
+              />
             </div>
           </div>
 
@@ -198,7 +231,9 @@
               </svg>
               <span class="scircle-settings-record-text">按住录制</span>
             </button>
-            <button class="scircle-settings-next" type="button" @click="settingsStep = 2">下一步</button>
+            <button class="scircle-settings-next" type="button" :disabled="isSavingStep1" @click="onStepOneNext">
+              {{ isSavingStep1 ? '提交中...' : '下一步' }}
+            </button>
           </div>
         </div>
 
@@ -207,44 +242,59 @@
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">他的标签（可多选）</div>
               <div class="scircle-settings-tags">
-                <button class="scircle-tag" type="button">教练</button>
-                <button class="scircle-tag" type="button">奶狗</button>
-                <button class="scircle-tag is-active" type="button">XXX</button>
-                <button class="scircle-tag" type="button">XXXXXX</button>
-                <button class="scircle-tag" type="button">教练</button>
-                <button class="scircle-tag" type="button">奶狗</button>
-                <button class="scircle-tag" type="button">xxx</button>
-                <button class="scircle-tag" type="button">xxxxxx</button>
+                <button
+                  v-for="item in expectProfileTags1"
+                  :key="`expect-1-${item.id}`"
+                  class="scircle-tag"
+                  :class="{ 'is-active': isTagSelected(expectProfileSelected, item.id) }"
+                  type="button"
+                  @click="toggleExpectTag(item.id)"
+                >
+                  {{ item.name }}
+                </button>
+                <span v-if="!expectProfileTags1.length" class="scircle-tag-empty">暂无标签</span>
               </div>
             </div>
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">他的倾向（可多选）</div>
               <div class="scircle-settings-tags scircle-settings-tags--small">
-                <button class="scircle-tag scircle-tag--small" type="button">1</button>
-                <button class="scircle-tag scircle-tag--small" type="button">0</button>
-                <button class="scircle-tag scircle-tag--small is-active" type="button">0.5</button>
-                <button class="scircle-tag scircle-tag--small" type="button">side</button>
+                <button
+                  v-for="item in expectProfileTags2"
+                  :key="`expect-2-${item.id}`"
+                  class="scircle-tag scircle-tag--small"
+                  :class="{ 'is-active': isTagSelected(expectProfileSelected, item.id) }"
+                  type="button"
+                  @click="toggleExpectTag(item.id)"
+                >
+                  {{ item.name }}
+                </button>
+                <span v-if="!expectProfileTags2.length" class="scircle-tag-empty">暂无倾向</span>
               </div>
             </div>
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">他的性癖好（可多选）</div>
               <div class="scircle-settings-tags">
-                <button class="scircle-tag" type="button">教练</button>
-                <button class="scircle-tag" type="button">奶狗</button>
-                <button class="scircle-tag is-active" type="button">XXX</button>
-                <button class="scircle-tag" type="button">XXXXXX</button>
-                <button class="scircle-tag" type="button">教练</button>
-                <button class="scircle-tag" type="button">奶狗</button>
-                <button class="scircle-tag" type="button">xxx</button>
-                <button class="scircle-tag" type="button">xxxxxx</button>
+                <button
+                  v-for="item in expectProfileTags3"
+                  :key="`expect-3-${item.id}`"
+                  class="scircle-tag"
+                  :class="{ 'is-active': isTagSelected(expectProfileSelected, item.id) }"
+                  type="button"
+                  @click="toggleExpectTag(item.id)"
+                >
+                  {{ item.name }}
+                </button>
+                <span v-if="!expectProfileTags3.length" class="scircle-tag-empty">暂无标签</span>
               </div>
             </div>
           </div>
 
           <div class="scircle-settings-footer">
-            <button class="scircle-settings-next" type="button" @click="showSettings = false">完成</button>
+            <button class="scircle-settings-next" type="button" :disabled="isSavingStep2" @click="onStepTwoDone">
+              {{ isSavingStep2 ? '提交中...' : '完成' }}
+            </button>
           </div>
         </div>
       </div>
@@ -297,7 +347,7 @@
                   type="button"
                   @click="openMatchDetail(idx)"
                 >
-                  <img class="tq-grid-img" :src="item" alt="匹配结果" />
+                  <img class="tq-grid-img" :src="item.cover" alt="匹配结果" />
                 </button>
               </div>
             </div>
@@ -308,20 +358,17 @@
             <div class="tq-detail" :style="{ backgroundImage: `url(${activeDetailBg})` }">
               <div class="tq-detail-top">
                 <button class="tq-detail-back" type="button" @click="backToMatchGrid">‹</button>
-                <div class="tq-detail-name">xxxxxxxxx名称</div>
+                <div class="tq-detail-name">{{ activeMatchItem.nickname || '匿名用户' }}</div>
                 <div class="tq-detail-right" />
               </div>
 
               <div class="tq-detail-body">
-                <div class="tq-detail-match">匹配度80%，你俩超级搭哟！</div>
+                <div class="tq-detail-match">匹配度{{ activeMatchItem.match_percent ?? 0 }}%，你俩超级搭哟！</div>
 
                 <div class="tq-detail-tags">
                   <div class="tq-detail-tags-scroll">
-                    <span class="tq-pill">#趣男</span>
-                    <span class="tq-pill">#0.5</span>
-                    <span class="tq-pill">#xxxx</span>
-                    <span class="tq-pill">#xxxx</span>
-                    <span class="tq-pill">#xxxx</span>
+                    <span v-for="(tag, i) in activeMatchItem.tags" :key="`${tag}-${i}`" class="tq-pill">#{{ tag }}</span>
+                    <span v-if="!activeMatchItem.tags.length" class="tq-pill">#暂无标签</span>
                   </div>
                 </div>
 
@@ -337,7 +384,7 @@
                     <span class="bar" />
                     <span class="bar" />
                   </div>
-                  <div class="tq-voice-dur">12"</div>
+                  <div class="tq-voice-dur">{{ activeMatchItem.voice_duration || '0"' }}</div>
                 </div>
               </div>
 
@@ -370,6 +417,21 @@ interface TalkHomeData {
   online_count: number
   readme: any[]
 }
+interface MatchItem {
+  uid: string | number
+  nickname: string
+  avatar: string
+  cover: string
+  match_percent: number
+  tags: string[]
+  voice_duration: string
+}
+interface MatchTagItem {
+  id: number | string
+  name: string
+  type: number
+  status: number
+}
 const talkHomeData = ref<TalkHomeData>({
   info: {},
   online_count: 0,
@@ -378,14 +440,30 @@ const talkHomeData = ref<TalkHomeData>({
 
 async function fetchTalkHome() {
   try {
-    const res = await __.$Api.Community.talkConf()
-    if (res?.data) {
-      talkHomeData.value = res.data as TalkHomeData
+    const [myProfileRes, expectProfileRes] = await Promise.all([
+      __.$Api.Community.usersmatchMyprofile().catch(() => null),
+      __.$Api.Community.usersmatchMyExpectProfile().catch(() => null)
+    ])
+    const myProfile = myProfileRes?.data || {}
+    const expectProfile = expectProfileRes?.data || {}
+    talkHomeData.value = {
+      info: {
+        ...myProfile,
+        expect: expectProfile,
+        match_num: Number(myProfile?.match_num ?? myProfile?.free_match_num ?? 0)
+      },
+      online_count: Number(myProfile?.online_count ?? 0),
+      readme: Array.isArray(myProfile?.readme) ? myProfile.readme : []
     }
-    console.error('测试接口:',"成功")
 
+    if (!talkHomeData.value.readme.length && !talkHomeData.value.info?.match_num) {
+      const res = await __.$Api.Community.talkConf().catch(() => null)
+      if (res?.data) {
+        talkHomeData.value = res.data as TalkHomeData
+      }
+    }
   } catch (error) {
-    console.error('测试接口:', error)
+    console.error('获取同圈配置失败:', error)
   }
 }
 
@@ -405,30 +483,261 @@ const showMatchPopup = ref(false)
 const matchView = ref<'grid' | 'detail'>('grid')
 const selectedMatchIndex = ref(0)
 const router = useRouter()
+const myProfileGroups = ref<Record<number, MatchTagItem[]>>({ 1: [], 2: [], 3: [] })
+const expectProfileGroups = ref<Record<number, MatchTagItem[]>>({ 1: [], 2: [], 3: [] })
+const myProfileSelected = ref<string[]>([])
+const expectProfileSelected = ref<string[]>([])
+const profileImg = ref('')
+const profileVoice = ref('')
+const profileImageInputRef = ref<HTMLInputElement | null>(null)
+const profileVoiceInputRef = ref<HTMLInputElement | null>(null)
+const isSavingStep1 = ref(false)
+const isSavingStep2 = ref(false)
+const isUploadingImage = ref(false)
+const isUploadingVoice = ref(false)
 
-const matchItems = computed(() => Array.from({ length: 6 }).map(() => tqItemUrl))
-const activeDetailBg = computed(() => matchItems.value[selectedMatchIndex.value] || tqItemUrl)
+const myProfileTags1 = computed(() => myProfileGroups.value[1] || [])
+const myProfileTags2 = computed(() => myProfileGroups.value[2] || [])
+const myProfileTags3 = computed(() => myProfileGroups.value[3] || [])
+const expectProfileTags1 = computed(() => expectProfileGroups.value[1] || [])
+const expectProfileTags2 = computed(() => expectProfileGroups.value[2] || [])
+const expectProfileTags3 = computed(() => expectProfileGroups.value[3] || [])
+const profileVoiceLabel = computed(() => {
+  if (isUploadingVoice.value) return '语音上传中...'
+  if (profileVoice.value) return '已上传语音'
+  return '未上传'
+})
+
+function normalizeTagId(id: number | string | null | undefined) {
+  return String(id ?? '')
+}
+
+function normalizeTagGroup(list: any[]): MatchTagItem[] {
+  if (!Array.isArray(list)) return []
+  return list.map((item: any, index: number) => ({
+    id: item?.id ?? index,
+    name: item?.name ?? item?.title ?? '',
+    type: Number(item?.type ?? 0),
+    status: Number(item?.status ?? 0)
+  }))
+}
+
+function parseProfileGroups(data: any) {
+  return {
+    groups: {
+      1: normalizeTagGroup(data?.['1'] || []),
+      2: normalizeTagGroup(data?.['2'] || []),
+      3: normalizeTagGroup(data?.['3'] || [])
+    },
+    selected: [
+      ...(data?.['1'] || []),
+      ...(data?.['2'] || []),
+      ...(data?.['3'] || [])
+    ]
+      .filter((item: any) => Number(item?.status ?? 0) === 1)
+      .map((item: any) => normalizeTagId(item?.id)),
+    img: String(data?.img ?? ''),
+    voice: String(data?.voice ?? '')
+  }
+}
+
+function isTagSelected(selected: string[], id: number | string) {
+  return selected.includes(normalizeTagId(id))
+}
+
+function toggleTag(selected: string[], id: number | string) {
+  const key = normalizeTagId(id)
+  const next = [...selected]
+  const idx = next.indexOf(key)
+  if (idx >= 0) {
+    next.splice(idx, 1)
+  } else {
+    next.push(key)
+  }
+  return next
+}
+
+function toggleMyTag(id: number | string) {
+  myProfileSelected.value = toggleTag(myProfileSelected.value, id)
+}
+
+function toggleExpectTag(id: number | string) {
+  expectProfileSelected.value = toggleTag(expectProfileSelected.value, id)
+}
+
+async function loadSettingsProfiles() {
+  const [myProfileRes, expectProfileRes] = await Promise.all([
+    __.$Api.Community.usersmatchMyprofile().catch(() => null),
+    __.$Api.Community.usersmatchMyExpectProfile().catch(() => null)
+  ])
+  const myParsed = parseProfileGroups(myProfileRes?.data || {})
+  const expectParsed = parseProfileGroups(expectProfileRes?.data || {})
+  myProfileGroups.value = myParsed.groups
+  expectProfileGroups.value = expectParsed.groups
+  myProfileSelected.value = myParsed.selected
+  expectProfileSelected.value = expectParsed.selected
+  profileImg.value = myParsed.img
+  profileVoice.value = myParsed.voice
+}
+
+function onPickProfileImage() {
+  if (isUploadingImage.value) return
+  profileImageInputRef.value?.click()
+}
+
+async function onProfileImageChange(event: Event) {
+  const input = event.target as HTMLInputElement | null
+  const file = input?.files?.[0]
+  if (!file) return
+  if (file.size > 2 * 1024 * 1024) {
+    __.$Toast('图片不能大于2M')
+    if (input) input.value = ''
+    return
+  }
+  try {
+    isUploadingImage.value = true
+    const compressed = await __.$ImageCompression.compressor(file)
+    const url = (await __.$Api.uploadImage({ file: compressed, useCompress: false })) as unknown as string
+    profileImg.value = String(url || '')
+    __.$Toast('图片上传成功')
+  } catch (error) {
+    __.$Toast('图片上传失败')
+    console.error('图片上传失败:', error)
+  } finally {
+    isUploadingImage.value = false
+    if (input) input.value = ''
+  }
+}
+
+function onPickProfileVoice() {
+  if (isUploadingVoice.value) return
+  profileVoiceInputRef.value?.click()
+}
+
+async function onProfileVoiceChange(event: Event) {
+  const input = event.target as HTMLInputElement | null
+  const file = input?.files?.[0]
+  if (!file) return
+  try {
+    isUploadingVoice.value = true
+    const url = (await __.$Api.uploadImage({ file, useCompress: false })) as unknown as string
+    profileVoice.value = String(url || '')
+    __.$Toast('语音上传成功')
+  } catch (error) {
+    __.$Toast('语音上传失败')
+    console.error('语音上传失败:', error)
+  } finally {
+    isUploadingVoice.value = false
+    if (input) input.value = ''
+  }
+}
+
+const matchItems = ref<MatchItem[]>([])
+const activeMatchItem = computed<MatchItem>(() => {
+  return matchItems.value[selectedMatchIndex.value] || {
+    uid: '0',
+    nickname: '',
+    avatar: '',
+    cover: tqItemUrl,
+    match_percent: 0,
+    tags: [],
+    voice_duration: '0"'
+  }
+})
+const activeDetailBg = computed(() => activeMatchItem.value.cover || tqItemUrl)
+
+function normalizeMatchItems(data: any): MatchItem[] {
+  const source = data?.list || data?.items || data?.users || data?.data || []
+  if (!Array.isArray(source)) return []
+  return source.map((item: any, index: number) => ({
+    uid: item?.uid ?? item?.id ?? index,
+    nickname: item?.nickname ?? item?.name ?? '匿名用户',
+    avatar: item?.avatar ?? item?.avatar_url ?? item?.thumb ?? '',
+    cover: item?.cover ?? item?.thumb ?? item?.avatar ?? item?.avatar_url ?? tqItemUrl,
+    match_percent: Number(item?.match_percent ?? item?.match_score ?? item?.score ?? 0),
+    tags: Array.isArray(item?.tags) ? item.tags : [],
+    voice_duration: item?.voice_duration ?? item?.voice_len ?? '0"'
+  }))
+}
 
 function onHelp() {
   showHelp.value = true
 }
 
-function onStartMatch() {
+async function onStartMatch() {
   isMatching.value = true
-  window.setTimeout(() => {
-    isMatching.value = false
+  try {
+    const res =
+      (await __.$Api.Community.usersmatchMatch({}).catch(() => null)) ||
+      (await __.$Api.Community.talkMatch({}))
+    const rows = normalizeMatchItems(res?.data)
+    matchItems.value = rows.length
+      ? rows.slice(0, 6)
+      : Array.from({ length: 6 }).map((_, index) => ({
+          uid: index,
+          nickname: '匿名用户',
+          avatar: '',
+          cover: tqItemUrl,
+          match_percent: 0,
+          tags: [],
+          voice_duration: '0"'
+        }))
+    selectedMatchIndex.value = 0
     showMatchPopup.value = true
     matchView.value = 'grid'
-  }, 900)
+  } catch (error) {
+    __.$Toast('匹配失败，请稍后重试')
+    console.error('匹配失败:', error)
+  } finally {
+    isMatching.value = false
+  }
 }
 
-function openSettings() {
+async function openSettings() {
   settingsStep.value = 1
   showSettings.value = true
+  try {
+    await loadSettingsProfiles()
+  } catch (error) {
+    __.$Toast('加载匹配标签失败')
+    console.error('加载匹配标签失败:', error)
+  }
 }
 
 function resetSettings() {
   settingsStep.value = 1
+}
+
+async function onStepOneNext() {
+  if (isSavingStep1.value) return
+  isSavingStep1.value = true
+  try {
+    await __.$Api.Community.usersmatchUpdateProfile({
+      tag_ids: myProfileSelected.value.join(','),
+      img: profileImg.value,
+      voice: profileVoice.value
+    })
+    settingsStep.value = 2
+  } catch (error) {
+    console.error('更新个人资料失败:', error)
+  } finally {
+    isSavingStep1.value = false
+  }
+}
+
+async function onStepTwoDone() {
+  if (isSavingStep2.value) return
+  isSavingStep2.value = true
+  try {
+    await __.$Api.Community.usersmatchUpdateExpectProfile({
+      tag_ids: expectProfileSelected.value.join(',')
+    })
+    showSettings.value = false
+  } catch (error) {
+    console.error('更新匹配偏好失败:', error)
+  } finally {
+    isSavingStep2.value = false
+  }
 }
 
 function isInCancelArea(clientX: number, clientY: number) {
@@ -470,6 +779,7 @@ function onRecordEnd() {
 function openMatchDetail(idx: number) {
   selectedMatchIndex.value = idx
   matchView.value = 'detail'
+  void fetchMatchDetail()
 }
 
 function backToMatchGrid() {
@@ -481,17 +791,50 @@ function closeMatchPopup() {
   matchView.value = 'grid'
 }
 
-function goChat() {
-  // 先只做UI跳转，具体 uid/name 后续接真实数据
-  showMatchPopup.value = false
-  matchView.value = 'grid'
-  router.push({
-    path: '/chat/room',
-    query: {
-      uid: '0',
-      name: 'xxxxxxxxx名称'
+async function fetchMatchDetail() {
+  const current = activeMatchItem.value
+  if (!current?.uid) return
+  try {
+    const res = await __.$Api.Community.usersmatchGetMatchInfo({
+      uid: current.uid,
+      score: current.match_percent
+    })
+    const detail = res?.data || {}
+    const list = Array.isArray(detail?.tags_list) ? detail.tags_list : []
+    const nextItem: MatchItem = {
+      ...current,
+      uid: detail?.uid ?? current.uid,
+      nickname: detail?.nickname ?? current.nickname,
+      avatar: detail?.avatar_url ?? detail?.avatar ?? detail?.thumb ?? current.avatar,
+      cover: detail?.thumb ?? detail?.avatar_url ?? detail?.avatar ?? current.cover,
+      match_percent: Number(detail?.score ?? current.match_percent ?? 0),
+      tags: list.map((it: any) => it?.name).filter(Boolean)
     }
-  })
+    matchItems.value[selectedMatchIndex.value] = nextItem
+  } catch (error) {
+    console.error('获取匹配详情失败:', error)
+  }
+}
+
+async function goChat() {
+  const current = activeMatchItem.value
+  try {
+    await __.$Api.Community.usersmatchSubmitMatch({
+      to_uid: String(current.uid || 0)
+    })
+  } catch (error) {
+    console.error('提交匹配结果失败:', error)
+  } finally {
+    showMatchPopup.value = false
+    matchView.value = 'grid'
+    router.push({
+      path: '/chat/room',
+      query: {
+        uid: String(current.uid || 0),
+        name: current.nickname || '匿名用户'
+      }
+    })
+  }
 }
 </script>
 
@@ -701,6 +1044,11 @@ function goChat() {
   text-align: center;
 }
 
+.scircle-tag-empty {
+  font-size: 12px;
+  color: #999;
+}
+
 .scircle-settings-photo {
   margin-top: 0;
 }
@@ -716,6 +1064,8 @@ function goChat() {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  padding: 0;
+  cursor: pointer;
 }
 
 .scircle-settings-photo-cloud {
@@ -729,6 +1079,38 @@ function goChat() {
   color: #9b9b9b;
   text-align: center;
   line-height: 16px;
+}
+
+.scircle-settings-photo-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.scircle-hidden-input {
+  display: none;
+}
+
+.scircle-settings-voice-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scircle-settings-voice-btn {
+  border: 0;
+  background: #2494ff;
+  color: #fff;
+  font-size: 12px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 6px;
+}
+
+.scircle-settings-voice-tip {
+  font-size: 12px;
+  color: #666;
 }
 
 .scircle-settings-footer {

@@ -22,7 +22,14 @@
         <van-tab title="视频">
           <dx-tabs v-model:active="video_tab" class="dx-tabs primary-tabs" animated swipeable>
             <van-tab title="上架中">
-              <dx-hoc-list v-if="key" class="px-2" :filter="filter" :api="__.$Api.Video.release" :show-empty="false">
+              <dx-hoc-list
+                v-if="key"
+                ref="published_list_ref"
+                class="px-2"
+                :filter="filter"
+                :api="__.$Api.Video.published"
+                :show-empty="false"
+              >
                 <template #item="{ item }">
                   <div class="work-item">
                     <video-item-cover
@@ -69,6 +76,7 @@
                           </span>
                           <span>{{ item.favorite_count || 0 }}</span>
                         </div>
+                        <div class="work-action" @click="onDownShelves(item)">下架</div>
                       </div>
                     </div>
                   </div>
@@ -76,7 +84,7 @@
               </dx-hoc-list>
             </van-tab>
             <van-tab title="待审核">
-              <dx-hoc-list v-if="key" class="px-2" :params="{ status: 0 }" :api="__.$Api.Video.wait">
+              <dx-hoc-list v-if="key" ref="pending_list_ref" class="px-2" :api="__.$Api.Video.submit">
                 <template #item="{ item }">
                   <div class="work-item">
                     <video-item-cover
@@ -123,7 +131,7 @@
                           </span>
                           <span>{{ item.favorite_count || 0 }}</span>
                         </div>
-                        <div class="work-delete">删除</div>
+                        <div class="work-delete" @click="onDeletePending(item)">删除</div>
                       </div>
                     </div>
                   </div>
@@ -131,7 +139,7 @@
               </dx-hoc-list>
             </van-tab>
             <van-tab title="未通过">
-              <dx-hoc-list v-if="key" class="px-2" :api="__.$Api.Video.reject">
+              <dx-hoc-list v-if="key" ref="rejected_list_ref" class="px-2" :api="__.$Api.Video.reject">
                 <template #item="{ item }">
                   <div class="work-item">
                     <video-item-cover
@@ -178,7 +186,7 @@
                           </span>
                           <span>{{ item.favorite_count || 0 }}</span>
                         </div>
-                        <div class="work-delete">删除</div>
+                        <div class="work-delete" @click="onDeletePending(item)">删除</div>
                       </div>
                       <div class="work-reason">
                         原因：{{ item.reason || item.reject_reason || item.remark || 'xxxxxxxx原因文案' }}
@@ -189,7 +197,7 @@
               </dx-hoc-list>
             </van-tab>
             <van-tab title="已下架">
-              <dx-hoc-list v-if="key" class="px-2" :api="__.$Api.Video.hide">
+              <dx-hoc-list v-if="key" ref="hide_list_ref" class="px-2" :api="__.$Api.Video.hide">
                 <template #item="{ item }">
                   <div class="work-item">
                     <video-item-cover
@@ -238,8 +246,10 @@
                         </div>
                       </div>
                       <div class="work-reason">
-                        原因：{{ item.reason || item.hide_reason || item.remark || 'xxxxxxxx原因文案' }}
+                        原因：{{ item.hide_reason_text || item.reason || item.hide_reason || item.remark || 'xxxxxxxx原因文案' }}
                       </div>
+                      <div v-if="item.can_delete === 1" class="work-delete mt-0.5" @click="onDeleteWork(item)">删除</div>
+                      <div class="work-action mt-0.5" @click="onReUpShelves(item)">重新上架</div>
                     </div>
                   </div>
                 </template>
@@ -269,6 +279,85 @@ const filter = (item: any) => {
   console.log('item: ', item)
   return item.title.includes(search_value.value)
 }
+const pending_list_ref = useTemplateRef('pending_list_ref')
+const rejected_list_ref = useTemplateRef('rejected_list_ref')
+const hide_list_ref = useTemplateRef('hide_list_ref')
+const published_list_ref = useTemplateRef('published_list_ref')
+const hide_reasons = ref<{ key: string; label: string }[]>([])
+
+const getHideReasonKey = async () => {
+  if (hide_reasons.value.length > 0) {
+    return hide_reasons.value[0]?.key || 'user'
+  }
+  try {
+    const res = await __.$Api.Video.hideReasons()
+    hide_reasons.value = Array.isArray(res) ? res : []
+  } catch (_error) {
+    hide_reasons.value = []
+  }
+  return hide_reasons.value[0]?.key || 'user'
+}
+
+const onDeletePending = async (item: any) => {
+  try {
+    await __.$Confirm({
+      title: '确定删除该视频吗？'
+    })
+    await __.$Api.Video.delSubmit({
+      mv_id: item.id || item.mv_id
+    })
+    pending_list_ref.value?.refresh_data()
+    rejected_list_ref.value?.refresh_data()
+  } catch (_error) {
+    // noop
+  }
+}
+
+const onDownShelves = async (item: any) => {
+  try {
+    await __.$Confirm({
+      title: '确定下架该视频吗？'
+    })
+    const hide_reason = await getHideReasonKey()
+    await __.$Api.Video.downShelves({
+      mv_id: item.id || item.mv_id,
+      hide_reason
+    })
+    published_list_ref.value?.refresh_data()
+    hide_list_ref.value?.refresh_data()
+  } catch (_error) {
+    // noop
+  }
+}
+
+const onReUpShelves = async (item: any) => {
+  try {
+    await __.$Confirm({
+      title: '确定重新上架该视频吗？'
+    })
+    await __.$Api.Video.reUpShelves({
+      mv_id: item.id || item.mv_id
+    })
+    hide_list_ref.value?.refresh_data()
+    published_list_ref.value?.refresh_data()
+  } catch (_error) {
+    // noop
+  }
+}
+
+const onDeleteWork = async (item: any) => {
+  try {
+    await __.$Confirm({
+      title: '确定删除该视频吗？'
+    })
+    await __.$Api.Video.delete({
+      mv_id: item.id || item.mv_id
+    })
+    hide_list_ref.value?.refresh_data()
+  } catch (_error) {
+    // noop
+  }
+}
 
 const init_active_tab = () => {
   return Number(route.query._index) || 0
@@ -286,7 +375,7 @@ const { key, activeTab: active_tab } = useKeepAlive({
     nav_tab.value = index ? 1 : 0
     active_tab.value = index
   }
-})
+} as any)
 
 const onTips = async () => {
   const res = await __.$Alert({
@@ -400,6 +489,12 @@ const onTips = async () => {
   margin-left: auto;
   font-size: 11px;
   color: #919191;
+}
+
+.work-action {
+  margin-left: auto;
+  font-size: 11px;
+  color: #2494ff;
 }
 
 .work-reason {

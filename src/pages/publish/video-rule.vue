@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 const { data, loading } = useMyFetch<any>({
-  api: '/api/mv/preUpload',
+  api: useNuxtApp().$Api.Video.preUpload,
   immediate: true
 })
 </script>

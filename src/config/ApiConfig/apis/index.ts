@@ -6,6 +6,7 @@ import AI from './modules/AI'
 import Checkin from './modules/Checkin'
 import Comics from './modules/Comics'
 import Community from './modules/Community'
+import Creator from './modules/Creator'
 import Darkweb from './modules/Darkweb'
 import Discover from './modules/Discover'
 import Game from './modules/Game'
@@ -34,6 +35,7 @@ export default {
   Story,
   Images,
   Community,
+  Creator,
   Darkweb,
   original,
   collect,
