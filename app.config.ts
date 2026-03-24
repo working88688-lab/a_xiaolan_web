@@ -724,10 +724,10 @@ export default defineAppConfig({
     }
   ],
 
-  lines: ['http://api-xiaolan.iiwwdfn.cc/pwa.php'],
+  lines: ['https://api.fsajqwld.com/pwa.php'],
   // 接口配置
   api: {
-    baseURL: 'http://api-xiaolan.iiwwdfn.cc/pwa.php',
+    baseURL: 'https://api.fsajqwld.com/pwa.php',
     withCredentials: false,
     timeout: 50000,
     version: '4.9.7',
