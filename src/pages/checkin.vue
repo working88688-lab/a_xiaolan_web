@@ -176,13 +176,13 @@ async function fetchDrawConf() {
       my_points: number
       points_per_draw: number
     }
-    
+
     // 更新抽奖机会次数、积分、每次抽奖消耗的积分和奖品列表
     state.drawChances = data.my_chances || 0
     state.drawPoints = data.my_points || 0
     state.drawPointsPerDraw = data.points_per_draw || 50
     state.lotteryItems = data.items || []
-    
+
     console.log('抽奖配置:', data)
   } catch (error) {
     console.error('获取抽奖配置失败:', error)
@@ -228,17 +228,17 @@ async function handleLottery(type: 'chance' | 'points') {
       // 积分抽奖
       res = await __.$Api.TaskLottery.drawByPoints({})
     }
-    
+
     const data = res?.data as {
       prize: Record<string, any>
       msg: string
     }
-    
+
     // 根据返回的奖品信息显示对应的奖品
     // 暂时使用随机奖品，后续根据 prize 数据结构调整
     prizeKey.value = pickRandomPrize()
     showPrize.value = true
-    
+
     console.log('抽奖结果:', data)
   } catch (error) {
     console.error('抽奖失败:', error)
@@ -351,13 +351,13 @@ const prizePositions = computed(() => {
   const items = lotteryItems.value
   const count = items.length
   const radius = 130 // 距离中心的半径
-  
+
   return items.map((item, index) => {
     const angle = (index / count) * 360 - 90 // 从顶部开始
     const rad = (angle * Math.PI) / 180
     const x = Math.cos(rad) * radius
     const y = Math.sin(rad) * radius
-    
+
     return {
       ...item,
       x,
@@ -391,17 +391,14 @@ function getDayIcon(day: CheckinDay) {
           <div class="checkin-panel-line">明日签到可得：{{ state.tomorrowRewardText }}</div>
           <div class="checkin-panel-sub">
             <span>已连续签到：{{ state.signedDays }}天</span>
-            <button class="checkin-panel-link" type="button" @click="() => { showSignRecord = true; fetchSignRecords() }">签到记录</button>
+            <button class="checkin-panel-link" type="button"
+              @click="() => { showSignRecord = true; fetchSignRecords() }">签到记录</button>
           </div>
         </div>
 
         <button class="checkin-panel-btn" type="button">
-          <img
-            class="checkin-panel-btn-img"
-            :src="state.hasSignedToday ? img.btnSigned : img.btnSign"
-            alt="签到"
-            @click="onSignClick"
-          />
+          <img class="checkin-panel-btn-img" :src="state.hasSignedToday ? img.btnSigned : img.btnSign" alt="签到"
+            @click="onSignClick" />
         </button>
       </div>
       <!-- 30天日历（只做上半部分：到这里为止） -->
@@ -427,7 +424,8 @@ function getDayIcon(day: CheckinDay) {
         <div class="lottery-content-top">
           <div class="lottery-head">
             <div class="lottery-title">抽奖得好礼</div>
-            <button class="lottery-link" type="button" @click="() => { showLotteryRecord = true; fetchLotteryRecords() }">抽奖记录</button>
+            <button class="lottery-link" type="button"
+              @click="() => { showLotteryRecord = true; fetchLotteryRecords() }">抽奖记录</button>
           </div>
           <div class="lottery-meta">
             <div class="lottery-meta-item">我的抽奖机会：{{ state.drawChances }}</div>
@@ -438,18 +436,15 @@ function getDayIcon(day: CheckinDay) {
         <div class="wheel">
           <div class="wheel-stack">
             <div class="wheel-prizes">
-              <div
-                v-for="prize in prizePositions"
-                :key="prize.id"
-                class="wheel-prize-item"
-                :style="{
-                  transform: `translate(${prize.x}px, ${prize.y}px) rotate(${prize.angle + 90}deg)`
-                }"
-              >
-                <div class="wheel-prize-icon">
-                  <img v-if="prize.icon" :src="prize.icon" :alt="prize.title" />
-                </div>
+              <div v-for="prize in prizePositions" :key="prize.id" class="wheel-prize-item" :style="{
+                transform: `rotate(${prize.angle + 90}deg)`
+              }">
+
                 <div class="wheel-prize-title">{{ prize.title }}</div>
+                <!--  -->
+                <div class="wheel-prize-icon">
+                  <img v-if="prize.icon" :src="prize.icon" />
+                </div>
               </div>
             </div>
             <div class="wheel-disk">
@@ -465,7 +460,8 @@ function getDayIcon(day: CheckinDay) {
     </div>
     <div class="lottery-actions">
       <button class="lottery-btn lottery-btn-yellow" type="button" @click="onLotteryClick('chance')">抽奖机会</button>
-      <button class="lottery-btn lottery-btn-blue" type="button" @click="onLotteryClick('points')">{{ state.drawPointsPerDraw }}积分抽奖</button>
+      <button class="lottery-btn lottery-btn-blue" type="button" @click="onLotteryClick('points')">{{
+        state.drawPointsPerDraw }}积分抽奖</button>
     </div>
   </div>
 
@@ -868,29 +864,30 @@ function getDayIcon(day: CheckinDay) {
   width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: center;
-  z-index: 3;
+  z-index: 10;
 }
 
 .wheel-prize-item {
   position: absolute;
   width: 60px;
-  height: 60px;
+  height: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  transform-origin: 0 0;
+  justify-content: end;
+  transform-origin: center bottom;
+  padding-bottom: 20%;
 }
 
 .wheel-prize-icon {
-  width: 40px;
-  height: 40px;
+  width: 33px;
+  height: 33px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 4px;
+  margin-top: 2.5px;
 }
 
 .wheel-prize-icon img {
@@ -1046,7 +1043,7 @@ function getDayIcon(day: CheckinDay) {
   aspect-ratio: 966 / 1182;
   border-radius: 22px;
   background-repeat: no-repeat;
-  background-position:right center;
+  background-position: right center;
   background-size: contain;
   box-sizing: border-box;
   position: relative;
@@ -1077,7 +1074,7 @@ function getDayIcon(day: CheckinDay) {
   display: block;
 }
 
-.qd-ok { 
+.qd-ok {
   width: 82%;
   height: 56px;
   border-radius: 10px;
