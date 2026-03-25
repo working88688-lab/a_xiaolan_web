@@ -220,19 +220,16 @@ function onLotteryClick(type: 'chance' | 'points') {
 
 async function handleLottery(type: 'chance' | 'points') {
   try {
-    const res = await __.$Api.Game.draw({ type })
+    const res =
+      type === 'points'
+        ? await __.$Api.TaskLottery.drawByPoints({})
+        : await __.$Api.TaskLottery.drawByChance({})
 
-    const data = res?.data as {
-      prize: Record<string, any>
-      msg: string
-    }
-
-    // 根据返回的奖品信息显示对应的奖品
-    // 暂时使用随机奖品，后续根据 prize 数据结构调整
+    // 只负责触发接口并展示奖品弹框；展示逻辑目前仍用随机奖品
     prizeKey.value = pickRandomPrize()
     showPrize.value = true
 
-    console.log('抽奖结果:', data)
+    console.log('抽奖结果:', (res as any)?.data ?? res)
   } catch (error) {
     console.error('抽奖失败:', error)
   }
@@ -279,27 +276,18 @@ const signRecords = ref<Array<{
 async function fetchSignRecords() {
   try {
     const res = await __.$Api.Checkin.records({ page: 1, limit: 20 })
-    const data = res?.data as {
-      list: Array<{
-        id: number
-        sign_date: string
-        day: number
-        reward_key: number
-        reward_name: string
-        reward_times: number
-        continuous_day: number
-        created_at: string
-      }>
-      last_ix: string
-    }
+    // 兼容不同接口返回形态：有的返回在 `res.data`，有的在 `res.data.data`
+    const payload = (res as any)?.data ?? res
+    const list: Array<any> = payload?.list ?? payload?.data?.list ?? []
 
-    signRecords.value = data.list.map((item) => ({
-      id: item.id,
-      time: item.created_at,
-      text: `${item.reward_name}+${item.reward_times}`
+    signRecords.value = list.map((item, index) => ({
+      id: item?.id ?? index,
+      time: String(item?.created_at ?? item?.sign_date ?? ''),
+      text: `${item?.reward_name ?? ''}+${item?.reward_times ?? 0}`
     }))
   } catch (error) {
     console.error('获取签到记录失败:', error)
+    signRecords.value = []
   }
 }
 
