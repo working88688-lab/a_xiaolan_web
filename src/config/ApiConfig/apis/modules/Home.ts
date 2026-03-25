@@ -4,7 +4,7 @@ export default {
   // tabs
   tab: { method: 'post', url: '/api/tabnew/index' },
   // 首页Tab栏目标签列表（新口径）
-  tabIndex: { method: 'post', url: '/api/tab/index' },
+  tabIndex: { method: 'post', url: '/api/tabnew/index' },
   // 落地页广告
   getConfig: { method: 'post', url: '/api/home/getConfig' },
   // 首页分类
