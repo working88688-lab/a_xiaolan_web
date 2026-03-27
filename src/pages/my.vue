@@ -211,7 +211,7 @@
         <!-- 设置 end -->
       </div>
     </scroll-list>
-    <MyProfilePopup v-model:show="showProfilePopup" />
+    <ProfilePopup v-model:show="showProfilePopup" />
   </div>
 </template>
 

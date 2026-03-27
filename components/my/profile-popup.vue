@@ -1,5 +1,5 @@
 <template>
-  <van-popup v-model:show="innerShow" teleport="body" position="bottom" round :style="{ height: '100%' }">
+  <van-popup v-model:show="innerShow" teleport="body" position="bottom" round :style="{ height: '55vh' }">
     <div class="profile-popup">
       <div class="profile-popup__header">
         <div class="profile-popup__title">我的资料</div>
@@ -79,9 +79,9 @@ const innerShow = computed({
   }
 })
 
-const personalTags = ['教练', '奶狗', 'xxx', 'xxxxxx', 'xxxxxx', 'xxxx']
+const personalTags = ['教练', '奶狗', '学长', '暖男', '肌肉', '斯文']
 const orientationTags = ['1', '0', '0.5', 'side']
-const hobbyTags = ['教练', '奶狗', 'xxx', 'xxxxxx', 'xxxxxx', 'xxxx']
+const hobbyTags = ['健身', '旅行', '电影', '摄影', '美食', '游戏']
 
 const selectedPersonalTags = ref<string[]>([])
 const selectedOrientationTags = ref<string[]>([])
@@ -112,22 +112,22 @@ const onSubmit = () => {
 <style lang="less" scoped>
 .profile-popup {
   padding: 16px 16px 20px;
-  background-color: #f5f5f5;
+  background-color: #ffffff;
   height: 100%;
   box-sizing: border-box;
+  overflow-y: auto;
 
   &__header {
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    margin-bottom: 16px;
   }
 
   &__title {
     font-size: 16px;
     font-weight: 500;
-    color: #111827;
+    color: #000000;
   }
 
   &__close {
@@ -152,7 +152,7 @@ const onSubmit = () => {
   &__section-title {
     margin-bottom: 8px;
     font-size: 13px;
-    color: #4b5563;
+    color: #000000;
   }
 
   &__tags {
@@ -166,13 +166,13 @@ const onSubmit = () => {
     padding: 6px 10px;
     border-radius: 6px;
     border: none;
-    background-color: #f3f4f6;
+    background-color: #f6f6f6;
     color: #374151;
     font-size: 13px;
   }
 
   &__tag--active {
-    background-color: #2f78ff;
+    background-color: #2494ff;
     color: #ffffff;
   }
 
@@ -185,7 +185,7 @@ const onSubmit = () => {
     height: 44px;
     border-radius: 8px;
     border: none;
-    background-color: #2f78ff;
+    background-color: #2494ff;
     color: #ffffff;
     font-size: 16px;
   }
