@@ -79,7 +79,11 @@ function readViewport() {
 
 function measure() {
   readViewport()
-  const root = props.tabsRef?.$el
+  const root =
+    props.tabsRef?.$el ??
+    (typeof document !== 'undefined'
+      ? document.querySelector('.community-page-root .van-tabs')
+      : null)
   if (!root) return false
   const items = root.querySelectorAll('.van-tabs__nav .van-tab')
   /** 关注 / 原创 / 同圈 / 求片 */
