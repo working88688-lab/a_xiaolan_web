@@ -5,40 +5,71 @@
     <div v-for="user in list" :key="user.uid" class="recommend-card">
       <div class="recommend-card-header">
         <div class="user-info">
-          <dx-image class="avatar" :src="user.avatar" round></dx-image>
+          <dx-image
+            class="avatar"
+            :src="resolveMediaUrl(user.avatar_url || user.avatar || user.headimg || user.face_url || user.thumb)"
+            round
+          ></dx-image>
           <span class="nickname">{{ user.nickname }}</span>
         </div>
-        <btn-follow :uid="user.uid" :attention="user.is_attention" :use-default-style="true" />
+        <btn-follow
+          :uid="user.uid"
+          :attention="user.is_followed ?? user.is_attention"
+          :use-default-style="true"
+        />
       </div>
 
       <div class="stats-row">
         <div class="stat">
-          <div class="stat-number">{{ formatNumber(user.video_num) }}</div>
+          <div class="stat-number">{{ formatNumber(user.videos_count ?? user.video_num) }}</div>
           <div class="stat-label">视频</div>
         </div>
         <div class="stat">
-          <div class="stat-number">{{ formatNumber(user.fans_num) }}</div>
+          <div class="stat-number">{{ formatNumber(user.fans_count ?? user.fans_num) }}</div>
           <div class="stat-label">粉丝</div>
         </div>
         <div class="stat">
-          <div class="stat-number">{{ formatNumber(user.total_play_num || user.play_num) }}</div>
+          <div class="stat-number">
+            {{ formatNumber(user.total_plays ?? user.total_play_num ?? user.play_num) }}
+          </div>
           <div class="stat-label">播放</div>
         </div>
         <div class="stat">
-          <div class="stat-number">{{ formatNumber(user.like_num) }}</div>
+          <div class="stat-number">{{ formatNumber(user.total_likes ?? user.like_num) }}</div>
           <div class="stat-label">点赞</div>
         </div>
       </div>
 
-      <div v-if="(user.videos || []).length" class="video-list-wrapper">
-        <div class="video-list">
-          <div v-for="video in (user.videos || []).slice(0, 10)" :key="video.id" class="video-card">
-            <dx-image class="video-cover" :src="video.cover || video.thumb"></dx-image>
-            <div class="video-info-overlay">
-              <span class="play-count">▶ {{ formatNumber(video.play_num || video.play_count) }}</span>
-              <span class="duration">
-                {{ formatDuration(video.duration || video.duration_sec) }}
-              </span>
+      <div v-if="(user.works || user.videos || []).length" class="video-list-wrapper">
+        <div
+          class="video-list-scroll"
+          @touchstart.stop="onWorksStripTouchStart"
+          @touchmove="onWorksStripTouchMove"
+          @touchend="onWorksStripTouchEnd"
+          @touchcancel="onWorksStripTouchEnd"
+        >
+          <div class="video-list">
+            <div
+              v-for="(video, vIdx) in user.works || user.videos || []"
+              :key="video.id ?? video.mv_id ?? vIdx"
+              class="video-card"
+            >
+              <dx-image
+                class="video-cover"
+                :src="
+                  resolveMediaUrl(
+                    video.cover_thumb || video.cover_thumb_url || video.cover || video.thumb
+                  )
+                "
+              ></dx-image>
+              <div class="video-info-overlay">
+                <span class="play-count">
+                  ▶ {{ formatNumber(video.play_num || video.play_count || video.plays) }}
+                </span>
+                <span class="duration">
+                  {{ formatDuration(video.duration || video.duration_sec) }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -52,6 +83,44 @@ const props = defineProps<{
   list: any[]
 }>()
 
+const globalStore = useGlobalStore()
+const appConfig = useAppConfig()
+
+/** 与 my/watched.vue 一致：相对路径需拼到资源域名，否则 worker fetch 会打到前端站点根路径而失败 */
+function getMediaOrigin(): string {
+  const thumb = globalStore.config?.activity_thumb || globalStore.config?.index_ads_thumb
+  if (thumb) {
+    try {
+      return new URL(thumb).origin
+    } catch {
+      /* use api host */
+    }
+  }
+  const base = appConfig.api?.baseURL as string | undefined
+  if (base) {
+    try {
+      return new URL(base).origin
+    } catch {
+      /* ignore */
+    }
+  }
+  return ''
+}
+
+function resolveMediaUrl(path: string | undefined): string {
+  if (!path?.trim()) return ''
+  const p = path.trim()
+  if (/^https?:\/\//i.test(p) || p.startsWith('data:') || p.startsWith('blob:')) return p
+  if (p.startsWith('//')) {
+    if (import.meta.client) return window.location.protocol + p
+    return 'https:' + p
+  }
+  const origin = getMediaOrigin()
+  if (!origin) return p
+  if (p.startsWith('/')) return origin + p
+  return `${origin}/${p}`
+}
+
 const formatNumber = (value: number | string | undefined) => {
   const n = Number(value || 0)
   if (n >= 10000) return (n / 10000).toFixed(1) + 'W'
@@ -64,11 +133,46 @@ const formatDuration = (seconds: number | undefined) => {
   const s = sec % 60
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
 }
+
+/**
+ * 首页 dx-tabs 默认 swipeable，横滑会与作品列表冲突。
+ * touchstart.stop 参考 feature-tab-item 里 mid 分类条；再按「横向优先」阻截 touchmove 冒泡，避免外层 tabs 跟手。
+ */
+let worksStripStartX = 0
+let worksStripStartY = 0
+let worksStripTracking = false
+
+function onWorksStripTouchStart(e: TouchEvent) {
+  const t = e.touches[0]
+  if (!t) return
+  worksStripStartX = t.clientX
+  worksStripStartY = t.clientY
+  worksStripTracking = true
+}
+
+function onWorksStripTouchMove(e: TouchEvent) {
+  if (!worksStripTracking) return
+  const t = e.touches[0]
+  if (!t) return
+  const dx = t.clientX - worksStripStartX
+  const dy = t.clientY - worksStripStartY
+  const ax = Math.abs(dx)
+  const ay = Math.abs(dy)
+  if (ax > 10 && ax > ay) {
+    e.stopPropagation()
+  }
+}
+
+function onWorksStripTouchEnd() {
+  worksStripTracking = false
+}
 </script>
 
 <style scoped lang="postcss">
 .follow-recommend {
-  padding: 0.5rem 0.5rem 0.75rem;
+  padding: 0.5rem 0.3rem 0.75rem;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .empty-text {
@@ -84,6 +188,9 @@ const formatDuration = (seconds: number | undefined) => {
   padding: 12px;
   box-shadow: 0 8px 24px rgba(15, 71, 161, 0.08);
   margin-bottom: 12px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .recommend-card-header {
@@ -134,16 +241,41 @@ const formatDuration = (seconds: number | undefined) => {
   color: #86909c;
 }
 
+/* 外层限宽；内层 max-content 撑开宽度，滚动只发生在外层，避免 flex 子项把整页横向撑开 */
 .video-list-wrapper {
   margin-top: 10px;
-  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.video-list-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.video-list-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.video-list-scroll::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .video-list {
-  display: flex;
-  overflow-x: auto;
+  display: inline-flex;
+  flex-wrap: nowrap;
   gap: 8px;
   padding-bottom: 4px;
+  width: max-content;
+  max-width: none;
 }
 
 .video-card {
