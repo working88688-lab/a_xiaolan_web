@@ -6,36 +6,69 @@ import magicCover4 from '~/assets/image/undressed.png'
 
 const __ = useNuxtApp()
 const router = useRouter()
-const { u: user } = storeToRefs(useUserStore())
+const globalStore = useGlobalStore()
+const appConfig = useAppConfig()
 
 definePageMeta({
   keepalive: true
 })
 
-type MagicItem = {
+/** 素材 cover 多为根相对路径，需拼资源域；完整 URL 仍走 dx-image + lazyLoad 解密 */
+function getMediaOrigin(): string {
+  const thumb = globalStore.config?.activity_thumb || globalStore.config?.index_ads_thumb
+  if (thumb) {
+    try {
+      return new URL(thumb).origin
+    } catch {
+      /* use api host */
+    }
+  }
+  const base = appConfig.api?.baseURL as string | undefined
+  if (base) {
+    try {
+      return new URL(base).origin
+    } catch {
+      /* ignore */
+    }
+  }
+  return ''
+}
+
+function resolveMediaUrl(path: string | undefined): string {
+  if (!path?.trim()) return ''
+  const p = path.trim()
+  if (/^https?:\/\//i.test(p) || p.startsWith('data:') || p.startsWith('blob:')) return p
+  if (p.startsWith('//')) {
+    if (import.meta.client) return window.location.protocol + p
+    return 'https:' + p
+  }
+  const origin = getMediaOrigin()
+  if (!origin) return p
+  if (p.startsWith('/')) return origin + p
+  return `${origin}/${p}`
+}
+
+interface MaterialItem {
   id: number
   title: string
   cover: string
+  preview_url: string
+  sort_num: number
+  status: number
+  /** list_material 返回的金币单价（字段名后端可能不同，见 normalizeMaterialRow） */
+  cost_coin: number
 }
 
-const list = ref<MagicItem[]>([
-  { id: 1, title: '名字名字名字名字', cover: magicCover1 },
-  { id: 2, title: '名字名字名字名字', cover: magicCover2 },
-  { id: 3, title: '名字名字名字名字', cover: magicCover3 },
-  { id: 4, title: '名字名字名字名字', cover: magicCover4 }
-])
-
 const showPopup = ref(false)
-const activeItem = ref<MagicItem | null>(null)
+const activeItem = ref<MaterialItem | null>(null)
 
 const MAX_SIZE = 2 * 1024 * 1024
-const payCoins = 9
 const images = ref<any[]>([])
 const showPayPopup = ref(false)
 
+/** /api/aimagic/pre_magic */
 interface PreMagicData {
-  free_num: number,
-  coins:number,
+  free_num: number
   coin: number
   cost_coin: number
   tips: string
@@ -43,17 +76,36 @@ interface PreMagicData {
 
 const magicData = ref<PreMagicData>({
   free_num: 0,
-  coins:0,
   coin: 0,
-  cost_coin: payCoins,
+  cost_coin: 0,
   tips: ''
+})
+
+/** 单价优先用当前选中素材（list_material 里的金币字段），否则用预检查 */
+const magicDisplayCost = computed(() => {
+  const fromItem = activeItem.value?.cost_coin
+  if (fromItem != null && Number.isFinite(fromItem) && fromItem > 0) return fromItem
+  const pre = magicData.value.cost_coin
+  return Number.isFinite(pre) && pre > 0 ? pre : 0
+})
+
+const magicMainPayLabel = computed(() => {
+  const c = magicDisplayCost.value
+  return c > 0 ? `支付${c}金币` : '立即制作'
 })
 
 async function fetchPreMagic() {
   try {
     const res = await __.$Api.AI.preMagic({})
-    magicData.value = res?.data as PreMagicData
-    console.log('AI魔法预检查:', magicData.value)
+    const d = res?.data as Partial<PreMagicData> | undefined
+    if (d) {
+      magicData.value = {
+        free_num: Number(d.free_num ?? 0),
+        coin: Number(d.coin ?? 0),
+        cost_coin: Number(d.cost_coin ?? 0),
+        tips: d.tips ?? ''
+      }
+    }
   } catch (error) {
     console.error('获取AI魔法预检查失败:', error)
   }
@@ -64,31 +116,91 @@ onMounted(() => {
   fetchMaterials()
 })
 
-interface MaterialItem {
-  id: number
-  title: string
-  cover: string
-  preview_url: string
-  sort_num: number
-  status: number
-}
+onActivated(() => {
+  fetchPreMagic()
+  fetchMaterials()
+})
 
 const materials = ref<MaterialItem[]>([])
+
+function pickNumericField(row: Record<string, unknown>, keys: string[]): number {
+  for (const k of keys) {
+    const v = row[k]
+    if (v === undefined || v === null || v === '') continue
+    const n = Number(v)
+    if (Number.isFinite(n)) return n
+  }
+  return 0
+}
+
+function normalizeMaterialRow(row: Record<string, unknown>): MaterialItem | null {
+  const id = Number(row.id)
+  if (!Number.isFinite(id)) return null
+  const cost_coin = pickNumericField(row, ['cost_coin', 'coin', 'price', 'need_coin', 'gold_coin', 'gold', 'coins'])
+  return {
+    id,
+    title: String(row.title ?? row.name ?? ''),
+    cover: String(row.cover ?? row.thumb ?? row.cover_url ?? ''),
+    preview_url: String(row.preview_url ?? row.preview ?? ''),
+    sort_num: Number(row.sort_num ?? row.sort ?? 0),
+    status: Number(row.status ?? 0),
+    cost_coin
+  }
+}
+
+/** 拦截器返回的是解密后的整包：常见为 { status, data }；data 可能是数组或再包一层 */
+function parseListMaterialRows(res: any): MaterialItem[] {
+  const d = res?.data
+  let raw: unknown[] = []
+  if (Array.isArray(d)) raw = d
+  else if (d && Array.isArray(d.list)) raw = d.list
+  else if (d && Array.isArray(d.data)) raw = d.data
+  else {
+    if (import.meta.dev) console.warn('[AI魔法] list_material 未解析到数组', res)
+    return []
+  }
+  const out: MaterialItem[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue
+    const m = normalizeMaterialRow(item as Record<string, unknown>)
+    if (m) out.push(m)
+  }
+  return out
+}
 
 async function fetchMaterials() {
   try {
     const res = await __.$Api.AI.listMaterial({ page: 1, limit: 20 })
-    materials.value = res?.data as MaterialItem[]
-    console.log('AI魔法素材列表:', materials.value)
+    if (import.meta.dev) {
+      const d = res?.data
+      const sample = Array.isArray(d)
+        ? d[0]
+        : Array.isArray(d?.list)
+          ? d.list[0]
+          : Array.isArray(d?.data)
+            ? d.data[0]
+            : d
+      console.log('[AI魔法] list_material 原始响应', res)
+      console.log(
+        '[AI魔法] 素材首条原始字段',
+        sample && typeof sample === 'object' ? Object.keys(sample as object) : sample
+      )
+    }
+    materials.value = parseListMaterialRows(res)
+    if (import.meta.dev) {
+      console.log('[AI魔法] 解析后素材列表', materials.value)
+    }
   } catch (error) {
-    console.error('获取AI魔法素材列表失败:', error)
+    console.error('[AI魔法] 获取素材列表失败:', error)
+    materials.value = []
   }
 }
 
-function open(item: MagicItem) {
+function open(item: MaterialItem) {
   activeItem.value = item
   images.value = []
   showPopup.value = true
+  fetchPreMagic()
 }
 
 function close() {
@@ -115,6 +227,10 @@ function toRecharge() {
   router.push('/coin-recharge?type=1')
 }
 
+function pickTaskMsg(res: any): string | undefined {
+  return res?.msg ?? res?.data?.msg
+}
+
 function onPay() {
   if (!images.value.length) {
     return __.$Toast('请先上传图片')
@@ -129,8 +245,6 @@ async function submitMagic() {
   if (!activeItem.value) {
     return __.$Toast('请选择魔法素材')
   }
-  console.log(activeItem.value);
-
   try {
     const file = images.value[0]
     // 获取图片尺寸
@@ -142,11 +256,9 @@ async function submitMagic() {
         thumb_h: img.height,
         magic_id: activeItem.value?.id
       })
-      
-      if (res?.data?.msg) {
-        __.$Toast(res.data.msg)
-      }
-      
+      const tip = pickTaskMsg(res)
+      if (tip) __.$Toast(tip)
+
       showPayPopup.value = false
       showPopup.value = false
       await __.$Alert({
@@ -176,7 +288,12 @@ async function confirmPay() {
     <div class="ai-magic-content">
       <div class="ai-magic-grid">
         <button v-for="item in materials" :key="item.id" class="ai-magic-card" type="button" @click="open(item)">
-          <img class="ai-magic-card-img" :src="item.cover" :alt="item.title" />
+          <div class="ai-magic-card-thumb">
+            <dx-image class="ai-magic-card-cover" :src="resolveMediaUrl(item.cover)" />
+            <span class="ai-magic-card-coin-badge" aria-hidden="true">
+              {{ item.cost_coin > 0 ? `${item.cost_coin}金币` : '金币' }}
+            </span>
+          </div>
           <div class="ai-magic-card-title">{{ item.title }}</div>
         </button>
       </div>
@@ -187,7 +304,10 @@ async function confirmPay() {
         <div class="magic-popup-title">{{ activeItem?.title ?? 'XXXXXXXXXX名称' }}</div>
 
         <div class="magic-popup-video">
-          <img class="magic-popup-video-cover" :src="activeItem?.cover ?? magicCover1" alt="" />
+          <dx-image
+            class="magic-popup-video-cover"
+            :src="(activeItem?.cover && resolveMediaUrl(activeItem.cover)) || magicCover1"
+          />
           <div class="magic-popup-play">▶</div>
         </div>
 
@@ -251,11 +371,11 @@ async function confirmPay() {
           </div>
         </div>
 
-        <button class="magic-popup-pay-btn" type="button" @click="onPay">支付{{ magicData.coins }}金币</button>
+        <button class="magic-popup-pay-btn" type="button" :disabled="!images.length" @click="onPay">
+          {{ magicMainPayLabel }}
+        </button>
         <div class="magic-popup-balance">
-          当前余额：
-          <span class="magic-popup-balance-num">{{ user?.coins ?? 0 }}</span>
-          金币
+          当前余额：{{ magicData.coin }}，
           <button class="magic-popup-recharge" type="button" @click="toRecharge">去充值</button>
         </div>
       </div>
@@ -267,20 +387,20 @@ async function confirmPay() {
         <div class="pay-popup-row">
           <div class="pay-popup-label">
             金币余额：
-            <span class="pay-popup-balance">{{ user.coins }}</span>
+            <span class="pay-popup-balance">{{ magicData.coin }}</span>
           </div>
           <button class="pay-popup-recharge" type="button" @click="toRecharge">立即充值</button>
         </div>
         <div class="pay-popup-row">
           <div class="pay-popup-label">支付金额</div>
-          <div class="pay-popup-value">{{ magicData.coins }}</div>
+          <div class="pay-popup-value">{{ magicDisplayCost }} 金币</div>
         </div>
         <div class="pay-popup-divider" />
         <div class="pay-popup-row pay-popup-row-strong">
           <div class="pay-popup-label">实际支付</div>
-          <div class="pay-popup-value pay-popup-value-strong">{{ magicData.coins }}</div>
+          <div class="pay-popup-value pay-popup-value-strong">{{ magicDisplayCost }} 金币</div>
         </div>
-        <button class="pay-popup-btn" type="button" @click="confirmPay">立即支付</button>
+        <button class="pay-popup-btn" type="button" :disabled="!images.length" @click="confirmPay">立即支付</button>
       </div>
     </van-popup>
   </div>
@@ -303,25 +423,59 @@ async function confirmPay() {
 }
 
 .ai-magic-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  width: 100%;
   border: 0;
   background: transparent;
   padding: 0;
   text-align: left;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.ai-magic-card-img {
+.ai-magic-card-thumb {
+  position: relative;
   width: 100%;
   aspect-ratio: 3 / 4;
   border-radius: 10px;
-  object-fit: cover;
-  display: block;
+  overflow: hidden;
+  background: #f0f0f0;
+  flex-shrink: 0;
+}
+
+.ai-magic-card-coin-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #ff9f43 0%, #ff7a00 100%);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.ai-magic-card-cover {
+  width: 100%;
+  height: 100%;
 }
 
 .ai-magic-card-title {
   margin-top: 6px;
+  width: 100%;
+  min-width: 0;
+  flex-shrink: 0;
   font-family: 'PingFang SC', sans-serif;
   font-weight: 400;
   font-size: 12px;
+  line-height: 1.35;
   color: #1a1a1a;
   white-space: nowrap;
   overflow: hidden;
@@ -350,8 +504,6 @@ async function confirmPay() {
 .magic-popup-video-cover {
   width: 100%;
   height: 160px;
-  object-fit: cover;
-  display: block;
 }
 
 .magic-popup-play {
@@ -535,24 +687,27 @@ async function confirmPay() {
   font-size: 16px;
 }
 
+.magic-popup-pay-btn:disabled {
+  background: #c8c9cc;
+  color: #ffffff;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
 .magic-popup-balance {
   margin-top: 10px;
   text-align: center;
   font-size: 12px;
   color: #a8a8a8;
-}
-
-.magic-popup-balance-num {
-  margin: 0 2px;
-  color: #a8a8a8;
+  line-height: 1.5;
 }
 
 .magic-popup-recharge {
-  margin-left: 6px;
+  margin: 0;
+  padding: 0;
   color: #2494ff;
   background: transparent;
   border: 0;
-  padding: 0;
   font-size: 12px;
   font-family: inherit;
 }
@@ -658,5 +813,11 @@ async function confirmPay() {
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
   font-size: 18px;
+}
+
+.pay-popup-btn:disabled {
+  background: #c8c9cc;
+  cursor: not-allowed;
+  opacity: 0.85;
 }
 </style>

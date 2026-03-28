@@ -4,7 +4,6 @@ import undressedImg from '~/assets/image/undressed.png'
 
 const __ = useNuxtApp()
 const router = useRouter()
-const { u: user } = storeToRefs(useUserStore())
 
 definePageMeta({
   keepalive: true
@@ -14,17 +13,16 @@ const MAX_SIZE = 2 * 1024 * 1024
 const images = ref<any[]>([])
 const showPayPopup = ref(false)
 
+/** /api/ai/pre_strip */
 interface PreStripData {
   free_num: number
   coin: number
   cost_coin: number
   tips: string
-  coins:number
 }
 
 const stripData = ref<PreStripData>({
   free_num: 0,
-  coins:0,
   coin: 0,
   cost_coin: 0,
   tips: ''
@@ -33,8 +31,15 @@ const stripData = ref<PreStripData>({
 async function fetchPreStrip() {
   try {
     const res = await __.$Api.AI.preStrip({})
-    stripData.value = res?.data as PreStripData
-    console.log('AI去衣预检查:', stripData.value)
+    const d = res?.data as Partial<PreStripData> | undefined
+    if (d) {
+      stripData.value = {
+        free_num: Number(d.free_num ?? 0),
+        coin: Number(d.coin ?? 0),
+        cost_coin: Number(d.cost_coin ?? 0),
+        tips: d.tips ?? ''
+      }
+    }
   } catch (error) {
     console.error('获取AI去衣预检查失败:', error)
   }
@@ -43,8 +48,6 @@ async function fetchPreStrip() {
 onMounted(() => {
   fetchPreStrip()
 })
-
-const payCoins = 9
 
 function onOversize() {
   __.$Toast({
@@ -73,6 +76,11 @@ function toRecharge() {
   router.push('/coin-recharge?type=1')
 }
 
+/** strip / magic 成功体可能为 { msg } 或包在 data 内 */
+function pickTaskMsg(res: any): string | undefined {
+  return res?.msg ?? res?.data?.msg
+}
+
 async function confirmPay() {
   if (!images.value.length) {
     return __.$Toast('请先上传图片')
@@ -88,11 +96,8 @@ async function confirmPay() {
         thumb_w: img.width,
         thumb_h: img.height
       })
-      
-      if (res?.data?.msg) {
-        __.$Toast(res.data.msg)
-      }
-      
+      const tip = pickTaskMsg(res)
+      if (tip) __.$Toast(tip)
       showPayPopup.value = false
       await __.$Alert({
         title: '提交成功',
@@ -161,11 +166,18 @@ async function confirmPay() {
           </div>
 
           <div class="action-bar">
-            <dx-button block class="action-bar-btn" color="#2494ff" :round="false" @click="onPay">支付{{ stripData.coins }}金币</dx-button>
+            <dx-button
+              block
+              class="action-bar-btn"
+              color="#2494ff"
+              :round="false"
+              :disabled="!images.length"
+              @click="onPay"
+            >
+              支付{{ stripData.cost_coin }}金币
+            </dx-button>
             <div class="action-bar-text">
-              当前余额：
-              <span class="action-bar-coins">{{ user?.coins ?? 0 }}</span>
-              金币
+              当前余额：{{ stripData.coin }}，
               <button class="action-bar-recharge" type="button" @click="toRecharge">去充值</button>
             </div>
           </div>
@@ -179,20 +191,20 @@ async function confirmPay() {
         <div class="pay-popup-row">
           <div class="pay-popup-label">
             金币余额：
-            <span class="pay-popup-balance">{{ user?.coins }}</span>
+            <span class="pay-popup-balance">{{ stripData.coin }}</span>
           </div>
           <button class="pay-popup-recharge" type="button" @click="toRecharge">立即充值</button>
         </div>
         <div class="pay-popup-row">
           <div class="pay-popup-label">支付金额</div>
-          <div class="pay-popup-value">{{ stripData.coins }}</div>
+          <div class="pay-popup-value">{{ stripData.cost_coin }}</div>
         </div>
         <div class="pay-popup-divider" />
         <div class="pay-popup-row pay-popup-row-strong">
           <div class="pay-popup-label">实际支付</div>
-          <div class="pay-popup-value pay-popup-value-strong">{{ stripData.coins }}</div>
+          <div class="pay-popup-value pay-popup-value-strong">{{ stripData.cost_coin }}</div>
         </div>
-        <button class="pay-popup-btn" type="button" @click="confirmPay">立即支付</button>
+        <button class="pay-popup-btn" type="button" :disabled="!images.length" @click="confirmPay">立即支付</button>
       </div>
     </van-popup>
   </div>
@@ -364,6 +376,11 @@ async function confirmPay() {
   font-size: 13px;
 }
 
+.action-bar-btn:deep(.van-button--disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .action-bar-text {
   margin-top: 20px;
   display: flex;
@@ -373,17 +390,12 @@ async function confirmPay() {
   color: #a8a8a8;
 }
 
-.action-bar-coins {
-  margin: 0 2px;
-  color: #a8a8a8;
-}
-
 .action-bar-recharge {
-  margin-left: 6px;
+  margin: 0;
+  padding: 0;
   color: #2494ff;
   background: transparent;
   border: 0;
-  padding: 0;
   font-size: 12px;
   font-family: inherit;
 }
@@ -490,6 +502,12 @@ async function confirmPay() {
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
   font-size: 18px;
+}
+
+.pay-popup-btn:disabled {
+  background: #c8c9cc;
+  cursor: not-allowed;
+  opacity: 0.85;
 }
 
 .skeleton {

@@ -16,11 +16,21 @@ const AI_TYPES: Array<{ key: AiTypeKey; title: string; index: number }> = [
   { key: 'magic', title: 'AI魔法', index: 3 }
 ]
 
-const STATUS_TABS: Array<{ key: StatusKey; title: string; status: number }> = [
-  { key: 'done', title: '已完成', status: 2 },
-  { key: 'processing', title: '处理中', status: 1 },
-  { key: 'failed', title: '已失败', status: 3 }
+const STATUS_TABS: Array<{ key: StatusKey; title: string }> = [
+  { key: 'done', title: '已完成' },
+  { key: 'processing', title: '处理中' },
+  { key: 'failed', title: '已失败' }
 ]
+
+/** 去衣 / 魔法：0处理中 1已完成 2失败；换脸沿用旧口径 1处理中 2已完成 3失败 */
+function listStatusParam(type: AiTypeKey, tab: StatusKey): number {
+  if (type === 'face') {
+    const legacy: Record<StatusKey, number> = { processing: 1, done: 2, failed: 3 }
+    return legacy[tab]
+  }
+  const v: Record<StatusKey, number> = { processing: 0, done: 1, failed: 2 }
+  return v[tab]
+}
 
 const API_MAP: Record<AiTypeKey, string> = {
   face: 'api/ai/my_face',
@@ -35,13 +45,13 @@ const POSTER_FIELDS: Record<AiTypeKey, Record<StatusKey, string[]>> = {
     failed: ['ground', 'thumb']
   },
   undress: {
-    processing: ['thumb', 'ground'],
-    done: ['result_image', 'strip_thumb', 'thumb'],
-    failed: ['thumb', 'ground']
+    processing: ['thumb'],
+    done: ['result_image', 'thumb'],
+    failed: ['thumb']
   },
   magic: {
     processing: ['thumb'],
-    done: ['result_video', 'result_image', 'thumb'],
+    done: ['result_video', 'thumb'],
     failed: ['thumb']
   }
 }
@@ -50,12 +60,10 @@ function onDownload(url: string) {
   onWinOpen(__.$GlobalObject._CACHE_IMAGES_MAPS?.[url]?.url)
 }
 
-function onPreview(item: any, status: number, type: AiTypeKey) {
-  if (type === 'face') {
+function onPreview(item: any, type: AiTypeKey) {
+  if (type === 'face' && statusTab.value === 'done') {
     dynamicStore.update_cache(CACHE_KEY.PREVIEW_AI_FACE, item)
-    if (status === 2) {
-      router.push(`/ai/preview-face?type=2`)
-    }
+    router.push(`/ai/preview-face?type=2`)
   }
 }
 
@@ -72,7 +80,7 @@ const { key } = useKeepAlive({
 })
 
 const activeApi = computed(() => API_MAP[aiType.value])
-const activeStatus = computed(() => STATUS_TABS.find(t => t.key === statusTab.value)!)
+const listParams = computed(() => ({ status: listStatusParam(aiType.value, statusTab.value) }))
 
 function resolvePoster(item: Record<string, any>) {
   const fields = POSTER_FIELDS[aiType.value][statusTab.value] || []
@@ -111,18 +119,18 @@ function resolvePoster(item: Record<string, any>) {
       </button>
     </div>
 
-    <dx-hoc-list class="ai-record-grid" :api="activeApi" :params="{ status: activeStatus.status }">
+    <dx-hoc-list class="ai-record-grid" :api="activeApi" :params="listParams">
       <template #item="{ item }">
         <div class="ai-record-item">
           <dx-cover
             class="ai-record-cover"
             :poster="resolvePoster(item)"
-            @click="onPreview(item, activeStatus.status, aiType)"
+            @click="onPreview(item, aiType)"
           >
-            <div v-if="activeStatus.status === 1" class="ai-record-cover-mask">
+            <div v-if="statusTab === 'processing'" class="ai-record-cover-mask">
               <van-loading class="ai-record-cover-loading" type="spinner" />
             </div>
-            <div v-if="aiType === 'face' && activeStatus.status === 2" class="ai-record-cover-actions">
+            <div v-if="aiType === 'face' && statusTab === 'done'" class="ai-record-cover-actions">
               <dx-button class="ai-record-save-btn" size="mini" @click.stop="onDownload(item.face_thumb)">
                 保存
               </dx-button>
