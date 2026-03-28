@@ -1,6 +1,7 @@
 <template>
-  <div class="container relative">
+  <div class="community-page-root container relative">
     <dx-tabs
+      ref="mainTabsRef"
       v-model:active="activeTab"
       shrink
       center
@@ -26,13 +27,22 @@
     <nuxt-link :to="`/search?_index=${search_index}`" class="search-button">
       <nuxt-icon name="search" filled class="icon-search !text-[20px] !text-[#141414]"></nuxt-icon>
     </nuxt-link>
+
+    <community-nav-first-guide
+      v-if="showCommunityNavGuide"
+      :tabs-ref="mainTabsRef"
+      @dismiss="onCommunityNavGuideDismiss"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { BannerItem, ForumItem, TabItem } from '@types'
+import { COMMUNITY_NAV_GUIDE_STORAGE_KEY } from '~/utils/communityNavGuide'
 
 const activeTab = ref('recomment')
+const mainTabsRef = ref<{ $el?: HTMLElement } | null>(null)
+const showCommunityNavGuide = ref(false)
 const graphic = ref(0)
 const __ = useNuxtApp()
 const route = useRoute()
@@ -77,6 +87,26 @@ watch(
   },
   { immediate: true }
 )
+
+function onCommunityNavGuideDismiss() {
+  try {
+    localStorage.setItem(COMMUNITY_NAV_GUIDE_STORAGE_KEY, '1')
+  } catch {
+    /* ignore */
+  }
+  showCommunityNavGuide.value = false
+}
+
+onMounted(() => {
+  if (!import.meta.client) return
+  try {
+    if (!localStorage.getItem(COMMUNITY_NAV_GUIDE_STORAGE_KEY)) {
+      showCommunityNavGuide.value = true
+    }
+  } catch {
+    /* 隐私模式等：不挡主流程 */
+  }
+})
 </script>
 <style lang="postcss" scoped>
 .search-button {
