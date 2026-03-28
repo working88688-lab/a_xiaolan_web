@@ -95,6 +95,12 @@ export default {
   talkToken: { method: 'post', url: '/api/talk/token' },
   // 获取聊天用户信息
   talkUserInfo: { method: 'post', url: '/api/talk/userInfo' },
+  // 获取聊天用户信息（剩余条数/是否超时等）
+  talkInfo: { method: 'post', url: '/api/talk/talk_info' },
+  // 聊天时长产品列表
+  talkProductList: { method: 'post', url: '/api/talk/product_list' },
+  // 购买聊天时长（扣金币）
+  talkBuyTime: { method: 'post', url: '/api/talk/buy_time', showSuccess: true },
   // 聊天功能配置
   talkChatConf: { method: 'post', url: '/api/talk/chatConf' },
   // 聊天地区列表
@@ -121,5 +127,9 @@ export default {
   // 同圈匹配-选择匹配详情
   usersmatchGetMatchInfo: { method: 'post', url: '/api/usersmatch/get_match_info' },
   // 同圈匹配-提交匹配结果
-  usersmatchSubmitMatch: { method: 'post', url: '/api/usersmatch/submit_match', showSuccess: true }
+  usersmatchSubmitMatch: { method: 'post', url: '/api/usersmatch/submit_match', showSuccess: true },
+  // 匹配卡商品列表
+  matchGoods: { method: 'post', url: '/api/usersmatch/match_goods' },
+  // 购买匹配卡
+  buyMatchGoods: { method: 'post', url: '/api/usersmatch/buy_match_goods', showSuccess: true }
 }

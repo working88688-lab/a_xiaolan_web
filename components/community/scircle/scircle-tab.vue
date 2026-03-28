@@ -17,7 +17,7 @@
 
       <!-- 底部按钮区 -->
       <div v-if="!isMatching" class="scircle-match px-1.5">
-        <button class="scircle-start" type="button" @click="onStartMatch">
+        <button class="scircle-start" type="button" :disabled="!canStartMatch" @click="onStartMatch">
           <svg
             class="scircle-start-icon"
             width="40"
@@ -36,8 +36,8 @@
         <div class="scircle-bottom">
           <div class="scircle-left">
             可匹配次数：
-            <span class="scircle-count">{{ talkHomeData.info?.match_num ?? 3 }}</span>
-            <a class="scircle-recharge" href="javascript:void(0)">充值</a>
+            <span class="scircle-count">{{ matchRemainNum }}</span>
+            <a class="scircle-recharge" href="javascript:void(0)" @click.prevent="openMatchGoodsPopup">充值</a>
           </div>
           <button class="scircle-right" type="button" @click="openSettings">匹配设置 ></button>
         </div>
@@ -64,16 +64,68 @@
       <div class="scircle-help-popup">
         <div class="scircle-help-popup-title">速配说明</div>
         <div class="scircle-help-popup-content">
-          <template v-if="talkHomeData.readme.length">
-            <div v-for="(item, idx) in talkHomeData.readme" :key="idx">
-              {{ idx + 1 }}、{{ typeof item === 'string' ? item : item.content ?? item.title ?? JSON.stringify(item) }}
+          <template v-if="scircleHelpFaqList.length">
+            <div v-for="(item, idx) in scircleHelpFaqList" :key="`${item.qt}-${idx}`" class="scircle-help-faq-item">
+              <div class="scircle-help-faq-qt">{{ item.qt }}</div>
+              <div class="scircle-help-faq-body">
+                <div class="scircle-help-faq-q">{{ item.question }}</div>
+                <div class="scircle-help-faq-a">{{ item.answer }}</div>
+              </div>
             </div>
           </template>
-          <template v-else>
-            <div>暂无说明</div>
-          </template>
+          <div v-else class="scircle-help-faq-empty">暂无说明</div>
         </div>
         <button class="scircle-help-popup-btn" type="button" @click="showHelp = false">我知道了</button>
+      </div>
+    </van-popup>
+
+    <van-popup
+      v-model:show="showMatchGoodsPopup"
+      position="bottom"
+      teleport="body"
+      round
+      closeable
+      class="match-goods-popup-van"
+    >
+      <div class="match-goods-popup">
+        <div class="match-goods-popup__header">
+          <div class="match-goods-popup__prices">
+            <span class="match-goods-popup__price-now">
+              {{ selectedMatchGood != null ? `${selectedMatchGood.discount_cion}金币` : '--' }}
+            </span>
+            <span v-if="selectedMatchGood != null && selectedMatchGood.pay_cion" class="match-goods-popup__price-old">
+              {{ selectedMatchGood.pay_cion }}金币
+            </span>
+          </div>
+        </div>
+
+        <div v-if="matchGoodsLoading" class="match-goods-popup__loading">
+          <van-loading type="spinner" size="28px" />
+        </div>
+        <div v-else-if="!matchGoodsList.length" class="match-goods-popup__empty">暂无匹配卡商品</div>
+        <div v-else class="match-goods-popup__grid">
+          <button
+            v-for="g in matchGoodsList"
+            :key="g.id"
+            type="button"
+            class="match-goods-card"
+            :class="{ 'is-active': selectedGoodsId === g.id }"
+            @click="selectedGoodsId = g.id"
+          >
+            <span class="match-goods-card__badge">匹配卡</span>
+            <img v-lazyLoad="g.img" class="match-goods-card__img" :src="g.img" :alt="g.name" />
+            <div class="match-goods-card__name">{{ g.name }}</div>
+          </button>
+        </div>
+
+        <button
+          class="match-goods-popup__buy"
+          type="button"
+          :disabled="!selectedMatchGood || matchGoodsBuying || matchGoodsLoading"
+          @click="onBuyMatchGoods"
+        >
+          {{ matchGoodsBuying ? '购买中…' : '购买' }}
+        </button>
       </div>
     </van-popup>
 
@@ -176,23 +228,66 @@
             </div>
 
             <div class="scircle-settings-section">
-              <div class="scircle-settings-section-title">个人语音（可选）</div>
-              <div class="scircle-settings-voice-actions">
-                <button class="scircle-settings-voice-btn" type="button" @click="onPickProfileVoice">上传语音</button>
-                <span class="scircle-settings-voice-tip">{{ profileVoiceLabel }}</span>
+              <div class="scircle-settings-voice-head">
+                <div class="scircle-settings-section-title scircle-settings-voice-title">个人语音（可选）</div>
+                <button
+                  v-if="profileVoice"
+                  type="button"
+                  class="scircle-settings-voice-delete"
+                  @click="onVoiceDeleteRerecord"
+                >
+                  删除重录
+                </button>
               </div>
-              <input
-                ref="profileVoiceInputRef"
-                class="scircle-hidden-input"
-                type="file"
-                accept="audio/*"
-                @change="onProfileVoiceChange"
-              />
+
+              <div
+                v-if="profileVoice"
+                class="scircle-settings-voice-player"
+                role="button"
+                tabindex="0"
+                @click="toggleProfileVoicePlay"
+              >
+                <span class="scircle-settings-voice-player-wave" aria-hidden="true">
+                  <svg width="22" height="18" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M11 1v16M7 4.5v9M15 4.5v9M3 7.5v3M19 7.5v3"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </span>
+                <span class="scircle-settings-voice-player-dur">{{ profileVoiceDurationDisplay }}</span>
+                <audio
+                  ref="profileVoiceAudioRef"
+                  :src="profileVoice"
+                  class="scircle-hidden-input"
+                  preload="metadata"
+                  @play="voicePlaying = true"
+                  @pause="voicePlaying = false"
+                  @ended="voicePlaying = false"
+                />
+              </div>
+
+              <template v-else>
+                <div class="scircle-settings-voice-actions">
+                  <!-- <button class="scircle-settings-voice-btn" type="button" @click="onPickProfileVoice">上传语音</button> -->
+                  <span class="scircle-settings-voice-tip">{{ isUploadingVoice ? '语音上传中...' : '' }}</span>
+                </div>
+                <input
+                  ref="profileVoiceInputRef"
+                  class="scircle-hidden-input"
+                  type="file"
+                  accept="audio/*"
+                  @change="onProfileVoiceChange"
+                />
+              </template>
             </div>
           </div>
 
           <div class="scircle-settings-footer">
             <button
+              v-if="!profileVoice && !isUploadingVoice"
               class="scircle-settings-primary"
               type="button"
               @touchstart.prevent="onRecordStart"
@@ -231,7 +326,13 @@
               </svg>
               <span class="scircle-settings-record-text">按住录制</span>
             </button>
-            <button class="scircle-settings-next" type="button" :disabled="isSavingStep1" @click="onStepOneNext">
+            <button
+              class="scircle-settings-next"
+              type="button"
+              :disabled="isSavingStep1"
+              :class="{ 'scircle-settings-next--solo': profileVoice || isUploadingVoice }"
+              @click="onStepOneNext"
+            >
               {{ isSavingStep1 ? '提交中...' : '下一步' }}
             </button>
           </div>
@@ -300,29 +401,61 @@
       </div>
     </van-popup>
 
-    <div v-if="showRecordOverlay" class="scircle-record-overlay">
-      <div class="scircle-record-panel">
-        <div class="scircle-record-actions">
-          <div class="scircle-record-voice" :class="{ 'is-cancel': isRecordCancel }">
-            <div class="scircle-record-bars">
-              <span class="bar" />
-              <span class="bar" />
-              <span class="bar" />
-              <span class="bar" />
-              <span class="bar" />
+    <!-- 必须挂到 body，否则 z-index 受祖先层叠上下文限制，会被 teleport 的 van-popup 盖住 -->
+    <Teleport to="body">
+      <div v-if="showRecordOverlay" class="scircle-record-overlay">
+        <!-- 结构对齐设计稿：上区暗色 + 波形气泡与右侧取消；中区「松开发送」；下区浅灰弧形 + 麦克风 -->
+        <div class="scircle-record-dim">
+          <div class="scircle-record-actions" :class="{ 'is-cancel-mode': isRecordCancel }">
+            <div class="scircle-record-voice" :class="{ 'is-cancel': isRecordCancel }">
+              <div class="scircle-record-bars">
+                <span class="bar" />
+                <span class="bar" />
+                <span class="bar" />
+                <span class="bar" />
+                <span class="bar" />
+              </div>
+            </div>
+
+            <div class="scircle-record-cancel-wrap">
+              <svg
+                v-if="isRecordCancel"
+                class="scircle-record-cancel-arc-text"
+                viewBox="0 0 120 36"
+                aria-hidden="true"
+              >
+                <defs>
+                  <path :id="recordCancelArcPathId" d="M 8 28 Q 60 4 112 28" fill="none" />
+                </defs>
+                <text class="scircle-record-cancel-arc-fill" text-anchor="middle">
+                  <textPath :href="`#${recordCancelArcPathId}`" startOffset="50%">松手 取消</textPath>
+                </text>
+              </svg>
+              <div ref="cancelRef" class="scircle-record-cancel" :class="{ 'is-active': isRecordCancel }">取消</div>
             </div>
           </div>
-
-          <div class="scircle-record-cancel-wrap">
-            <div ref="cancelRef" class="scircle-record-cancel" :class="{ 'is-active': isRecordCancel }">取消</div>
-            <div v-if="isRecordCancel" class="scircle-record-cancel-tip">松手 取消</div>
-          </div>
+          <div class="scircle-record-tip">松开发送</div>
         </div>
-
-        <div class="scircle-record-tip">{{ isRecordCancel ? '松手取消' : '松开发送' }}</div>
-        <div class="scircle-record-mic">♪)</div>
+        <div class="scircle-record-arch" aria-hidden="true">
+          <svg class="scircle-record-mic-icon" width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <path
+              d="M28 36c4.42 0 8-3.58 8-8V18c0-4.42-3.58-8-8-8s-8 3.58-8 8v10c0 4.42 3.58 8 8 8z"
+              stroke="currentColor"
+              stroke-width="2.2"
+            />
+            <path d="M18 26v2c0 5.52 4.48 10 10 10s10-4.48 10-10v-2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+            <path d="M28 40v6M22 46h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+            <path
+              d="M38 22c0-5.52-4.48-10-10-10M18 22c0-5.52 4.48-10 10-10"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              opacity="0.45"
+            />
+          </svg>
+        </div>
       </div>
-    </div>
+    </Teleport>
 
     <van-popup
       v-model:show="showMatchPopup"
@@ -363,7 +496,7 @@
               </div>
 
               <div class="tq-detail-body">
-                <div class="tq-detail-match">匹配度{{ activeMatchItem.match_percent ?? 0 }}%，你俩超级搭哟！</div>
+                <div class="tq-detail-match">{{ activeMatchLineText }}</div>
 
                 <div class="tq-detail-tags">
                   <div class="tq-detail-tags-scroll">
@@ -372,9 +505,12 @@
                   </div>
                 </div>
 
-                <div class="tq-voice">
-                  <button class="tq-voice-play" type="button">▶</button>
-                  <div class="tq-voice-bars">
+                <div v-if="activeMatchItem.voice_url" class="tq-voice">
+                  <button class="tq-voice-play" type="button" aria-label="播放语音" @click="toggleMatchVoicePlay">
+                    <span v-if="!matchVoicePlaying" class="tq-voice-play-icon tq-voice-play-icon--play" />
+                    <span v-else class="tq-voice-play-icon tq-voice-play-icon--pause" />
+                  </button>
+                  <div class="tq-voice-bars" :class="{ 'is-playing': matchVoicePlaying }">
                     <span class="bar" />
                     <span class="bar" />
                     <span class="bar" />
@@ -385,7 +521,18 @@
                     <span class="bar" />
                   </div>
                   <div class="tq-voice-dur">{{ activeMatchItem.voice_duration || '0"' }}</div>
+                  <audio
+                    :key="`match-voice-${activeMatchItem.uid}-${activeMatchItem.voice_url}`"
+                    ref="matchDetailAudioRef"
+                    class="tq-voice-audio"
+                    :src="activeMatchItem.voice_url"
+                    preload="metadata"
+                    @play="matchVoicePlaying = true"
+                    @pause="matchVoicePlaying = false"
+                    @ended="matchVoicePlaying = false"
+                  />
                 </div>
+                <div v-else class="tq-voice-empty">对方暂无语音</div>
               </div>
 
               <div class="tq-detail-footer">
@@ -401,8 +548,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed, useId, watch } from 'vue'
 import successBgUrl from '~/assets/image/success-bg.png'
 import tqItemUrl from '~/assets/image/tq-item.png'
+
+const recordCancelArcPathId = useId()
 
 const props = defineProps<{
   data: any
@@ -410,6 +560,22 @@ const props = defineProps<{
 const listRef = useTemplateRef('list')
 const { scrollTop } = useScrollTop(listRef)
 const __ = useNuxtApp()
+
+/** 从接口/axios 错误对象取出提示文案 */
+function scircleErrMsg(err: unknown): string {
+  if (err == null) return '请求失败'
+  if (typeof err === 'string') return err
+  const e = err as Record<string, any>
+  if (e.msg != null && String(e.msg).trim() !== '') return String(e.msg)
+  if (e.message != null && String(e.message).trim() !== '') return String(e.message)
+  const ax = e.response?.data
+  if (ax && typeof ax === 'object' && ax.msg != null && String(ax.msg).trim() !== '') return String(ax.msg)
+  if (e instanceof Error && e.message) return e.message
+  return '请求失败'
+}
+
+/** 开发环境：进入同圈 tab 后打印首页相关接口返回，便于对照「可匹配次数」等字段 */
+const scircleDebug = import.meta.env.DEV && import.meta.client
 
 // 匹配首页配置
 interface TalkHomeData {
@@ -422,8 +588,15 @@ interface MatchItem {
   nickname: string
   avatar: string
   cover: string
+  /** 列表项 /usersmatch/match 的 score（数字），用于 get_match_info、submit 等入参 */
   match_percent: number
+  /** 详情 /usersmatch/get_match_info 的 score（常为整句文案）；有则详情区整行展示 */
+  match_line_text: string
   tags: string[]
+  /**
+   * 对方语音 URL（详情接口当前不返回语音字段，此处预留；将来可接 voice / voice_url 等）
+   */
+  voice_url: string
   voice_duration: string
 }
 interface MatchTagItem {
@@ -438,12 +611,72 @@ const talkHomeData = ref<TalkHomeData>({
   readme: []
 })
 
+/** 可匹配次数展示（无字段时兜底 0，非 3） */
+const matchRemainNum = computed(() => Number(talkHomeData.value.info?.match_num ?? 0))
+const canStartMatch = computed(() => matchRemainNum.value > 0)
+
+type ScircleReadmeFaqItem = { qt: string; question: string; answer: string }
+
+function normalizeReadmeFaqList(readme: any[]): ScircleReadmeFaqItem[] {
+  if (!Array.isArray(readme) || !readme.length) return []
+  const out: ScircleReadmeFaqItem[] = []
+  for (const item of readme) {
+    if (item == null) continue
+    if (typeof item === 'string') {
+      const t = item.trim()
+      if (t) out.push({ qt: `Q${out.length + 1}`, question: '', answer: item })
+      continue
+    }
+    if (typeof item === 'object') {
+      const question = String(item.question ?? item.title ?? '')
+      const answer = String(item.answer ?? item.content ?? '')
+      if (!question.trim() && !answer.trim()) continue
+      const qtRaw = item.qt
+      const qt = qtRaw != null && String(qtRaw).trim() !== '' ? String(qtRaw) : `Q${out.length + 1}`
+      out.push({ qt, question, answer })
+    }
+  }
+  return out
+}
+
+/** 仅接口 readme（myprofile / talk/conf 的 data.readme），无兜底数据 */
+const scircleHelpFaqList = computed(() => normalizeReadmeFaqList(talkHomeData.value.readme))
+
 async function fetchTalkHome() {
   try {
     const [myProfileRes, expectProfileRes] = await Promise.all([
-      __.$Api.Community.usersmatchMyprofile().catch(() => null),
-      __.$Api.Community.usersmatchMyExpectProfile().catch(() => null)
+      __.$Api.Community.usersmatchMyprofile().catch(e => {
+        if (scircleDebug) console.warn('[scircle] POST /api/usersmatch/myprofile 失败', e)
+        __.$Toast(scircleErrMsg(e))
+        return null
+      }),
+      __.$Api.Community.usersmatchMyExpectProfile().catch(e => {
+        if (scircleDebug) console.warn('[scircle] POST /api/usersmatch/myexpectprofile 失败', e)
+        __.$Toast(scircleErrMsg(e))
+        return null
+      })
     ])
+
+    if (scircleDebug) {
+      console.log(
+        '%c[scircle] ① POST /api/usersmatch/myprofile 整包（解密后）',
+        'font-weight:bold;color:#1677ff',
+        myProfileRes
+      )
+      console.log('[scircle] ① data 字段：', myProfileRes?.data)
+      console.log(
+        '[scircle] ① 原始 match_num / free_match_num：',
+        myProfileRes?.data?.match_num,
+        myProfileRes?.data?.free_match_num
+      )
+      console.log(
+        '%c[scircle] ② POST /api/usersmatch/myexpectprofile 整包（解密后）',
+        'font-weight:bold;color:#1677ff',
+        expectProfileRes
+      )
+      console.log('[scircle] ② data 字段：', expectProfileRes?.data)
+    }
+
     const myProfile = myProfileRes?.data || {}
     const expectProfile = expectProfileRes?.data || {}
     talkHomeData.value = {
@@ -457,19 +690,117 @@ async function fetchTalkHome() {
     }
 
     if (!talkHomeData.value.readme.length && !talkHomeData.value.info?.match_num) {
-      const res = await __.$Api.Community.talkConf().catch(() => null)
+      const res = await __.$Api.Community.talkConf().catch(e => {
+        if (scircleDebug) console.warn('[scircle] POST /api/talk/conf 失败', e)
+        __.$Toast(scircleErrMsg(e))
+        return null
+      })
+      if (scircleDebug && res) {
+        console.log(
+          '%c[scircle] ③ POST /api/talk/conf（readme 空且 match_num 为 0 时补充拉取）',
+          'font-weight:bold;color:#07c160',
+          res
+        )
+        console.log('[scircle] ③ data：', res?.data)
+      }
       if (res?.data) {
         talkHomeData.value = res.data as TalkHomeData
       }
     }
+
+    if (scircleDebug) {
+      console.log('%c[scircle] 最终 talkHomeData（页面绑定）', 'font-weight:bold;color:#333', talkHomeData.value)
+      const mn = talkHomeData.value.info?.match_num
+      const uiShows = mn ?? 0
+      const hint = mn == null ? '（undefined/null 时用模板兜底 0；已得到数字 0 则显示 0）' : ''
+      console.log('[scircle] info.match_num =', mn, '；界面显示 match_num ?? 0 =>', uiShows, hint)
+    }
   } catch (error) {
     console.error('获取同圈配置失败:', error)
+    __.$Toast(scircleErrMsg(error))
   }
 }
 
 onMounted(() => {
   fetchTalkHome()
 })
+
+/** 匹配卡商品（接口字段 pay_cion / discount_cion 与后端一致） */
+interface MatchGoodsItem {
+  id: number
+  name: string
+  img: string
+  num: number
+  pay_cion: number
+  discount_cion: number
+  status?: number
+}
+
+const showMatchGoodsPopup = ref(false)
+const matchGoodsList = ref<MatchGoodsItem[]>([])
+const matchGoodsLoading = ref(false)
+const matchGoodsBuying = ref(false)
+const selectedGoodsId = ref<number | null>(null)
+
+const selectedMatchGood = computed(() => {
+  const id = selectedGoodsId.value
+  if (id == null) return null
+  return matchGoodsList.value.find(g => g.id === id) ?? null
+})
+
+async function loadMatchGoods() {
+  matchGoodsLoading.value = true
+  try {
+    const res = await __.$Api.Community.matchGoods({})
+    const raw = res?.data
+    const list = Array.isArray(raw) ? raw : []
+    matchGoodsList.value = list
+      .filter((g: MatchGoodsItem) => g.status !== 0)
+      .map((g: any) => ({
+        id: Number(g.id),
+        name: String(g.name ?? ''),
+        img: String(g.img ?? ''),
+        num: Number(g.num ?? 0),
+        pay_cion: Number(g.pay_cion ?? 0),
+        discount_cion: Number(g.discount_cion ?? 0),
+        status: g.status
+      }))
+    if (matchGoodsList.value.length) {
+      const exists = matchGoodsList.value.some(g => g.id === selectedGoodsId.value)
+      if (!exists) selectedGoodsId.value = matchGoodsList.value[0].id
+    } else {
+      selectedGoodsId.value = null
+    }
+  } catch (e) {
+    console.error('[scircle] match_goods 失败', e)
+    __.$Toast(scircleErrMsg(e))
+    matchGoodsList.value = []
+    selectedGoodsId.value = null
+  } finally {
+    matchGoodsLoading.value = false
+  }
+}
+
+async function openMatchGoodsPopup() {
+  showMatchGoodsPopup.value = true
+  await loadMatchGoods()
+}
+
+async function onBuyMatchGoods() {
+  const g = selectedMatchGood.value
+  if (!g || matchGoodsBuying.value) return
+  matchGoodsBuying.value = true
+  try {
+    await __.$Api.Community.buyMatchGoods({ goods_id: String(g.id) })
+    showMatchGoodsPopup.value = false
+    await fetchTalkHome()
+  } catch (e) {
+    console.error('[scircle] buy_match_goods 失败', e)
+    __.$Toast(scircleErrMsg(e))
+  } finally {
+    matchGoodsBuying.value = false
+  }
+}
 
 const showHelp = ref(false)
 const isMatching = ref(false)
@@ -489,12 +820,22 @@ const myProfileSelected = ref<string[]>([])
 const expectProfileSelected = ref<string[]>([])
 const profileImg = ref('')
 const profileVoice = ref('')
+const profileVoiceDurationSec = ref<number | null>(null)
+const profileVoiceAudioRef = ref<HTMLAudioElement | null>(null)
+const voicePlaying = ref(false)
 const profileImageInputRef = ref<HTMLInputElement | null>(null)
 const profileVoiceInputRef = ref<HTMLInputElement | null>(null)
 const isSavingStep1 = ref(false)
 const isSavingStep2 = ref(false)
 const isUploadingImage = ref(false)
 const isUploadingVoice = ref(false)
+const mediaRecorderRef = ref<MediaRecorder | null>(null)
+const mediaStreamRef = ref<MediaStream | null>(null)
+const recordChunksRef = ref<Blob[]>([])
+const recordStartTsRef = ref(0)
+const isRecordInitializing = ref(false)
+/** 防止松手早于 getUserMedia 完成时仍创建录音 */
+const recordGenRef = ref(0)
 
 const myProfileTags1 = computed(() => myProfileGroups.value[1] || [])
 const myProfileTags2 = computed(() => myProfileGroups.value[2] || [])
@@ -502,11 +843,71 @@ const myProfileTags3 = computed(() => myProfileGroups.value[3] || [])
 const expectProfileTags1 = computed(() => expectProfileGroups.value[1] || [])
 const expectProfileTags2 = computed(() => expectProfileGroups.value[2] || [])
 const expectProfileTags3 = computed(() => expectProfileGroups.value[3] || [])
-const profileVoiceLabel = computed(() => {
-  if (isUploadingVoice.value) return '语音上传中...'
-  if (profileVoice.value) return '已上传语音'
-  return '未上传'
+
+function probeVoiceDurationFromUrl(url: string): Promise<number> {
+  return new Promise(resolve => {
+    const a = new Audio()
+    a.preload = 'metadata'
+    a.src = url
+    a.onloadedmetadata = () => {
+      const d = Math.round(a.duration)
+      resolve(Number.isFinite(d) && d > 0 ? d : 0)
+    }
+    a.onerror = () => resolve(0)
+  })
+}
+
+function pickAudioRecorderMime(): string {
+  if (typeof MediaRecorder === 'undefined') return ''
+  const list = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']
+  for (const t of list) {
+    if (MediaRecorder.isTypeSupported(t)) return t
+  }
+  return ''
+}
+
+async function getAudioDurationFromFile(file: File): Promise<number> {
+  const u = URL.createObjectURL(file)
+  try {
+    return await new Promise(resolve => {
+      const a = new Audio()
+      a.src = u
+      a.onloadedmetadata = () => {
+        const d = Math.round(a.duration)
+        resolve(Number.isFinite(d) && d > 0 ? d : 0)
+      }
+      a.onerror = () => resolve(0)
+    })
+  } finally {
+    URL.revokeObjectURL(u)
+  }
+}
+
+/** 语音走 R2 分片通道；imgUpload 只收图片，音频会提示「格式不支持」 */
+async function uploadVoiceToServer(file: File): Promise<string> {
+  const url = (await __.$Api.uploadVideo(file)) as unknown as string
+  return String(url || '')
+}
+
+const profileVoiceDurationDisplay = computed(() => {
+  const s = profileVoiceDurationSec.value
+  if (s == null || s <= 0) return '0"'
+  return `${Math.min(599, s)}"`
 })
+
+watch(
+  () => profileVoice.value,
+  url => {
+    if (!url) {
+      profileVoiceDurationSec.value = null
+      voicePlaying.value = false
+      return
+    }
+    void probeVoiceDurationFromUrl(url).then(sec => {
+      if (sec > 0) profileVoiceDurationSec.value = sec
+    })
+  }
+)
 
 function normalizeTagId(id: number | string | null | undefined) {
   return String(id ?? '')
@@ -567,8 +968,14 @@ function toggleExpectTag(id: number | string) {
 
 async function loadSettingsProfiles() {
   const [myProfileRes, expectProfileRes] = await Promise.all([
-    __.$Api.Community.usersmatchMyprofile().catch(() => null),
-    __.$Api.Community.usersmatchMyExpectProfile().catch(() => null)
+    __.$Api.Community.usersmatchMyprofile().catch(e => {
+      __.$Toast(scircleErrMsg(e))
+      return null
+    }),
+    __.$Api.Community.usersmatchMyExpectProfile().catch(e => {
+      __.$Toast(scircleErrMsg(e))
+      return null
+    })
   ])
   const myParsed = parseProfileGroups(myProfileRes?.data || {})
   const expectParsed = parseProfileGroups(expectProfileRes?.data || {})
@@ -601,8 +1008,8 @@ async function onProfileImageChange(event: Event) {
     profileImg.value = String(url || '')
     __.$Toast('图片上传成功')
   } catch (error) {
-    __.$Toast('图片上传失败')
     console.error('图片上传失败:', error)
+    __.$Toast(scircleErrMsg(error))
   } finally {
     isUploadingImage.value = false
     if (input) input.value = ''
@@ -620,19 +1027,46 @@ async function onProfileVoiceChange(event: Event) {
   if (!file) return
   try {
     isUploadingVoice.value = true
-    const url = (await __.$Api.uploadImage({ file, useCompress: false })) as unknown as string
-    profileVoice.value = String(url || '')
+    const dur = await getAudioDurationFromFile(file)
+    const url = await uploadVoiceToServer(file)
+    profileVoice.value = url
+    if (dur > 0) profileVoiceDurationSec.value = dur
     __.$Toast('语音上传成功')
   } catch (error) {
-    __.$Toast('语音上传失败')
     console.error('语音上传失败:', error)
+    __.$Toast(scircleErrMsg(error))
   } finally {
     isUploadingVoice.value = false
     if (input) input.value = ''
   }
 }
 
+function onVoiceDeleteRerecord() {
+  const el = profileVoiceAudioRef.value
+  if (el) {
+    el.pause()
+    el.removeAttribute('src')
+    el.load()
+  }
+  voicePlaying.value = false
+  profileVoice.value = ''
+  profileVoiceDurationSec.value = null
+}
+
+function toggleProfileVoicePlay() {
+  const el = profileVoiceAudioRef.value
+  if (!el || !profileVoice.value) return
+  if (voicePlaying.value) {
+    el.pause()
+  } else {
+    void el.play().catch(() => {})
+  }
+}
+
 const matchItems = ref<MatchItem[]>([])
+const matchDetailAudioRef = useTemplateRef<HTMLAudioElement>('matchDetailAudioRef')
+const matchVoicePlaying = ref(false)
+
 const activeMatchItem = computed<MatchItem>(() => {
   return matchItems.value[selectedMatchIndex.value] || {
     uid: '0',
@@ -640,14 +1074,42 @@ const activeMatchItem = computed<MatchItem>(() => {
     avatar: '',
     cover: tqItemUrl,
     match_percent: 0,
+    match_line_text: '',
     tags: [],
+    voice_url: '',
     voice_duration: '0"'
   }
 })
 const activeDetailBg = computed(() => activeMatchItem.value.cover || tqItemUrl)
 
-function normalizeMatchItems(data: any): MatchItem[] {
-  const source = data?.list || data?.items || data?.users || data?.data || []
+/** 详情区匹配文案：优先 get_match_info 返回的整句 score，否则用列表数值拼一句 */
+const activeMatchLineText = computed(() => {
+  const m = activeMatchItem.value
+  const line = m.match_line_text?.trim()
+  if (line) return line
+  return `匹配度${m.match_percent ?? 0}%，你俩超级搭哟！`
+})
+
+/** 从接口对象解析语音文件 URL（字段名按后端可能取值兼容） */
+function voiceUrlFromApiItem(item: any): string {
+  const u = item?.voice ?? item?.voice_url ?? item?.audio_url ?? item?.audio ?? item?.voice_file ?? ''
+  return typeof u === 'string' ? u.trim() : String(u || '').trim()
+}
+
+/** 展示用时长文案，如 12" */
+function voiceDurationLabelFromApi(item: any): string {
+  const v = item?.voice_duration ?? item?.voice_len ?? item?.voice_time ?? item?.duration
+  if (v == null || v === '') return '0"'
+  if (typeof v === 'number' && Number.isFinite(v)) return `${Math.round(v)}"`
+  const s = String(v).trim()
+  if (s.includes('"')) return s
+  const n = Number(s)
+  return Number.isFinite(n) ? `${Math.round(n)}"` : '0"'
+}
+
+function normalizeMatchItems(raw: any): MatchItem[] {
+  /** 文档约定：/api/usersmatch/match 的 data 即为用户数组 */
+  const source = Array.isArray(raw) ? raw : raw?.list || raw?.items || raw?.users || raw?.data || []
   if (!Array.isArray(source)) return []
   return source.map((item: any, index: number) => ({
     uid: item?.uid ?? item?.id ?? index,
@@ -655,9 +1117,29 @@ function normalizeMatchItems(data: any): MatchItem[] {
     avatar: item?.avatar ?? item?.avatar_url ?? item?.thumb ?? '',
     cover: item?.cover ?? item?.thumb ?? item?.avatar ?? item?.avatar_url ?? tqItemUrl,
     match_percent: Number(item?.match_percent ?? item?.match_score ?? item?.score ?? 0),
+    match_line_text: '',
     tags: Array.isArray(item?.tags) ? item.tags : [],
-    voice_duration: item?.voice_duration ?? item?.voice_len ?? '0"'
+    voice_url: voiceUrlFromApiItem(item),
+    voice_duration: voiceDurationLabelFromApi(item)
   }))
+}
+
+function stopMatchDetailVoice() {
+  matchDetailAudioRef.value?.pause()
+  matchVoicePlaying.value = false
+}
+
+function toggleMatchVoicePlay() {
+  const el = matchDetailAudioRef.value
+  const url = activeMatchItem.value.voice_url
+  if (!el || !url) return
+  if (matchVoicePlaying.value) {
+    el.pause()
+  } else {
+    void el.play().catch(() => {
+      __.$Toast('语音播放失败')
+    })
+  }
 }
 
 function onHelp() {
@@ -665,11 +1147,18 @@ function onHelp() {
 }
 
 async function onStartMatch() {
+  if (!canStartMatch.value) return
   isMatching.value = true
   try {
-    const res =
-      (await __.$Api.Community.usersmatchMatch({}).catch(() => null)) ||
-      (await __.$Api.Community.talkMatch({}))
+    let res: any = null
+    try {
+      res = await __.$Api.Community.usersmatchMatch({})
+    } catch (e) {
+      __.$Toast(scircleErrMsg(e))
+    }
+    if (!res) {
+      res = await __.$Api.Community.talkMatch({})
+    }
     const rows = normalizeMatchItems(res?.data)
     matchItems.value = rows.length
       ? rows.slice(0, 6)
@@ -679,15 +1168,17 @@ async function onStartMatch() {
           avatar: '',
           cover: tqItemUrl,
           match_percent: 0,
+          match_line_text: '',
           tags: [],
+          voice_url: '',
           voice_duration: '0"'
         }))
     selectedMatchIndex.value = 0
     showMatchPopup.value = true
     matchView.value = 'grid'
   } catch (error) {
-    __.$Toast('匹配失败，请稍后重试')
     console.error('匹配失败:', error)
+    __.$Toast(scircleErrMsg(error))
   } finally {
     isMatching.value = false
   }
@@ -699,8 +1190,8 @@ async function openSettings() {
   try {
     await loadSettingsProfiles()
   } catch (error) {
-    __.$Toast('加载匹配标签失败')
     console.error('加载匹配标签失败:', error)
+    __.$Toast(scircleErrMsg(error))
   }
 }
 
@@ -720,6 +1211,7 @@ async function onStepOneNext() {
     settingsStep.value = 2
   } catch (error) {
     console.error('更新个人资料失败:', error)
+    __.$Toast(scircleErrMsg(error))
   } finally {
     isSavingStep1.value = false
   }
@@ -735,6 +1227,7 @@ async function onStepTwoDone() {
     showSettings.value = false
   } catch (error) {
     console.error('更新匹配偏好失败:', error)
+    __.$Toast(scircleErrMsg(error))
   } finally {
     isSavingStep2.value = false
   }
@@ -747,14 +1240,61 @@ function isInCancelArea(clientX: number, clientY: number) {
   return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
 }
 
-function onRecordStart(e: TouchEvent | MouseEvent) {
-  showRecordOverlay.value = true
-  isRecordCancel.value = false
+function stopMediaStream() {
+  const s = mediaStreamRef.value
+  if (s) {
+    s.getTracks().forEach(t => t.stop())
+    mediaStreamRef.value = null
+  }
+}
+
+async function onRecordStart(e: TouchEvent | MouseEvent) {
+  if (profileVoice.value || isUploadingVoice.value) return
+  if (isRecordInitializing.value || (mediaRecorderRef.value && mediaRecorderRef.value.state === 'recording')) return
+
+  const gen = ++recordGenRef.value
+
   if (e instanceof MouseEvent) {
     isMouseDown.value = true
-  } else {
+  }
+  showRecordOverlay.value = true
+  isRecordCancel.value = false
+  if (e instanceof TouchEvent) {
     const t = e.touches?.[0]
     if (t) isRecordCancel.value = isInCancelArea(t.clientX, t.clientY)
+  }
+
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    showRecordOverlay.value = false
+    __.$Toast('当前环境不支持录音')
+    return
+  }
+
+  isRecordInitializing.value = true
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    if (gen !== recordGenRef.value) {
+      stream.getTracks().forEach(t => t.stop())
+      return
+    }
+    mediaStreamRef.value = stream
+    recordChunksRef.value = []
+    recordStartTsRef.value = Date.now()
+    const mime = pickAudioRecorderMime()
+    const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
+    rec.ondataavailable = ev => {
+      if (ev.data.size > 0) recordChunksRef.value.push(ev.data)
+    }
+    rec.start(120)
+    mediaRecorderRef.value = rec
+  } catch (err) {
+    stopMediaStream()
+    mediaRecorderRef.value = null
+    showRecordOverlay.value = false
+    isMouseDown.value = false
+    __.$Toast(scircleErrMsg(err) || '无法使用麦克风')
+  } finally {
+    isRecordInitializing.value = false
   }
 }
 
@@ -769,24 +1309,79 @@ function onRecordMouseMove(e: MouseEvent) {
   isRecordCancel.value = isInCancelArea(e.clientX, e.clientY)
 }
 
-function onRecordEnd() {
+async function onRecordEnd() {
   if (!showRecordOverlay.value) return
+  recordGenRef.value++
+  const cancelled = isRecordCancel.value
   showRecordOverlay.value = false
   isMouseDown.value = false
   isRecordCancel.value = false
+
+  const rec = mediaRecorderRef.value
+  mediaRecorderRef.value = null
+  const chunks = [...recordChunksRef.value]
+  recordChunksRef.value = []
+  stopMediaStream()
+
+  if (!rec || rec.state === 'inactive') {
+    return
+  }
+
+  await new Promise<void>(resolve => {
+    rec.onstop = () => resolve()
+    try {
+      rec.stop()
+    } catch {
+      resolve()
+    }
+  })
+
+  if (cancelled || !chunks.length) {
+    return
+  }
+
+  const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' })
+  if (blob.size < 80) {
+    __.$Toast('录音过短')
+    return
+  }
+
+  const ext = blob.type.includes('mp4') ? 'm4a' : blob.type.includes('webm') ? 'webm' : 'webm'
+  const file = new File([blob], `voice.${ext}`, { type: blob.type || 'audio/webm' })
+  const approx = Math.max(1, Math.round((Date.now() - recordStartTsRef.value) / 1000))
+
+  isUploadingVoice.value = true
+  try {
+    const url = await uploadVoiceToServer(file)
+    profileVoice.value = url
+    profileVoiceDurationSec.value = approx
+    const precise = await probeVoiceDurationFromUrl(profileVoice.value)
+    if (precise > 0) profileVoiceDurationSec.value = precise
+    __.$Toast('语音上传成功')
+  } catch (error) {
+    console.error('语音上传失败:', error)
+    profileVoice.value = ''
+    profileVoiceDurationSec.value = null
+    __.$Toast(scircleErrMsg(error))
+  } finally {
+    isUploadingVoice.value = false
+  }
 }
 
 function openMatchDetail(idx: number) {
+  stopMatchDetailVoice()
   selectedMatchIndex.value = idx
   matchView.value = 'detail'
   void fetchMatchDetail()
 }
 
 function backToMatchGrid() {
+  stopMatchDetailVoice()
   matchView.value = 'grid'
 }
 
 function closeMatchPopup() {
+  stopMatchDetailVoice()
   showMatchPopup.value = false
   matchView.value = 'grid'
 }
@@ -801,18 +1396,31 @@ async function fetchMatchDetail() {
     })
     const detail = res?.data || {}
     const list = Array.isArray(detail?.tags_list) ? detail.tags_list : []
+    /** 文档：score 常为整句「匹配度xx%，你俩超级搭哟!」，勿 Number()；数值匹配度沿用列表项 match_percent */
+    const scoreRaw = detail?.score
+    const matchLineText =
+      typeof scoreRaw === 'string' && scoreRaw.trim() !== '' ? scoreRaw.trim() : ''
+    const voiceFromDetail = voiceUrlFromApiItem(detail)
+    const voiceUrl = voiceFromDetail || current.voice_url
+    const durationFromDetail = voiceDurationLabelFromApi(detail)
+    const voiceDuration =
+      durationFromDetail !== '0"' ? durationFromDetail : current.voice_duration || '0"'
     const nextItem: MatchItem = {
       ...current,
       uid: detail?.uid ?? current.uid,
       nickname: detail?.nickname ?? current.nickname,
       avatar: detail?.avatar_url ?? detail?.avatar ?? detail?.thumb ?? current.avatar,
       cover: detail?.thumb ?? detail?.avatar_url ?? detail?.avatar ?? current.cover,
-      match_percent: Number(detail?.score ?? current.match_percent ?? 0),
-      tags: list.map((it: any) => it?.name).filter(Boolean)
+      match_percent: current.match_percent,
+      match_line_text: matchLineText,
+      tags: list.map((it: any) => it?.name).filter(Boolean),
+      voice_url: voiceUrl,
+      voice_duration: voiceDuration
     }
     matchItems.value[selectedMatchIndex.value] = nextItem
   } catch (error) {
     console.error('获取匹配详情失败:', error)
+    __.$Toast(scircleErrMsg(error))
   }
 }
 
@@ -822,18 +1430,20 @@ async function goChat() {
     await __.$Api.Community.usersmatchSubmitMatch({
       to_uid: String(current.uid || 0)
     })
-  } catch (error) {
-    console.error('提交匹配结果失败:', error)
-  } finally {
+    stopMatchDetailVoice()
     showMatchPopup.value = false
     matchView.value = 'grid'
-    router.push({
+    await router.push({
       path: '/chat/room',
       query: {
         uid: String(current.uid || 0),
-        name: current.nickname || '匿名用户'
+        name: current.nickname || '匿名用户',
+        score: String(Math.round(Number(current.match_percent) || 0))
       }
     })
+  } catch (error) {
+    console.error('提交匹配结果失败:', error)
+    __.$Toast(scircleErrMsg(error))
   }
 }
 </script>
@@ -883,6 +1493,13 @@ async function goChat() {
   gap: 6px;
   position: relative;
   z-index: 2;
+}
+
+.scircle-start:disabled {
+  background: #d0d0d0;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: not-allowed;
+  opacity: 0.85;
 }
 
 .scircle-start-icon {
@@ -943,7 +1560,7 @@ async function goChat() {
 }
 
 .scircle-help-popup {
-  padding: 16px 16px 20px;
+  padding: 16px 12px 20px;
 }
 
 .scircle-help-popup-title {
@@ -955,10 +1572,63 @@ async function goChat() {
 }
 
 .scircle-help-popup-content {
+  max-height: 52vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scircle-help-faq-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px 0;
+  border-bottom: 1px solid #efefef;
+}
+
+.scircle-help-faq-item:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+.scircle-help-faq-qt {
+  flex: 0 0 auto;
+  min-width: 26px;
+  max-width: 34px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2494ff;
+  line-height: 1.45;
+}
+
+.scircle-help-faq-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.scircle-help-faq-q {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.scircle-help-faq-a {
   font-size: 12px;
   color: #6c6c6c;
-  line-height: 18px;
-  white-space: pre-wrap;
+  line-height: 1.55;
+  white-space: pre-line;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-ideograph;
+}
+
+.scircle-help-faq-empty {
+  text-align: center;
+  padding: 28px 12px;
+  font-size: 13px;
+  color: #999;
 }
 
 .scircle-help-popup-btn {
@@ -998,8 +1668,7 @@ async function goChat() {
 .scircle-settings-scroll {
   flex: 1;
   min-height: 0;
-  overflow: auto;
-  padding-bottom: 12px;
+  overflow: auto; 
 }
 
 .scircle-settings-section + .scircle-settings-section {
@@ -1092,6 +1761,64 @@ async function goChat() {
   display: none;
 }
 
+.scircle-settings-voice-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.scircle-settings-voice-title {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.scircle-settings-voice-delete {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1.3;
+  color: #ee0a24;
+  cursor: pointer;
+}
+
+.scircle-settings-voice-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  background: #07c160;
+  color: #ffffff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.scircle-settings-voice-player:active {
+  opacity: 0.92;
+}
+
+.scircle-settings-voice-player-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.scircle-settings-voice-player-dur {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
 .scircle-settings-voice-actions {
   display: flex;
   align-items: center;
@@ -1114,7 +1841,7 @@ async function goChat() {
 }
 
 .scircle-settings-footer {
-  padding-top: 10px;
+  /* padding-top: 10px; */
 }
 
 .scircle-settings-primary {
@@ -1159,53 +1886,55 @@ async function goChat() {
   font-size: 16px;
 }
 
+.scircle-settings-next--solo {
+  margin-top: 0;
+}
+
 .scircle-record-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
-  background: rgba(0, 0, 0, 0.35);
+  z-index: 100000;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+  max-width: 100vw;
+  margin: 0 auto;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.scircle-record-dim {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-}
-
-.scircle-record-panel {
-  width: 100%;
-  max-width: 520px;
-  height: 360px;
-  background: linear-gradient(180deg, rgba(70, 75, 80, 0.88) 0%, rgba(60, 64, 68, 0.92) 100%);
-  border-top-left-radius: 18px;
-  border-top-right-radius: 18px;
-  position: relative;
-  padding: 22px 18px 16px;
-  overflow: hidden;
-}
-
-.scircle-record-panel::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -160px;
-  transform: translateX(-50%);
-  width: 120%;
-  height: 320px;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 70%);
-  pointer-events: none;
+  padding: 24px 20px 20px;
+  box-sizing: border-box;
 }
 
 .scircle-record-actions {
   position: relative;
   z-index: 1;
   display: flex;
-  align-items: center;
+  flex-wrap: nowrap;
+  align-items: flex-end;
   justify-content: center;
-  gap: 18px;
-  margin-top: 88px;
+  gap: 20px;
+  width: 100%;
+  max-width: 340px;
+  transition: gap 0.2s ease;
+}
+
+.scircle-record-actions.is-cancel-mode {
+  justify-content: flex-end;
+  padding-right: 8px;
+  gap: 14px;
 }
 
 .scircle-record-voice {
-  width: 236px;
+  width: min(236px, 72vw);
   height: 54px;
   border-radius: 10px;
   background: #2494ff;
@@ -1213,6 +1942,11 @@ async function goChat() {
   align-items: center;
   justify-content: center;
   position: relative;
+  flex-shrink: 0;
+  transition:
+    width 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
 }
 
 .scircle-record-voice::after {
@@ -1226,11 +1960,13 @@ async function goChat() {
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
   border-top: 10px solid #2494ff;
+  transition: border-top-color 0.2s ease;
 }
 
 .scircle-record-voice.is-cancel {
   width: 120px;
   background: #ff3b30;
+  transform: translateX(6px);
 }
 
 .scircle-record-voice.is-cancel::after {
@@ -1281,52 +2017,86 @@ async function goChat() {
 }
 
 .scircle-record-cancel-wrap {
-  width: 86px;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  min-height: 88px;
+  padding-bottom: 2px;
+}
+
+.scircle-record-cancel-arc-text {
+  width: 120px;
+  height: 36px;
+  margin-bottom: 2px;
+  overflow: visible;
+}
+
+.scircle-record-cancel-arc-fill {
+  fill: rgba(255, 255, 255, 0.95);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .scircle-record-cancel {
-  width: 54px;
-  height: 54px;
-  border-radius: 27px;
-  background: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.85);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(120, 120, 120, 0.55);
+  color: rgba(255, 255, 255, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    width 0.2s ease,
+    height 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .scircle-record-cancel.is-active {
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
   background: #2494ff;
   color: #fff;
-}
-
-.scircle-record-cancel-tip {
-  font-size: 12px;
-  color: #ff3b30;
+  box-shadow: 0 4px 14px rgba(36, 148, 255, 0.45);
 }
 
 .scircle-record-tip {
   position: relative;
   z-index: 1;
   text-align: center;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 14px;
-  margin-top: 18px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 15px;
+  font-weight: 500;
+  margin-top: 22px;
+  letter-spacing: 0.04em;
 }
 
-.scircle-record-mic {
-  position: absolute;
-  left: 50%;
-  bottom: 34px;
-  transform: translateX(-50%);
-  z-index: 1;
-  font-size: 28px;
-  color: rgba(0, 0, 0, 0.55);
+.scircle-record-arch {
+  flex-shrink: 0;
+  width: 100%;
+  height: min(168px, 28vh);
+  min-height: 120px;
+  background: linear-gradient(180deg, #e4e4e6 0%, #d6d6d8 100%);
+  border-top-left-radius: 50% 36px;
+  border-top-right-radius: 50% 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.scircle-record-mic-icon {
+  color: rgba(0, 0, 0, 0.38);
 }
 
 :global(.van-popup.tq-match-popup:not(.van-popup--bottom):not(.van-toast)) {
@@ -1490,44 +2260,140 @@ async function goChat() {
 }
 
 .tq-voice {
+  position: relative;
   display: grid;
-  grid-template-columns: 34px 1fr 40px;
+  grid-template-columns: 36px 1fr 44px;
   align-items: center;
   gap: 10px;
-  height: 40px;
+  min-height: 44px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.18);
-  padding: 0 10px;
+  background: rgba(240, 240, 242, 0.35);
+  padding: 0 12px;
   box-sizing: border-box;
+  backdrop-filter: blur(6px);
+}
+
+.tq-voice-empty {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 8px 0 4px;
+}
+
+.tq-voice-audio {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .tq-voice-play {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   border: 0;
-  background: rgba(255, 255, 255, 0.25);
-  color: #fff;
+  background: #ffffff;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.tq-voice-play-icon--play {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 6px 0 6px 9px;
+  border-color: transparent transparent transparent #6a6a6a;
+  margin-left: 2px;
+}
+
+.tq-voice-play-icon--pause {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 12px;
+  height: 12px;
+}
+
+.tq-voice-play-icon--pause::before,
+.tq-voice-play-icon--pause::after {
+  content: '';
+  width: 3px;
+  height: 12px;
+  border-radius: 1px;
+  background: #6a6a6a;
 }
 
 .tq-voice-bars {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 3px;
+  min-height: 22px;
 }
 
 .tq-voice-bars .bar {
-  width: 4px;
+  width: 3px;
   height: 10px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.85);
-  opacity: 0.9;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  transform-origin: center bottom;
+}
+
+.tq-voice-bars.is-playing .bar {
+  animation: tqMatchVoiceBar 750ms infinite ease-in-out;
+}
+
+.tq-voice-bars.is-playing .bar:nth-child(2) {
+  animation-delay: 90ms;
+  height: 14px;
+}
+.tq-voice-bars.is-playing .bar:nth-child(3) {
+  animation-delay: 180ms;
+  height: 18px;
+}
+.tq-voice-bars.is-playing .bar:nth-child(4) {
+  animation-delay: 270ms;
+  height: 14px;
+}
+.tq-voice-bars.is-playing .bar:nth-child(5) {
+  animation-delay: 360ms;
+}
+.tq-voice-bars.is-playing .bar:nth-child(6) {
+  animation-delay: 450ms;
+  height: 14px;
+}
+.tq-voice-bars.is-playing .bar:nth-child(7) {
+  animation-delay: 540ms;
+  height: 18px;
+}
+.tq-voice-bars.is-playing .bar:nth-child(8) {
+  animation-delay: 630ms;
+  height: 14px;
+}
+
+@keyframes tqMatchVoiceBar {
+  0%,
+  100% {
+    transform: scaleY(0.75);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scaleY(1.35);
+    opacity: 1;
+  }
 }
 
 .tq-voice-dur {
   text-align: right;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .tq-detail-footer {
@@ -1557,5 +2423,123 @@ async function goChat() {
 .tq-btn-primary {
   background: #2494ff;
   color: #fff;
+}
+
+:global(.match-goods-popup-van.van-popup) {
+  max-height: 88vh;
+}
+
+.match-goods-popup {
+  padding: 12px 14px 20px;
+  box-sizing: border-box;
+  max-height: 82vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.match-goods-popup__header {
+  text-align: center;
+  padding: 8px 0 14px;
+}
+
+.match-goods-popup__prices {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+}
+
+.match-goods-popup__price-now {
+  font-size: 22px;
+  font-weight: 600;
+  color: #ff7300;
+}
+
+.match-goods-popup__price-old {
+  font-size: 14px;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.match-goods-popup__loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.match-goods-popup__empty {
+  text-align: center;
+  padding: 32px 0;
+  font-size: 14px;
+  color: #999;
+}
+
+.match-goods-popup__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 10px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 8px;
+}
+
+.match-goods-card {
+  position: relative;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  padding: 8px 8px 10px;
+  background: #fafafa;
+  text-align: center;
+  cursor: pointer;
+}
+
+.match-goods-card.is-active {
+  border-color: #2494ff;
+  background: #f0f7ff;
+}
+
+.match-goods-card__badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  font-size: 10px;
+  color: #fff;
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.match-goods-card__img {
+  display: block;
+  width: 100%;
+  height: 88px;
+  object-fit: contain;
+  margin-top: 4px;
+}
+
+.match-goods-card__name {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #333;
+  line-height: 1.3;
+}
+
+.match-goods-popup__buy {
+  margin-top: 12px;
+  width: 100%;
+  height: 46px;
+  border: 0;
+  border-radius: 10px;
+  background: #2494ff;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.match-goods-popup__buy:disabled {
+  opacity: 0.5;
 }
 </style>
