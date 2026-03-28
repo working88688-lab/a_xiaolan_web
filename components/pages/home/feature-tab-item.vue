@@ -2,8 +2,6 @@
 import type { AdItem, TabItem } from '@types'
 import { SwiperSlide } from 'swiper/vue'
 import { ROUTE_PARAMS } from '@utils/constants/route'
-import qiandaoIcon from '~/assets/image/qiandao.png'
-import tongquanIcon from '~/assets/image/tongquan.png'
 
 /***
  *  bot_style_one ： 今日热点
@@ -21,26 +19,8 @@ provide(ROUTE_PARAMS, {
 const __ = useNuxtApp()
 
 const { mv_nag_tab } = useGlobalStore()
+/** 与后端下发的暗网 tab name 一致，选中时跳转 /darkweb */
 const DARKWEB_TAB_NAME = '__darkweb__'
-
-const tabsWithDarkweb = computed(() => {
-  const tabs = mv_nag_tab ?? []
-  if (!tabs.length) return tabs
-
-  const hasDarkweb = tabs.some((tab: any) => tab.name === DARKWEB_TAB_NAME || tab.title === '暗网')
-  if (hasDarkweb) return tabs
-
-  const index = tabs.findIndex((tab: any) => tab.title === '独家')
-  if (index === -1) return tabs
-
-  const insertTabs = [...tabs]
-  insertTabs.splice(index + 1, 0, {
-    name: DARKWEB_TAB_NAME,
-    title: '暗网'
-  })
-
-  return insertTabs
-})
 
 const sort = ref(mv_nag_tab?.[0].name)
 
@@ -48,34 +28,6 @@ const banners = ref<AdItem[]>([])
 
 const mid_style_category = ref<any[]>([])
 const mid_style_recommend = ref<any[]>([])
-const mid_style_recommend_with_static = computed(() => {
-  const list = mid_style_recommend.value ?? []
-  const hasQiandao = list.some(i => i?.type === 14)
-  const hasTongquan = list.some(i => i?.type === 10)
-
-  const staticItems = [
-    ...(hasQiandao
-      ? []
-      : [
-        {
-          id: -14,
-          type: 14,
-          icon_new: qiandaoIcon
-        }
-      ]),
-    ...(hasTongquan
-      ? []
-      : [
-        {
-          id: -10,
-          type: 10,
-          icon_new: tongquanIcon
-        }
-      ])
-  ]
-
-  return [...staticItems, ...list]
-})
 
 const is_recommend = props.tab.name === '推荐'
 // 关注 Tab：根据接口地址判断，更稳
@@ -229,9 +181,9 @@ async function onReplace(item: TabItem, newItems: any) {
       </div>
 
       <!-- mid_style_recommend -->
-      <div v-if="mid_style_recommend_with_static.length" class="mb-1 px-1.5">
+      <div v-if="mid_style_recommend.length" class="mb-1 px-1.5">
         <dx-scrollview-swiper>
-          <SwiperSlide v-for="item in mid_style_recommend_with_static" :key="item.id" class="recommend-item">
+          <SwiperSlide v-for="item in mid_style_recommend" :key="item.id" class="recommend-item">
             <nuxt-link class="flex-col-center h-full" :to="navigate(item.type)">
               <div class="mb-0.5 h-full w-full">
                 <dx-image :src="item.icon_new"></dx-image>
@@ -284,7 +236,7 @@ async function onReplace(item: TabItem, newItems: any) {
       <template v-if="mid_style_category.length">
         <dx-tabs v-model:active="sort" stop-propagation line-width="0px" line-height="0px" sticky
           class="my-nest-tabs text-medium first-no-padding" title-inactive-color="#333333" shrink>
-          <van-tab v-for="item in tabsWithDarkweb" :key="item.name ?? item.title" v-bind="item"></van-tab>
+          <van-tab v-for="item in (mv_nag_tab ?? [])" :key="item.name ?? item.title" v-bind="item"></van-tab>
         </dx-tabs>
         <div class="scroll-container list-container">
           <scroll-list :loading="loading" :is-empty="isEmpty" :is-end="isEnd" :pullup="execute"
