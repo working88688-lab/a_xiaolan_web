@@ -24,6 +24,20 @@ const {
 } = useMyFetch<UserInfo>({
   api: __.$Api.User.getOtherUserInfo
 })
+
+/** 开发环境：在浏览器控制台打印「用户信息」与「标签接口」便于对照 */
+const detailDebug = import.meta.env.DEV && import.meta.client
+watch(
+  userInfo,
+  v => {
+    if (!detailDebug) return
+    console.log('%c========== [userdetail] ① 用户信息 /api/users/getUserHome（useMyFetch.data）==========', 'font-weight:bold;color:#1677ff')
+    console.log('完整 userInfo 对象：', v)
+    console.log('字段 tags_ary（类型里预留的个人标签名，后端若返回会在这里）：', v?.tags_ary)
+  },
+  { deep: true, immediate: true }
+)
+
 const {
   listData: posts,
   loading: postLoading,
@@ -96,13 +110,70 @@ const {
   startRefreshEmptyData: true
 })
 
-// 临时 mock 3 个标签，方便查看样式；等后端 tags_ary 接好后可删除
-const userTags = computed(() => {
-  if (userInfo.value?.tags_ary && userInfo.value.tags_ary.length > 0) {
-    return userInfo.value.tags_ary
+/** 他人主页标签：get_userhome_tags */
+const homeTagList = ref<{ id: number; name: string }[]>([])
+
+function normalizeUserhomeTagRows(payload: unknown): { id: number; name: string; status?: number | string }[] {
+  if (Array.isArray(payload)) return payload as { id: number; name: string; status?: number | string }[]
+  if (payload && typeof payload === 'object' && Array.isArray((payload as { list?: unknown }).list)) {
+    return (payload as { list: { id: number; name: string; status?: number | string }[] }).list
   }
-  return ['攻受兼备', '奶狗', '幽默']
-})
+  return []
+}
+
+/** 文档：1 已勾选、2 未选中；仅返回已选列表时可能不带 status */
+function shouldShowHomeTag(t: { status?: number | string }) {
+  if (t.status === undefined || t.status === null || t.status === '') return true
+  return Number(t.status) === 1
+}
+
+async function loadUserhomeTags() {
+  const raw = route.query.id
+  const id = Array.isArray(raw) ? raw[0] : raw
+  if (id == null || id === '') {
+    homeTagList.value = []
+    if (detailDebug) {
+      console.log('%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags（跳过：无 id）==========', 'font-weight:bold;color:#ee0a24')
+      console.log({ fullPath: route.fullPath, query: { ...route.query } })
+    }
+    return
+  }
+  try {
+    const res = await __.$Api.User.getUserhomeTags({ to_uid: String(id) })
+    const rows = normalizeUserhomeTagRows(res?.data)
+    let picked = rows.filter(shouldShowHomeTag).map(t => ({ id: Number(t.id), name: String(t.name ?? '') }))
+    if (picked.length === 0 && rows.length > 0) {
+      picked = rows.map(t => ({ id: Number(t.id), name: String(t.name ?? '') }))
+      if (detailDebug) {
+        console.warn('[userdetail] 按 status 过滤后为空，已回退展示接口返回的全部项', { rows })
+      }
+    }
+    homeTagList.value = picked.filter(t => t.name)
+
+    if (detailDebug) {
+      console.log('%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags ==========', 'font-weight:bold;color:#07c160')
+      console.log('请求参数 to_uid：', String(id))
+      console.log('整包响应 res（解密后，含 status/msg/data）：', res)
+      console.log('res.data（标签接口返回的原始 data，一般为数组）：', res?.data)
+      console.log('归一化后的 rows：', rows)
+      console.log('页面用于渲染的 homeTagList：', homeTagList.value)
+    }
+  } catch (err) {
+    homeTagList.value = []
+    if (detailDebug) {
+      console.log('%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags（请求失败）==========', 'font-weight:bold;color:#ee0a24')
+      console.warn(err)
+    }
+  }
+}
+
+watch(
+  () => route.fullPath,
+  () => {
+    loadUserhomeTags()
+  },
+  { immediate: true }
+)
 
 const fetchMap = {
   '2': () =>
@@ -220,6 +291,8 @@ onActivated(() => {
     })
     scroll_top.value = 0
   }
+  // keepalive 页面从「我的」点头像回来时 fullPath 可能不变，watch 不触发；此处必拉标签
+  loadUserhomeTags()
 })
 
 onDeactivated(() => {
@@ -313,9 +386,9 @@ const is_show_bg = computed(() => {
             </div>
           </div>
 
-          <div v-if="userTags.length" class="user-tags">
-            <div v-for="tag in userTags" :key="tag" class="user-tag">
-              {{ tag }}
+          <div v-if="homeTagList.length" class="user-tags">
+            <div v-for="tag in homeTagList" :key="tag.id" class="user-tag">
+              {{ tag.name }}
             </div>
           </div>
         </div>
