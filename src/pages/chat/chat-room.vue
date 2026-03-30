@@ -96,7 +96,8 @@ async function fetchMatchPeerVoice() {
   const uid = typeof uidRaw === 'string' ? uidRaw.trim() : Array.isArray(uidRaw) ? String(uidRaw[0] ?? '').trim() : ''
   const scoreNum = Number(typeof scoreRaw === 'string' ? scoreRaw : Array.isArray(scoreRaw) ? scoreRaw[0] : scoreRaw)
   const uidNum = Number(uid)
-  if (!uid || !Number.isFinite(uidNum) || !Number.isFinite(scoreNum)) {
+  // score 可能来自「同圈」(带 score) 或其它入口（不带 score）；不带时兜底 0 也允许拉详情
+  if (!uid || !Number.isFinite(uidNum)) {
     return
   }
 
@@ -104,8 +105,14 @@ async function fetchMatchPeerVoice() {
   try {
     const res = await __.$Api.Community.usersmatchGetMatchInfo({
       uid: uidNum,
-      score: Math.round(scoreNum)
+      score: Math.round(Number.isFinite(scoreNum) ? scoreNum : 0)
     })
+    console.log(
+      '%c[chat-room] POST /api/usersmatch/get_match_info 结果',
+      'font-weight:bold;color:#1677ff',
+      res
+    )
+    console.log('[chat-room] get_match_info data 字段：', res?.data)
     const detail = res?.data || {}
     peerAvatar.value = String(detail?.thumb ?? detail?.avatar_url ?? detail?.avatar ?? '').trim()
     const vUrl = voiceUrlFromApiItem(detail)

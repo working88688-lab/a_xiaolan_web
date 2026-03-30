@@ -20,6 +20,13 @@ const { data, loading } = useMyFetch<{
 })
 
 const { key, activeTab } = useKeepAlive({})
+
+watchEffect(() => {
+  if (data.value?.sj_conf) {
+    // 打印请求返回的导航配置
+    console.log('data.sj_conf:', data.value.sj_conf)
+  }
+})
 </script>
 
 <template>

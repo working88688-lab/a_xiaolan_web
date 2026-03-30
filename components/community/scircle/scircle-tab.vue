@@ -611,8 +611,11 @@ const talkHomeData = ref<TalkHomeData>({
   readme: []
 })
 
+// 可用匹配次数：只来自 myprofile（不与 readme/talkConf 混用）
+const myProfileMatchNum = ref(0)
+
 /** 可匹配次数展示（无字段时兜底 0，非 3） */
-const matchRemainNum = computed(() => Number(talkHomeData.value.info?.match_num ?? 0))
+const matchRemainNum = computed(() => Number(myProfileMatchNum.value ?? 0))
 const canStartMatch = computed(() => matchRemainNum.value > 0)
 
 type ScircleReadmeFaqItem = { qt: string; question: string; answer: string }
@@ -644,19 +647,14 @@ const scircleHelpFaqList = computed(() => normalizeReadmeFaqList(talkHomeData.va
 
 async function fetchTalkHome() {
   try {
-    const [myProfileRes, expectProfileRes] = await Promise.all([
-      __.$Api.Community.usersmatchMyprofile().catch(e => {
-        if (scircleDebug) console.warn('[scircle] POST /api/usersmatch/myprofile 失败', e)
-        __.$Toast(scircleErrMsg(e))
-        return null
-      }),
-      __.$Api.Community.usersmatchMyExpectProfile().catch(e => {
-        if (scircleDebug) console.warn('[scircle] POST /api/usersmatch/myexpectprofile 失败', e)
-        __.$Toast(scircleErrMsg(e))
-        return null
-      })
-    ])
+    // 先拉「我的资料」：match_num 以此接口为准
+    const myProfileRes = await __.$Api.Community.usersmatchMyprofile().catch(e => {
+      if (scircleDebug) console.warn('[scircle] POST /api/usersmatch/myprofile 失败', e)
+      __.$Toast(scircleErrMsg(e))
+      return null
+    })
 
+    // 打印 myprofile 返回（你说的“书库”这里先按接口返回整包/核心 data 打印）
     if (scircleDebug) {
       console.log(
         '%c[scircle] ① POST /api/usersmatch/myprofile 整包（解密后）',
@@ -664,11 +662,17 @@ async function fetchTalkHome() {
         myProfileRes
       )
       console.log('[scircle] ① data 字段：', myProfileRes?.data)
-      console.log(
-        '[scircle] ① 原始 match_num / free_match_num：',
-        myProfileRes?.data?.match_num,
-        myProfileRes?.data?.free_match_num
-      )
+      console.log('[scircle] ① match_num（新字段）:', myProfileRes?.data?.match_num)
+    }
+
+    // 再拉「我想匹配」等其它配置
+    const expectProfileRes = await __.$Api.Community.usersmatchMyExpectProfile().catch(e => {
+      if (scircleDebug) console.warn('[scircle] POST /api/usersmatch/myexpectprofile 失败', e)
+      __.$Toast(scircleErrMsg(e))
+      return null
+    })
+
+    if (scircleDebug) {
       console.log(
         '%c[scircle] ② POST /api/usersmatch/myexpectprofile 整包（解密后）',
         'font-weight:bold;color:#1677ff',
@@ -679,17 +683,19 @@ async function fetchTalkHome() {
 
     const myProfile = myProfileRes?.data || {}
     const expectProfile = expectProfileRes?.data || {}
+    myProfileMatchNum.value = Number(myProfile?.match_num ?? 0)
     talkHomeData.value = {
       info: {
         ...myProfile,
         expect: expectProfile,
-        match_num: Number(myProfile?.match_num ?? myProfile?.free_match_num ?? 0)
+        match_num: myProfileMatchNum.value
       },
       online_count: Number(myProfile?.online_count ?? 0),
       readme: Array.isArray(myProfile?.readme) ? myProfile.readme : []
     }
 
-    if (!talkHomeData.value.readme.length && !talkHomeData.value.info?.match_num) {
+    // readme 为空时再补一次 talk/conf，但不要覆盖 myprofile 的 match_num（可用匹配次数以 myprofile 为准）
+    if (!talkHomeData.value.readme.length) {
       const res = await __.$Api.Community.talkConf().catch(e => {
         if (scircleDebug) console.warn('[scircle] POST /api/talk/conf 失败', e)
         __.$Toast(scircleErrMsg(e))
@@ -704,16 +710,20 @@ async function fetchTalkHome() {
         console.log('[scircle] ③ data：', res?.data)
       }
       if (res?.data) {
-        talkHomeData.value = res.data as TalkHomeData
+        const cur = talkHomeData.value
+        const next = res.data as TalkHomeData
+        // 各用各的：readme/online_count 用 talk/conf；次数等 info 字段用 myprofile
+        talkHomeData.value = {
+          ...cur,
+          online_count: cur.online_count || Number(next?.online_count ?? 0),
+          readme: cur.readme?.length ? cur.readme : next.readme
+        }
       }
     }
 
     if (scircleDebug) {
       console.log('%c[scircle] 最终 talkHomeData（页面绑定）', 'font-weight:bold;color:#333', talkHomeData.value)
-      const mn = talkHomeData.value.info?.match_num
-      const uiShows = mn ?? 0
-      const hint = mn == null ? '（undefined/null 时用模板兜底 0；已得到数字 0 则显示 0）' : ''
-      console.log('[scircle] info.match_num =', mn, '；界面显示 match_num ?? 0 =>', uiShows, hint)
+      console.log('[scircle] 可用匹配次数 myProfileMatchNum =', myProfileMatchNum.value)
     }
   } catch (error) {
     console.error('获取同圈配置失败:', error)
