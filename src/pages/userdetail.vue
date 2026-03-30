@@ -386,7 +386,7 @@ const is_show_bg = computed(() => {
             </div>
           </div>
 
-          <div v-if="homeTagList.length" class="user-tags">
+          <div v-if="!isMyDetail && homeTagList.length" class="user-tags">
             <div v-for="tag in homeTagList" :key="tag.id" class="user-tag">
               {{ tag.name }}
             </div>

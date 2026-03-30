@@ -27,7 +27,6 @@
                 ref="published_list_ref"
                 :filter="filter"
                 :api="publishedListApi"
-                :show-empty="false"
               >
                 <template #item="{ item }">
                   <div class="work-item">

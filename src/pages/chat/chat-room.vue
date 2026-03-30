@@ -92,7 +92,8 @@ function scircleErrMsg(err: unknown): string {
 
 async function fetchMatchPeerVoice() {
   const uidRaw = route.query.uid
-  const scoreRaw = route.query.score
+  const scoreRaw = route.query.score ?? route.query.scoreNum
+  const thumbRaw = route.query.thumb
   const uid = typeof uidRaw === 'string' ? uidRaw.trim() : Array.isArray(uidRaw) ? String(uidRaw[0] ?? '').trim() : ''
   const scoreNum = Number(typeof scoreRaw === 'string' ? scoreRaw : Array.isArray(scoreRaw) ? scoreRaw[0] : scoreRaw)
   const uidNum = Number(uid)
@@ -115,6 +116,15 @@ async function fetchMatchPeerVoice() {
     console.log('[chat-room] get_match_info data 字段：', res?.data)
     const detail = res?.data || {}
     peerAvatar.value = String(detail?.thumb ?? detail?.avatar_url ?? detail?.avatar ?? '').trim()
+    if (!peerAvatar.value) {
+      const t =
+        typeof thumbRaw === 'string'
+          ? thumbRaw.trim()
+          : Array.isArray(thumbRaw)
+            ? String(thumbRaw[0] ?? '').trim()
+            : ''
+      if (t) peerAvatar.value = t
+    }
     const vUrl = voiceUrlFromApiItem(detail)
     peerVoiceUrl.value = vUrl
     const dur = voiceDurationLabelFromApi(detail)
@@ -431,7 +441,9 @@ async function onRecordEnd() {
         <img
           v-if="peerAvatar"
           class="chat-avatar chat-avatar-img"
-          :src="peerAvatar"
+          :key="peerAvatar"
+          v-lazyLoad="peerAvatar"
+          src="~/assets/image/img_loading.png"
           alt=""
         />
         <div v-else class="chat-avatar" />
