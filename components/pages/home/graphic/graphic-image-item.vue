@@ -5,9 +5,14 @@ const props = defineProps<{
   title: string
   type?: string
 }>()
+
+onMounted(() => {
+  // 便于排查当前 tab 实际请求的接口地址
+  console.log('[home-resource][graphic-image-item] request api:', props.api)
+})
 </script>
 <template>
-  <dx-hoc-list :api="props.api" fields="data" :pullup="false">
+  <dx-hoc-list :api="`${props.api}`" fields="data" :pullup="false">
     <template #header="{ data }">
       <dx-resource-ads
         class="px-1.5"

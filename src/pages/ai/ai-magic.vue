@@ -170,7 +170,17 @@ function parseListMaterialRows(res: any): MaterialItem[] {
 
 async function fetchMaterials() {
   try {
-    const res = await __.$Api.AI.listMaterial({ page: 1, limit: 20 })
+    let res: any
+    try {
+      res = await __.$Api.AI.listMaterial({ page: 1, limit: 20 })
+      // 后端新接口未上线时会返回 status=0 且 msg 类似 “Call to undefined method ...::list_material()”
+      if (Number(res?.status) === 0 && String(res?.msg ?? '').includes('list_material')) {
+        throw res
+      }
+    } catch (e: any) {
+      // 兼容旧接口
+      res = await __.$Api.AI.list({ page: 1, limit: 20 })
+    }
     if (import.meta.dev) {
       const d = res?.data
       const sample = Array.isArray(d)

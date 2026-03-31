@@ -1,15 +1,59 @@
 <script setup lang="ts">
-import aiBanner1 from '~/assets/image/ai-1.png'
-import aiBanner2 from '~/assets/image/ai-2.png'
-import aiBanner3 from '~/assets/image/ai-3.png'
-
 definePageMeta({
   keepalive: true
 })
 
-const aiFacePath = '/ai/face'
-const aiUndressPath = '/ai/undress'
-const aiMagicPath = '/ai/magic'
+type AiNavItem = {
+  id: number
+  title: string
+  icon: string
+  cover?: string
+  icon_new?: string
+  route: string
+  sort_num: number
+  status: number
+}
+
+const __ = useNuxtApp()
+const navItems = ref<AiNavItem[]>([])
+
+function resolveAiPath(route: string) {
+  // 后端给的是“路由标识”，这里映射到现有页面路径
+  switch (route) {
+    case 'ai_face':
+      return '/ai/face'
+    case 'ai_strip':
+      return '/ai/undress'
+    case 'ai_magic':
+      return '/ai/magic'
+    default: {
+      if (!route) return '/ai'
+      if (route.startsWith('/')) return route
+      // 兜底：ai_xxx -> /ai/xxx
+      return `/ai/${route.replace(/^ai_/, '')}`
+    }
+  }
+}
+
+function resolveBannerSrc(item: AiNavItem) {
+  return item?.cover || item?.icon_new || item?.icon || ''
+}
+
+onMounted(async () => {
+  try {
+    const res: any = await __.$Api.AI.aiNav({})
+    console.log('[ai_nav] raw response:', res)
+
+    const list = (res?.data?.list ?? []) as AiNavItem[]
+    console.log('[ai_nav] data.list:', list)
+
+    navItems.value = (Array.isArray(list) ? list : [])
+      .filter(i => Number(i?.status) === 1)
+      .sort((a, b) => Number(b?.sort_num ?? 0) - Number(a?.sort_num ?? 0))
+  } catch (e) {
+    navItems.value = []
+  }
+})
 </script>
 
 <template>
@@ -26,16 +70,10 @@ const aiMagicPath = '/ai/magic'
             </dx-hoc-list>
           </div>
 
-          <!-- 底部三张功能横图 -->
+          <!-- AI 功能入口（由接口返回） -->
           <div class="ai-index-banners">
-            <nuxt-link :to="aiFacePath" class="ai-index-banner">
-              <img :src="aiBanner1" alt="AI换脸" class="ai-index-banner-img" />
-            </nuxt-link>
-            <nuxt-link :to="aiUndressPath" class="ai-index-banner">
-              <img :src="aiBanner2" alt="AI去衣" class="ai-index-banner-img" />
-            </nuxt-link>
-            <nuxt-link :to="aiMagicPath" class="ai-index-banner">
-              <img :src="aiBanner3" alt="AI魔法" class="ai-index-banner-img" />
+            <nuxt-link v-for="item in navItems" :key="item.id" :to="resolveAiPath(item.route)" class="ai-index-banner">
+              <dx-image no-bg fit="cover" :src="resolveBannerSrc(item)" :alt="item.title" class="ai-index-banner-img" />
             </nuxt-link>
           </div>
         </div>

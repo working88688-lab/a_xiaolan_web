@@ -1,17 +1,17 @@
 <script setup lang="tsx">
-const tabsMap = {
-  ns: {
-    api: '/api/image/index',
-    type: 'images',
-    title: '男色'
-  }
+function normalizeApiPath(api?: string) {
+  const p = (api ?? '').trim()
+  if (!p) return ''
+  return p.startsWith('/') ? p : `/${p}`
 }
 
 const { data, loading } = useMyFetch<{
   sj_conf: {
     list: Array<{
       name: string
-      type: 'ns' | 'hy'
+      title?: string
+      api?: string
+      type: string | number
     }>
   }
 }>({
@@ -39,10 +39,15 @@ watchEffect(() => {
         <nuxt-icon class="!absolute left-0 top-0 p-1.5 text-4xl" name="arrow-left" @click="$router.back"></nuxt-icon>
       </template>
       <van-tab v-for="tab in data.sj_conf?.list" :key="tab.type" :title="tab.name">
-        <template v-if="tab.type === 'hy'">
+        <template v-if="String(tab.type) === 'hy' || Number(tab.type) === 15">
           <game-tab></game-tab>
         </template>
-        <graphic-image-item v-else v-bind="tabsMap[tab.type]"></graphic-image-item>
+        <graphic-image-item
+          v-else
+          :api="normalizeApiPath(tab.api)"
+          :title="tab.title || tab.name"
+          type="images"
+        ></graphic-image-item>
       </van-tab>
     </dx-tabs>
   </div>
