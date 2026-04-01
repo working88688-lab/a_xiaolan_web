@@ -15,16 +15,17 @@ const { data, loading } = useMyFetch<{
     }>
   }
 }>({
-  api: '/api/system/nav_conf',
+  // api: '/api/system/nav_conf',
+  api: '/api/home/getConfig',
   immediate: true
 })
 
 const { key, activeTab } = useKeepAlive({})
 
 watchEffect(() => {
-  if (data.value?.sj_conf) {
+  if (data.value) {
     // 打印请求返回的导航配置
-    console.log('data.sj_conf:', data.value.sj_conf)
+    console.log('data from home/getConfig:', data.value)
   }
 })
 </script>
@@ -44,7 +45,7 @@ watchEffect(() => {
         </template>
         <graphic-image-item
           v-else
-          :api="normalizeApiPath(tab.api)"
+          :api="normalizeApiPath(tab.api || '/api/image/IndexNew')"
           :title="tab.title || tab.name"
           type="images"
         ></graphic-image-item>

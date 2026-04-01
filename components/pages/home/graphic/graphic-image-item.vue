@@ -131,7 +131,7 @@ onMounted(() => {
                 "
                 class="graphic-filter-item"
               >
-                <div class="title">{{ _item.label }}</div>
+                <div class="title">{{ _item.label || _item.name }}</div>
               </div>
             </div>
           </scroll-x-view>

@@ -1,4 +1,10 @@
 <script setup lang="tsx">
+function normalizeApiPath(api?: string) {
+  const p = (api ?? '').trim()
+  if (!p) return ''
+  return p.startsWith('/') ? p : `/${p}`
+}
+
 const tabsMap = {
   mh: {
     api: '/api/manhua/index',
@@ -89,7 +95,12 @@ const { key, activeTab } = useKeepAlive({})
           </dx-hoc-list>
         </template>
         <template v-else>
-          <graphic-image-item :key="tab.type" v-bind="tabsMap[tab.type]"></graphic-image-item>
+          <graphic-image-item
+            :key="tab.type"
+            :api="normalizeApiPath(tabsMap[tab.type]?.api)"
+            :type="tabsMap[tab.type]?.type"
+            :title="tab.name || tabsMap[tab.type]?.title"
+          ></graphic-image-item>
         </template>
       </van-tab>
     </dx-tabs>
