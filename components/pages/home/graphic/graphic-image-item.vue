@@ -6,14 +6,105 @@ const props = defineProps<{
   type?: string
 }>()
 
+const hocListRef = ref<null | { refresh_data: (params?: Record<string, any>) => Promise<any> }>(null)
+const iconScrollRef = ref<null | { refresh: () => void }>(null)
+const headerDataRef = ref<any>(null)
+
+function __setHeaderData(data: any) {
+  headerDataRef.value = data
+  return ''
+}
+
+watch(
+  () => headerDataRef.value?.icon?.length,
+  async () => {
+    await nextTick()
+    iconScrollRef.value?.refresh?.()
+  }
+)
+const __ = useNuxtApp()
+const hyhLoadingKey = ref<string | null>(null)
+const hyhApi = __.$Api.dynamic({ url: '/api/image/list_hyh_image', method: 'post' })
+
+function getHyhBoardId(card: any): number | null {
+  const tabId = Number(card?.tab_id)
+  if ([0, 1, 2, 3].includes(tabId)) return tabId
+  return null
+}
+
+const onReplaceClick = async (card: any) => {
+  const boardId = getHyhBoardId(card)
+  if (boardId === null) {
+    // 兜底：如果无法识别板块ID，就刷新整块数据
+    try {
+      await hocListRef.value?.refresh_data?.()
+    } catch (e) {
+      console.warn('[home-resource][graphic-image-item] refresh_data failed:', e)
+    }
+    return
+  }
+
+  const loadingKey = `${boardId}`
+  if (hyhLoadingKey.value === loadingKey) return
+  hyhLoadingKey.value = loadingKey
+  try {
+    const res: any = await hyhApi({ id: boardId })
+    const list = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.list) ? res.data.list : null
+    if (Array.isArray(list)) {
+      card.items = list
+    } else {
+      console.warn('[home-resource][graphic-image-item] list_hyh_image unexpected response:', res)
+    }
+  } catch (e) {
+    console.warn('[home-resource][graphic-image-item] list_hyh_image failed:', e)
+  } finally {
+    if (hyhLoadingKey.value === loadingKey) hyhLoadingKey.value = null
+  }
+}
+
+let __headerLogged = false
+function __logHeaderDataOnce(data: any) {
+  // dx-hoc-list 首次渲染时 data(init_data) 可能还是 undefined
+  // 这里必须等 data 有值后再算“打印过一次”，否则会错过真实数据
+  if (!data) return ''
+  if (__headerLogged) return ''
+  __headerLogged = true
+  try {
+    const icons = Array.isArray(data?.icon) ? data.icon : []
+    console.log('[home-resource][graphic-image-item] header data(object):', data)
+    try {
+      console.log(
+        '[home-resource][graphic-image-item] header data(json):',
+        JSON.stringify(data, null, 2)
+      )
+    } catch (e) {
+      console.warn('[home-resource][graphic-image-item] header data stringify failed:', e)
+    }
+    console.log(
+      '[home-resource][graphic-image-item] header icons(sample):',
+      icons.slice(0, 6).map((it: any) => ({
+        name: it?.name,
+        type: it?.type,
+        key: it?.key,
+        icon: it?.icon
+      }))
+    )
+  } catch (e) {
+    console.warn('[home-resource][graphic-image-item] header log failed:', e)
+  }
+  return ''
+}
+
 onMounted(() => {
   // 便于排查当前 tab 实际请求的接口地址
   console.log('[home-resource][graphic-image-item] request api:', props.api)
 })
 </script>
 <template>
-  <dx-hoc-list :api="`${props.api}`" fields="data" :pullup="false">
+  <dx-hoc-list ref="hocListRef" :api="`${props.api}`" fields="data" :pullup="false">
     <template #header="{ data }">
+      {{ __setHeaderData(data) }}
+      {{ __logHeaderDataOnce(data) }}
       <dx-resource-ads
         class="px-1.5"
         :ad-key="props.type"
@@ -23,26 +114,28 @@ onMounted(() => {
       <div
         class="graphic-filter-state"
         :class="props.type === 'comics' ? 'icon-type-two' : 'icon-type-one'"
-        @touchmove.stop
       >
-        <scroll-x-view class="graphic-filter-state-scroll">
-          <div
-            v-for="(_item, index) in data?.icon"
-            :key="index"
-            v-link="
-              `/home/resource-filter?${format_url_params({
-                title: props.title,
-                _type: props.type,
-                type: _item.type,
-                key: _item.key
-              })}`
-            "
-            class="graphic-filter-item"
-          >
-            <div class="icon"><dx-image no-bg :src="_item.icon" /></div>
-            <div class="title">{{ _item.name }}</div>
-          </div>
-        </scroll-x-view>
+        <div class="graphic-filter-state-scroll" @touchmove.stop>
+          <scroll-x-view ref="iconScrollRef">
+            <div class="graphic-filter-scroll-content">
+              <div
+                v-for="(_item, index) in data?.icon"
+                :key="index"
+                v-link="
+                  `/home/resource-filter?${format_url_params({
+                    title: props.title,
+                    _type: props.type,
+                    type: _item.type,
+                    key: _item.key
+                  })}`
+                "
+                class="graphic-filter-item"
+              >
+                <div class="title">{{ _item.label }}</div>
+              </div>
+            </div>
+          </scroll-x-view>
+        </div>
         <nuxt-link :to="'/home/male-beauty-category'" class="graphic-filter-state-more">
           <img class="icon" src="~/assets/image/home/icon_more.png" alt="" />
 
@@ -137,7 +230,7 @@ onMounted(() => {
           <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
         </div>
         <div class="graphic-layout-bottom">
-          <div class="graphic-layout-bottom-button">
+          <div class="graphic-layout-bottom-button" @click="onReplaceClick(card)">
             <img class="icon" src="~/assets/image/home/icon_refresh.png" alt="" />
             <div class="title">换一换</div>
           </div>
@@ -205,20 +298,26 @@ onMounted(() => {
 
   .graphic-filter-state-scroll {
     flex: 1;
+    min-width: 0;
     padding-left: 12px;
+
+    .graphic-filter-scroll-content {
+      display: flex;
+      gap: 6px;
+    }
 
     .graphic-filter-item {
       display: inline-block;
+      position: relative;
       width: 83px !important;
       height: 40px !important;
       border-radius: 7px !important;
       overflow: hidden;
-      margin-right: 6px !important;
+      margin-right: 0 !important;
+      background: url('~/assets/image/community/icon-bg.png') center / 100% 100% no-repeat;
 
       .icon {
-        width: 100% !important;
-        margin: 0 !important;
-        height: 100% !important;
+        display: none;
       }
 
       .title {
@@ -228,6 +327,7 @@ onMounted(() => {
         transform: translate(-50%, -50%);
         color: #fff !important;
         font-size: 14px;
+        font-weight: 600;
         text-shadow: 0px 0px 5px black;
         white-space: nowrap;
       }
@@ -235,6 +335,7 @@ onMounted(() => {
   }
 
   .graphic-filter-state-more {
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     gap: 3px;
@@ -262,7 +363,6 @@ onMounted(() => {
   flex-direction: row;
   align-items: center;
   justify-content: space-around;
-  padding: 0.4rem;
 
   &.between {
     justify-content: space-between;
@@ -270,9 +370,10 @@ onMounted(() => {
 
     .graphic-filter-item {
       flex: 1;
+      background: url('~/assets/image/community/icon-bg.png') center / 100% 100% no-repeat;
 
       .icon {
-        width: 100%;
+        display: none;
       }
 
       .title {
@@ -291,11 +392,10 @@ onMounted(() => {
   .graphic-filter-item {
     position: relative;
     text-align: center;
+    background: url('~/assets/image/community/icon-bg.png') center / 100% 100% no-repeat;
 
     .icon {
-      width: 1.3rem;
-      height: 1.3rem;
-      margin-bottom: 0.2rem;
+      display: none;
     }
 
     .atlasIcon {
@@ -325,6 +425,7 @@ onMounted(() => {
       text-align: center;
       color: #333333;
       font-size: 0.33rem;
+      font-weight: 600;
     }
   }
 }
@@ -482,11 +583,10 @@ onMounted(() => {
 
   .graphic-filter-item {
     text-align: center;
+    background: url('~/assets/image/community/icon-bg.png') center / 100% 100% no-repeat;
 
     .icon {
-      width: 1.3rem;
-      height: 1.3rem;
-      margin-bottom: 0.2rem;
+      display: none;
     }
 
     .atlasIcon {
