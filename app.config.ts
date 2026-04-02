@@ -730,7 +730,7 @@ export default defineAppConfig({
     baseURL: 'https://api-xiaolan.iiwwdfn.cc/pwa.php',
     withCredentials: false,
     timeout: 50000,
-    version: '4.9.7',
+    version: '4.9.9',
     contentType: 'application/x-www-form-urlencoded'
   },
 
