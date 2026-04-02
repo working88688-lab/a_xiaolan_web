@@ -868,58 +868,60 @@ const expectProfileTags1 = computed(() => expectProfileGroups.value[1] || [])
 const expectProfileTags2 = computed(() => expectProfileGroups.value[2] || [])
 const expectProfileTags3 = computed(() => expectProfileGroups.value[3] || [])
 
-// 开发预览：直接用你提供的 get_match_info 数据展示第二层
-onMounted(() => {
-  if (!(import.meta.env.DEV && import.meta.client)) return
-
-  const mockDetail = {
-    uid: '38238161',
-    score: '匹配度0%, 你俩超级搭哟!',
-    thumb: 'https://new.cimefl.cn/new/xiao/20201117/2020111718104250323.png',
-    voice: 'https://upload.ycomesc.live/20260328/4785cbf0d920222f8f462385f03d64c0.mp4',
-    voice_url: 'https://upload.ycomesc.live/20260328/4785cbf0d920222f8f462385f03d64c0.mp4',
-    voice_duration: 0,
-    nickname: '超级黄蜂',
-    tags_list: [
-      { id: 3, name: '猛男' },
-      { id: 6, name: '0' },
-      { id: 7, name: '0.5' },
-      { id: 10, name: '恋同' },
-      { id: 11, name: '恋物' }
-    ]
-  }
-
-  const mockItem: MatchItem = {
-    uid: mockDetail.uid,
-    nickname: mockDetail.nickname,
-    avatar: '',
-    cover: mockDetail.thumb,
-    match_percent: 0,
-    match_line_text: String(mockDetail.score || '').trim(),
-    tags: Array.isArray(mockDetail.tags_list) ? mockDetail.tags_list.map((t: any) => String(t?.name ?? '')).filter(Boolean) : [],
-    voice_url: voiceUrlFromApiItem(mockDetail),
-    voice_duration: voiceDurationLabelFromApi(mockDetail)
-  }
-
-  matchItems.value = Array.from({ length: 6 }).map((_, idx) =>
-    idx === 0
-      ? mockItem
-      : {
-          uid: idx,
-          nickname: '匿名用户',
-          avatar: '',
-          cover: tqItemUrl,
-          match_percent: 0,
-          match_line_text: '',
-          tags: [],
-          voice_url: '',
-          voice_duration: '0"'
-        }
-  )
-  selectedMatchIndex.value = 0
-  showMatchPopup.value = true
-  matchView.value = 'detail'
-})
+// 开发预览 mock（已停用）：之前用于直接用 get_match_info 数据展示第二层
+// onMounted(() => {
+//   if (!(import.meta.env.DEV && import.meta.client)) return
+//
+//   const mockDetail = {
+//     uid: '38238161',
+//     score: '匹配度0%, 你俩超级搭哟!',
+//     thumb: 'https://new.cimefl.cn/new/xiao/20201117/2020111718104250323.png',
+//     voice: 'https://upload.ycomesc.live/20260328/4785cbf0d920222f8f462385f03d64c0.mp4',
+//     voice_url: 'https://upload.ycomesc.live/20260328/4785cbf0d920222f8f462385f03d64c0.mp4',
+//     voice_duration: 0,
+//     nickname: '超级黄蜂',
+//     tags_list: [
+//       { id: 3, name: '猛男' },
+//       { id: 6, name: '0' },
+//       { id: 7, name: '0.5' },
+//       { id: 10, name: '恋同' },
+//       { id: 11, name: '恋物' }
+//     ]
+//   }
+//
+//   const mockItem: MatchItem = {
+//     uid: mockDetail.uid,
+//     nickname: mockDetail.nickname,
+//     avatar: '',
+//     cover: mockDetail.thumb,
+//     match_percent: 0,
+//     match_line_text: String(mockDetail.score || '').trim(),
+//     tags: Array.isArray(mockDetail.tags_list)
+//       ? mockDetail.tags_list.map((t: any) => String(t?.name ?? '')).filter(Boolean)
+//       : [],
+//     voice_url: voiceUrlFromApiItem(mockDetail),
+//     voice_duration: voiceDurationLabelFromApi(mockDetail)
+//   }
+//
+//   matchItems.value = Array.from({ length: 6 }).map((_, idx) =>
+//     idx === 0
+//       ? mockItem
+//       : {
+//           uid: idx,
+//           nickname: '匿名用户',
+//           avatar: '',
+//           cover: tqItemUrl,
+//           match_percent: 0,
+//           match_line_text: '',
+//           tags: [],
+//           voice_url: '',
+//           voice_duration: '0"'
+//         }
+//   )
+//   selectedMatchIndex.value = 0
+//   showMatchPopup.value = true
+//   matchView.value = 'detail'
+// })
 
 function probeVoiceDurationFromUrl(url: string): Promise<number> {
   return new Promise(resolve => {

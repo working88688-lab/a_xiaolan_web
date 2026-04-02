@@ -15,8 +15,8 @@ const { data, loading } = useMyFetch<{
     }>
   }
 }>({
-  // api: '/api/system/nav_conf',
-  api: '/api/home/getConfig',
+  api: '/api/system/nav_conf',
+  // api: '/api/home/getConfig',
   immediate: true
 })
 
