@@ -667,10 +667,10 @@ export default defineAppConfig({
     }
   ],
 
-  lines: ['https://api.dethxzuo.com/pwa.php'],
+  lines: ['https://api.flivirdz.cc/pwa.php'],
   // 接口配置
   api: {
-    baseURL: 'https://api.dethxzuo.com/pwa.php',
+    baseURL: 'https://api.flivirdz.cc/pwa.php',
     withCredentials: false,
     timeout: 50000,
     version: '4.9.7',
