@@ -22,13 +22,17 @@ const STATUS_TABS: Array<{ key: StatusKey; title: string }> = [
   { key: 'failed', title: '已失败' }
 ]
 
-/** 去衣 / 魔法：0处理中 1已完成 2失败；换脸沿用旧口径 1处理中 2已完成 3失败 */
+/**
+ * 说明：
+ * - 换脸沿用旧口径：1处理中 2已完成 3失败
+ * - 去衣/魔法：后端实际校验把 0 当“未传”（empty(0)），因此这里改为 1/2/3 以兼容现网
+ */
 function listStatusParam(type: AiTypeKey, tab: StatusKey): number {
   if (type === 'face') {
     const legacy: Record<StatusKey, number> = { processing: 1, done: 2, failed: 3 }
     return legacy[tab]
   }
-  const v: Record<StatusKey, number> = { processing: 0, done: 1, failed: 2 }
+  const v: Record<StatusKey, number> = { processing: 1, done: 2, failed: 3 }
   return v[tab]
 }
 
