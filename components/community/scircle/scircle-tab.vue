@@ -708,16 +708,16 @@ async function fetchTalkHome() {
       readme: Array.isArray(myProfile?.readme) ? myProfile.readme : []
     }
 
-    // readme 为空时再补一次 talk/conf，但不要覆盖 myprofile 的 match_num（可用匹配次数以 myprofile 为准）
+    // readme 为空时再补一次 talk/config，但不要覆盖 myprofile 的 match_num（可用匹配次数以 myprofile 为准）
     if (!talkHomeData.value.readme.length) {
       const res = await __.$Api.Community.talkConf().catch(e => {
-        if (scircleDebug) console.warn('[scircle] POST /api/talk/conf 失败', e)
+        if (scircleDebug) console.warn('[scircle] POST /api/talk/config 失败', e)
         __.$Toast(scircleErrMsg(e))
         return null
       })
       if (scircleDebug && res) {
         console.log(
-          '%c[scircle] ③ POST /api/talk/conf（readme 空且 match_num 为 0 时补充拉取）',
+          '%c[scircle] ③ POST /api/talk/config（readme 空且 match_num 为 0 时补充拉取）',
           'font-weight:bold;color:#07c160',
           res
         )
@@ -726,7 +726,7 @@ async function fetchTalkHome() {
       if (res?.data) {
         const cur = talkHomeData.value
         const next = res.data as TalkHomeData
-        // 各用各的：readme/online_count 用 talk/conf；次数等 info 字段用 myprofile
+        // 各用各的：readme/online_count 用 talk/config；次数等 info 字段用 myprofile
         talkHomeData.value = {
           ...cur,
           online_count: cur.online_count || Number(next?.online_count ?? 0),

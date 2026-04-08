@@ -86,7 +86,7 @@ export default {
   // 搜索帖子
   search: { method: 'post', url: '/api/community/search' },
   // 匹配首页配置
-  talkConf: { method: 'post', url: '/api/talk/conf' },
+  talkConf: { method: 'post', url: '/api/talk/config' },
   // 匹配用户
   talkMatch: { method: 'post', url: '/api/talk/match' },
   // 修改匹配设置

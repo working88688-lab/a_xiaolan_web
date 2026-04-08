@@ -247,9 +247,7 @@
       </dx-tabs>
     </div>
     <div v-show="nav_tab === 0" class="px-3 py-1.5">
-      <publish-popup>
-        <dx-button block class="publish-btn">发布视频</dx-button>
-      </publish-popup>
+      <dx-button block class="publish-btn" @click="onGoPublishVideo">发布视频</dx-button>
     </div>
   </div>
 </template>
@@ -258,6 +256,7 @@
 const __ = useNuxtApp()
 const globalStore = useGlobalStore()
 const appConfig = useAppConfig()
+const router = useRouter()
 
 /** 作品封面多为根相对路径，拼资源域；完整 URL 仍走 dx-image + lazyLoad 解密 */
 function getMediaOrigin(): string {
@@ -527,6 +526,10 @@ const onTips = async () => {
   if (res === 'confirm') {
     __.$Utils.onWinOpen(__.$Store.global.config.share_url)
   }
+}
+
+function onGoPublishVideo() {
+  router.push('/publish/video')
 }
 </script>
 

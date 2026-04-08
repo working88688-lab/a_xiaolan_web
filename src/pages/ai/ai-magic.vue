@@ -1,9 +1,4 @@
 <script setup lang="ts">
-import magicCover1 from '~/assets/image/ai-3.png'
-import magicCover2 from '~/assets/image/ai-1.png'
-import magicCover3 from '~/assets/image/before.png'
-import magicCover4 from '~/assets/image/undressed.png'
-
 const __ = useNuxtApp()
 const router = useRouter()
 const globalStore = useGlobalStore()
@@ -61,6 +56,20 @@ interface MaterialItem {
 
 const showPopup = ref(false)
 const activeItem = ref<MaterialItem | null>(null)
+const isPreviewing = ref(false)
+
+const previewVideoUrl = computed(() => resolveMediaUrl(activeItem.value?.preview_url))
+const previewPosterUrl = computed(() => resolveMediaUrl(activeItem.value?.cover))
+
+function resetPopupState() {
+  isPreviewing.value = false
+  images.value = []
+  activeItem.value = null
+}
+
+watch(showPopup, v => {
+  if (!v) resetPopupState()
+})
 
 const MAX_SIZE = 2 * 1024 * 1024
 const images = ref<any[]>([])
@@ -72,6 +81,10 @@ interface PreMagicData {
   coin: number
   cost_coin: number
   tips: string
+  exp_correct_img?: string
+  exp_error1_img?: string
+  exp_error2_img?: string
+  exp_error3_img?: string
 }
 
 const magicData = ref<PreMagicData>({
@@ -97,19 +110,31 @@ const magicMainPayLabel = computed(() => {
 async function fetchPreMagic() {
   try {
     const res = await __.$Api.AI.preMagic({})
+    if (import.meta.dev) {
+      console.log('[AI魔法] pre_magic 原始响应', res)
+    }
     const d = res?.data as Partial<PreMagicData> | undefined
     if (d) {
       magicData.value = {
         free_num: Number(d.free_num ?? 0),
         coin: Number(d.coin ?? 0),
         cost_coin: Number(d.cost_coin ?? 0),
-        tips: d.tips ?? ''
+        tips: d.tips ?? '',
+        exp_correct_img: (d as any).exp_correct_img,
+        exp_error1_img: (d as any).exp_error1_img,
+        exp_error2_img: (d as any).exp_error2_img,
+        exp_error3_img: (d as any).exp_error3_img
       }
     }
   } catch (error) {
     console.error('获取AI魔法预检查失败:', error)
   }
 }
+
+const expCorrectImg = computed(() => resolveMediaUrl(magicData.value.exp_correct_img))
+const expError1Img = computed(() => resolveMediaUrl(magicData.value.exp_error1_img))
+const expError2Img = computed(() => resolveMediaUrl(magicData.value.exp_error2_img))
+const expError3Img = computed(() => resolveMediaUrl(magicData.value.exp_error3_img))
 
 onMounted(() => {
   fetchPreMagic()
@@ -141,7 +166,7 @@ function normalizeMaterialRow(row: Record<string, unknown>): MaterialItem | null
     id,
     title: String(row.title ?? row.name ?? ''),
     cover: String(row.cover ?? row.thumb ?? row.cover_url ?? ''),
-    preview_url: String(row.preview_url ?? row.preview ?? ''),
+    preview_url: String(row.preview_url ?? row.preview ?? row.video ?? row.preview_video ?? ''),
     sort_num: Number(row.sort_num ?? row.sort ?? 0),
     status: Number(row.status ?? 0),
     cost_coin
@@ -209,13 +234,21 @@ async function fetchMaterials() {
 function open(item: MaterialItem) {
   activeItem.value = item
   images.value = []
+  isPreviewing.value = false
   showPopup.value = true
   fetchPreMagic()
 }
 
 function close() {
+  isPreviewing.value = false
   showPopup.value = false
   showPayPopup.value = false
+}
+
+async function onPreviewClick() {
+  const url = previewVideoUrl.value
+  if (!url) return
+  isPreviewing.value = true
 }
 
 function onOversize() {
@@ -313,13 +346,24 @@ async function confirmPay() {
       <div class="magic-popup">
         <div class="magic-popup-title">{{ activeItem?.title ?? 'XXXXXXXXXX名称' }}</div>
 
-        <div class="magic-popup-video">
-          <dx-image
-            class="magic-popup-video-cover"
-            :src="(activeItem?.cover && resolveMediaUrl(activeItem.cover)) || magicCover1"
-          />
-          <div class="magic-popup-play">▶</div>
-        </div>
+        <button class="magic-popup-video" type="button" @click="onPreviewClick">
+          <template v-if="previewVideoUrl">
+            <xg-player
+              :key="previewVideoUrl || 'no-preview-video'"
+              class="magic-popup-xg"
+              :active="isPreviewing"
+              :src="previewVideoUrl"
+              :poster="previewPosterUrl"
+              :autoplay="true"
+              :loop="true"
+              :short="true"
+              :preview-config="{ mode: 0 }"
+            />
+            <div v-if="!isPreviewing" class="magic-popup-play">▶</div>
+          </template>
+          <dx-image v-else-if="previewPosterUrl" class="magic-popup-video-cover" :src="previewPosterUrl" />
+          <div v-else class="magic-popup-video-placeholder skeleton" aria-hidden="true" />
+        </button>
 
         <div class="magic-upload-card">
           <van-field class="magic-my-upload" name="uploader" label-align="top">
@@ -353,28 +397,40 @@ async function confirmPay() {
         <div class="magic-popup-tips">
           <div class="magic-popup-tip">
             <div class="magic-popup-tip-img-wrap">
-              <img class="magic-popup-tip-img" :src="magicCover3" alt="" />
+              <div class="magic-popup-tip-img-clip">
+                <dx-image v-if="expCorrectImg" class="magic-popup-tip-img" :src="expCorrectImg" />
+                <div v-else class="magic-popup-tip-img magic-popup-tip-img-placeholder skeleton" aria-hidden="true" />
+              </div>
               <div class="magic-popup-tip-badge is-ok">✓</div>
             </div>
             <div class="magic-popup-tip-text">正面无遮挡</div>
           </div>
           <div class="magic-popup-tip">
             <div class="magic-popup-tip-img-wrap">
-              <img class="magic-popup-tip-img" :src="magicCover4" alt="" />
+              <div class="magic-popup-tip-img-clip">
+                <dx-image v-if="expError1Img" class="magic-popup-tip-img" :src="expError1Img" />
+                <div v-else class="magic-popup-tip-img magic-popup-tip-img-placeholder skeleton" aria-hidden="true" />
+              </div>
               <div class="magic-popup-tip-badge is-bad">✕</div>
             </div>
             <div class="magic-popup-tip-text">上身有遮挡</div>
           </div>
           <div class="magic-popup-tip">
             <div class="magic-popup-tip-img-wrap">
-              <img class="magic-popup-tip-img" :src="magicCover2" alt="" />
+              <div class="magic-popup-tip-img-clip">
+                <dx-image v-if="expError2Img" class="magic-popup-tip-img" :src="expError2Img" />
+                <div v-else class="magic-popup-tip-img magic-popup-tip-img-placeholder skeleton" aria-hidden="true" />
+              </div>
               <div class="magic-popup-tip-badge is-bad">✕</div>
             </div>
             <div class="magic-popup-tip-text">不是正面</div>
           </div>
           <div class="magic-popup-tip">
             <div class="magic-popup-tip-img-wrap">
-              <img class="magic-popup-tip-img" :src="magicCover1" alt="" />
+              <div class="magic-popup-tip-img-clip">
+                <dx-image v-if="expError3Img" class="magic-popup-tip-img" :src="expError3Img" />
+                <div v-else class="magic-popup-tip-img magic-popup-tip-img-placeholder skeleton" aria-hidden="true" />
+              </div>
               <div class="magic-popup-tip-badge is-bad">✕</div>
             </div>
             <div class="magic-popup-tip-text">过于模糊</div>
@@ -509,9 +565,27 @@ async function confirmPay() {
   border-radius: 12px;
   overflow: hidden;
   background: #e9e9e9;
+  border: 0;
+  padding: 0;
+  width: 100%;
+  display: block;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .magic-popup-video-cover {
+  width: 100%;
+  height: 160px;
+  display: block;
+}
+
+.magic-popup-video-placeholder {
+  width: 100%;
+  height: 160px;
+  border-radius: 12px;
+}
+
+.magic-popup-xg {
   width: 100%;
   height: 160px;
 }
@@ -521,6 +595,8 @@ async function confirmPay() {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  z-index: 3;
+  pointer-events: none;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -648,12 +724,30 @@ async function confirmPay() {
   height: 64px;
 }
 
-.magic-popup-tip-img {
+.magic-popup-tip-img-clip {
   width: 64px;
   height: 64px;
-  border-radius: 64px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.magic-popup-tip-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  display: block;
+}
+
+.magic-popup-tip-img:deep(img) {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
   object-fit: cover;
   display: block;
+}
+
+.magic-popup-tip-img-placeholder {
+  background-color: #f0f0f0;
 }
 
 .magic-popup-tip-badge {

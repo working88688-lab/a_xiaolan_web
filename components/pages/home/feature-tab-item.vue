@@ -32,10 +32,10 @@ const mid_style_recommend = ref<any[]>([])
 const is_recommend = props.tab.name === '推荐'
 // 关注 Tab：根据接口地址判断，更稳
 const is_follow_tab = computed(() => props.tab.api === '/api/mv/listOfFollow')
+const followTabDebug = import.meta.dev && import.meta.client
 
 const followRecommendList = ref<any[]>([])
 const loadingFollowRecommend = ref(false)
-console.log(props.tab.api,"props.tab.api")
 const { listData, execute, loading, refresh, isEmpty, isEnd, result, isError, isReady } = useFetchList<any>({
   api: __.$Api.dynamic({ url: props.tab.api, method: 'post' }),
   params: {
@@ -47,6 +47,28 @@ const { listData, execute, loading, refresh, isEmpty, isEnd, result, isError, is
   },
 
   success(_result, is_refresh) {
+    // 关注 Tab：打印 /api/mv/listOfFollow 原始返回（便于对照 data.list / data.recommend_users）
+    if (followTabDebug && is_follow_tab.value) {
+      const d = result.value?.data
+      const listLike = d?.list ?? d?.data?.list ?? d?.bot_style_two ?? d?.bot_style_one
+      // eslint-disable-next-line no-console
+      console.log('%c[关注Tab] /api/mv/listOfFollow 原始响应', 'font-weight:bold;color:#1677ff', result.value)
+      // eslint-disable-next-line no-console
+      console.log('[关注Tab] data.list(或近似字段)=', listLike)
+      // eslint-disable-next-line no-console
+      console.log('[关注Tab] data.recommend_users=', d?.recommend_users)
+    }
+
+    // 关注 Tab：如果 list 为空，直接用接口返回的 recommend_users
+    if (is_follow_tab.value) {
+      const d: any = result.value?.data
+      const list = Array.isArray(d?.list) ? d.list : []
+      const users = Array.isArray(d?.recommend_users) ? d.recommend_users : []
+      if (list.length === 0 && users.length && !followRecommendList.value.length) {
+        followRecommendList.value = users.slice(0, 50)
+      }
+    }
+
     if (!banners.value.length && result.value.data?.banner?.length) {
       banners.value = result.value.data.banner
     }
@@ -103,6 +125,11 @@ if (props.tab.type === 1) {
 }
 
 const hasFollowRecommend = computed(() => followRecommendList.value.length > 0)
+const followRecommendFromApi = computed(() => {
+  const d: any = result.value?.data
+  const u = d?.recommend_users
+  return Array.isArray(u) ? u : []
+})
 
 // 关注 Tab 推荐用户接口（未关注任何人时展示，按视频总播放量排序，最多50个）
 const fetchFollowRecommend = async () => {
@@ -110,8 +137,13 @@ const fetchFollowRecommend = async () => {
 
   loadingFollowRecommend.value = true
   try {
+    // 优先使用 /api/mv/listOfFollow 自带的 recommend_users（避免多打一条接口）
+    if (followRecommendFromApi.value.length) {
+      followRecommendList.value = followRecommendFromApi.value.slice(0, 50)
+      return
+    }
     const res = await __.$Api.Home.recommendUsers({ page: 1, limit: 50 })
-    console.log(res,"res")
+    if (followTabDebug) console.log('[关注Tab] /api/home/recommend_users 响应', res)
     followRecommendList.value = (res?.data || []).slice(0, 50)
   } catch (error) {
     console.error('获取推荐用户失败:', error)
@@ -161,8 +193,24 @@ async function onReplace(item: TabItem, newItems: any) {
 }
 </script>
 <template>
-  <!-- 关注 Tab：直接使用推荐作者卡片，不再显示原空态 -->
+  <!-- 关注 Tab：优先展示 list（关注内容）；list 为空时展示 recommend_users -->
   <template v-if="is_follow_tab">
+    <template v-if="listData.length">
+      <scroll-list ref="scroll" v-dom-rect :is-end="false" :pullup="undefined" :pull-down-refresh="refresh">
+        <dx-spin v-show="loading && !isReady" size="0.6rem" class="my-2 text-center"></dx-spin>
+        <dx-empty v-if="isError" description="暂无数据"></dx-empty>
+        <div class="grid grid-cols-2 gap-1 px-1 pb-1.5">
+          <video-card
+            v-for="(item, lIndex) in listData"
+            :key="item.id"
+            :list="listData"
+            :index="lIndex"
+            :item="item"
+            lines
+          ></video-card>
+        </div>
+      </scroll-list>
+    </template>
     <dx-spin v-if="loadingFollowRecommend && !hasFollowRecommend" size="0.6rem" class="my-2 text-center"></dx-spin>
     <follow-recommend v-else :list="followRecommendList"></follow-recommend>
   </template>
