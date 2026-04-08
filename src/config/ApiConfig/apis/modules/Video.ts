@@ -30,7 +30,7 @@ export default {
   // 作品-所有
   all: { method: 'post', url: '/api/works/all' },
   // 作品-已发布
-  published: { method: 'post', url: '/api/works/published' },
+  published: { method: 'post', url: '/api/works/release' },
   // 待审核
   wait: { method: 'post', url: '/api/works/wait' },
   // 作品-审核中

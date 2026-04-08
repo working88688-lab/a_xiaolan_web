@@ -22,6 +22,8 @@ type CheckinDay = {
 
 interface CalendarResponse {
   continuous_day: number
+  /** 今日是否可签到：true 可点击签到，false 不可点击 */
+  is_sign: boolean
   /** 抽奖机会（与签到日历同接口返回） */
   my_chances?: number
   my_points: number
@@ -102,6 +104,8 @@ const state = reactive({
   signedDays: 0,
   tomorrowRewardText: '',
   hasSignedToday: false,
+  /** 是否允许点击“今日签到”按钮（由 sign/calendar 的 is_sign 控制） */
+  canSignToday: false,
   drawChances: 0,
   drawPoints: 0,
   drawPointsPerDraw: 50,
@@ -125,6 +129,7 @@ async function fetchCalendarData() {
     const data = res.data as CalendarResponse
 
     state.signedDays = data.continuous_day
+    state.canSignToday = Boolean(data.is_sign)
     state.drawPoints = data.my_points
     state.myMatchCardTimes = data.my_match_card_times
     if (typeof data.my_chances === 'number') {
@@ -159,7 +164,8 @@ async function fetchCalendarData() {
     const tomorrowDay = state.calendarData.find((d) => d.status === 'today')
     if (tomorrowDay) {
       state.tomorrowRewardText = tomorrowDay.rewardText
-      state.hasSignedToday = false
+      // “是否已签到”不再从日历推断，今日是否可点由 is_sign 控制
+      state.hasSignedToday = !state.canSignToday
     } else {
       const nextDay = state.calendarData.find((d) => d.status === 'future')
       if (nextDay) {
@@ -274,6 +280,7 @@ const prizeMessage = computed(() => {
 })
 
 function onSignClick() {
+  if (!state.canSignToday) return
   if (state.hasSignedToday) return
   handleSign()
 }
@@ -411,7 +418,7 @@ function getDayIcon(day: CheckinDay) {
           </div>
         </div>
 
-        <button class="checkin-panel-btn" type="button">
+        <button class="checkin-panel-btn" type="button" :disabled="!state.canSignToday || state.hasSignedToday">
           <img class="checkin-panel-btn-img" :src="state.hasSignedToday ? img.btnSigned : img.btnSign" alt="签到"
             @click="onSignClick" />
         </button>

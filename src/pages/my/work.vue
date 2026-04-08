@@ -442,7 +442,7 @@ const hideListApi = USE_MOCK_MY_WORK_UI ? createMockWorkListApi(MOCK_HIDE) : __.
 */
 
 const publishedListApi = __.$Api.Video.published
-const submitListApi = __.$Api.Video.submit
+const submitListApi = __.$Api.Video.wait
 const rejectListApi = __.$Api.Video.reject
 const hideListApi = __.$Api.Video.hide
 
