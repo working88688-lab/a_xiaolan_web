@@ -84,7 +84,8 @@ const { listData, execute, loading, refresh, isEmpty, isEnd, result, isError, is
   },
   immediate: true,
   startRefreshEmptyData: !is_recommend,
-  fields: is_recommend ? 'bot_style_one' : 'bot_style_two',
+  // 关注 Tab：接口返回在 data.list；其他 Tab 仍用原约定字段
+  fields: is_follow_tab.value ? 'list' : is_recommend ? 'bot_style_one' : 'bot_style_two',
   usePageSize: false,
   adConfig: !is_recommend
     ? {
@@ -199,20 +200,21 @@ async function onReplace(item: TabItem, newItems: any) {
       <scroll-list ref="scroll" v-dom-rect :is-end="false" :pullup="undefined" :pull-down-refresh="refresh">
         <dx-spin v-show="loading && !isReady" size="0.6rem" class="my-2 text-center"></dx-spin>
         <dx-empty v-if="isError" description="暂无数据"></dx-empty>
-        <div class="grid grid-cols-2 gap-1 px-1 pb-1.5">
-          <video-card
+        <div class="px-1 pb-1.5">
+          <feature-item
             v-for="(item, lIndex) in listData"
-            :key="item.id"
+            :key="item.id ?? lIndex"
+            :data="item"
             :list="listData"
             :index="lIndex"
-            :item="item"
-            lines
-          ></video-card>
+          />
         </div>
       </scroll-list>
     </template>
-    <dx-spin v-if="loadingFollowRecommend && !hasFollowRecommend" size="0.6rem" class="my-2 text-center"></dx-spin>
-    <follow-recommend v-else :list="followRecommendList"></follow-recommend>
+    <template v-else>
+      <dx-spin v-if="loadingFollowRecommend && !hasFollowRecommend" size="0.6rem" class="my-2 text-center"></dx-spin>
+      <follow-recommend v-else :list="followRecommendList"></follow-recommend>
+    </template>
   </template>
 
   <!-- 其他 Tab：保持原有逻辑 -->
