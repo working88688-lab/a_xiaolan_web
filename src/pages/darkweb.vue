@@ -51,9 +51,13 @@ const goRenewal = () => {
 .container {
   position: relative;
   width: 100%;
-  min-height: 100vh;
+  /* 占满布局主区高度，避免 min-height:100vh 撑高后带着搜索/tab 整体滚 */
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* 暗网页只需要顶部 tab 行，不需要 feature-tab 的内容区；同时避免高度塌陷导致“看不到 tabs” */
@@ -74,8 +78,11 @@ const goRenewal = () => {
 .dw-hero {
   position: relative;
   flex: 1;
+  min-height: 0;
   width: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   /* 预留底部 tabbar 安全区 */
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -92,12 +99,17 @@ const goRenewal = () => {
 .dw-content {
   position: relative;
   z-index: 1;
+  flex: 1;
+  min-height: 0;
   width: 100%;
   padding: 18px 14px 20px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .dw-title {

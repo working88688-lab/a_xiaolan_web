@@ -32,6 +32,10 @@ import type { TabItem } from '@types'
  * 当前实例
  */
 const __ = useNuxtApp()
+const route = useRoute()
+
+/** 从 /darkweb 点其它 tab 回首页时，同步 keep-alive 下首页实例的选中项（一次性） */
+const HOME_FEATURE_TAB_INDEX_KEY = 'xl_home_feature_tab_once'
 
 const { activeTab, duration, updateDuration, updateActiveTab } = useDefaultActiveTab({
   defaultActive: 1
@@ -75,7 +79,15 @@ const getTabs = async () => {
 
     tabState.tabs = insertDarkwebTab(data)
     console.log(data)
-    updateActiveTab(data)
+    // 暗网页不要按接口 current 改选中项，否则会误触「离开暗网」逻辑
+    if (route.path === '/darkweb') {
+      const idx = tabState.tabs.findIndex(t => t.name === DARKWEB_TAB_NAME)
+      if (idx >= 0) {
+        activeTab.value = idx
+      }
+    } else {
+      updateActiveTab(data)
+    }
   } catch (error) {
   } finally {
     updateDuration()
@@ -87,9 +99,43 @@ onBeforeMount(getTabs)
 watch(activeTab, (value, oldValue) => {
   const current = tabState.tabs[value]
   if (current?.name === DARKWEB_TAB_NAME) {
+    if (route.path === '/darkweb') {
+      return
+    }
     __.$Replace('/darkweb')
     activeTab.value = oldValue ?? 1
+    return
   }
+  if (route.path !== '/darkweb' || !tabState.tabs.length) {
+    return
+  }
+  const darkIdx = tabState.tabs.findIndex(t => t.name === DARKWEB_TAB_NAME)
+  if (darkIdx < 0 || value === darkIdx) {
+    return
+  }
+  sessionStorage.setItem(HOME_FEATURE_TAB_INDEX_KEY, String(value))
+  __.$Replace('/home')
+})
+
+onActivated(() => {
+  if (route.path === '/darkweb') {
+    const idx = tabState.tabs.findIndex(t => t.name === DARKWEB_TAB_NAME)
+    if (idx >= 0) {
+      activeTab.value = idx
+    }
+    return
+  }
+  const raw = sessionStorage.getItem(HOME_FEATURE_TAB_INDEX_KEY)
+  if (raw === null || raw === '') {
+    return
+  }
+  sessionStorage.removeItem(HOME_FEATURE_TAB_INDEX_KEY)
+  const n = Number(raw)
+  if (Number.isNaN(n) || !tabState.tabs.length || n < 0 || n >= tabState.tabs.length) {
+    return
+  }
+  activeTab.value = n
+  updateDuration()
 })
 </script>
 

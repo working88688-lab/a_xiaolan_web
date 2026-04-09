@@ -23,19 +23,24 @@ watch(
   }
 )
 const __ = useNuxtApp()
-const hyhLoadingKey = ref<string | null>(null)
-const hyhApi = __.$Api.dynamic({ url: '/api/image/list_hyh_image', method: 'post' })
+const replaceLoadingKey = ref<string | null>(null)
+// 男色分类「换一换」：走老接口
+const pictureListApi = __.$Api.dynamic({ url: '/api/image/getPicturelist', method: 'post' })
 
-function getHyhBoardId(card: any): number | null {
-  const tabId = Number(card?.tab_id)
-  if ([0, 1, 2, 3].includes(tabId)) return tabId
-  return null
+function getLastItemId(items: any): string {
+  const list = Array.isArray(items) ? items : []
+  const last = list.length ? list[list.length - 1] : null
+  const id = last?.id ?? ''
+  return id === null || id === undefined ? '' : String(id)
 }
 
 const onReplaceClick = async (card: any) => {
-  const boardId = getHyhBoardId(card)
-  if (boardId === null) {
-    // 兜底：如果无法识别板块ID，就刷新整块数据
+  const tabId = card?.tab_id ?? card?.category_id ?? ''
+  const tab_id = tabId === null || tabId === undefined ? '' : String(tabId)
+  const id = getLastItemId(card?.items)
+
+  if (!tab_id) {
+    // 兜底：缺少分类 id 就刷新整块数据
     try {
       await hocListRef.value?.refresh_data?.()
     } catch (e) {
@@ -44,21 +49,21 @@ const onReplaceClick = async (card: any) => {
     return
   }
 
-  const loadingKey = `${boardId}`
-  if (hyhLoadingKey.value === loadingKey) return
-  hyhLoadingKey.value = loadingKey
+  const loadingKey = `${tab_id}_${id}`
+  if (replaceLoadingKey.value === loadingKey) return
+  replaceLoadingKey.value = loadingKey
   try {
-    const res: any = await hyhApi({ id: boardId })
+    const res: any = await pictureListApi({ id, tab_id })
     const list = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.list) ? res.data.list : null
     if (Array.isArray(list)) {
       card.items = list
     } else {
-      console.warn('[home-resource][graphic-image-item] list_hyh_image unexpected response:', res)
+      console.warn('[home-resource][graphic-image-item] getPicturelist unexpected response:', res)
     }
   } catch (e) {
-    console.warn('[home-resource][graphic-image-item] list_hyh_image failed:', e)
+    console.warn('[home-resource][graphic-image-item] getPicturelist failed:', e)
   } finally {
-    if (hyhLoadingKey.value === loadingKey) hyhLoadingKey.value = null
+    if (replaceLoadingKey.value === loadingKey) replaceLoadingKey.value = null
   }
 }
 
