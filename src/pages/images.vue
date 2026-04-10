@@ -35,7 +35,7 @@
             <div v-if="pageData?.coins > 0" class="image-action-sub">
               {{ pageData?.coins }}金币解锁全部{{ pageData?.total }}张
             </div>
-            <div v-else class="image-action-sub">开通VIP，即可查看全部{{ pageData?.total }}张</div>
+            <div v-else class="image-action-sub">开通VIP，即可解锁全套{{ pageData?.total }}张</div>
           </div>
 
           <div v-if="isImageLocked(index)" class="image-footer">
