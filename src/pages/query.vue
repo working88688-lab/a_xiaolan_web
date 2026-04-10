@@ -14,11 +14,7 @@
           }"
         >
           <template #item="{ item }">
-            <nuxt-link
-              v-if="isImagesType"
-              class="graphic-information-common"
-              :to="`/images?id=${item.id}`"
-            >
+            <nuxt-link v-if="isImagesType" class="graphic-information-common" :to="`/images?id=${item.id}`">
               <dx-cover class="aspect-h-4 aspect-w-3" :poster="item?.thumb_full">
                 <dx-pay-type :coins="item.coins" class="absolute right-0.5 top-0.5" />
                 <div class="absolute bottom-0.5 left-0.5 right-0.5 z-10 flex justify-between text-[0.28rem] text-white">
@@ -70,7 +66,15 @@ const get_url_query = () => {
   )
 }
 
-const MAP = {
+type QueryModule = {
+  config: Record<string, any>
+  component: any
+  className?: string
+  props?: Record<string, any>
+  rewrite_props?: (item: any) => any
+}
+
+const MAP: Record<string, QueryModule> = {
   comics: {
     config: {
       api: __.$Api.Community.manhuaClass
