@@ -56,6 +56,17 @@ const showInsufficientTip = computed(() => {
 const composerMode = ref<'text' | 'voice'>('text')
 const showMore = ref(false)
 
+/** 对方 uid（路由 query，私信 / 同圈进入均会带） */
+const peerUid = computed(() => {
+  const uidRaw = route.query.uid
+  const s = typeof uidRaw === 'string' ? uidRaw.trim() : Array.isArray(uidRaw) ? String(uidRaw[0] ?? '').trim() : ''
+  const n = Number(s)
+  return Number.isFinite(n) && n > 0 ? n : null
+})
+
+const messageText = ref('')
+const isSendingText = ref(false)
+
 const isUploadingImage = ref(false)
 const albumInputRef = useTemplateRef<HTMLInputElement>('albumInputRef')
 const cameraInputRef = useTemplateRef<HTMLInputElement>('cameraInputRef')
@@ -81,6 +92,30 @@ function pickFromCamera() {
   if (isUploadingImage.value) return
   showMore.value = false
   resetAndClickInput(cameraInputRef.value)
+}
+
+async function sendTextMessage() {
+  const uid = peerUid.value
+  const text = messageText.value.trim()
+  if (uid == null) {
+    __.$Toast('缺少聊天对象，请从匹配或私信列表重新进入')
+    return
+  }
+  if (!text || isSendingText.value) return
+  if (showInsufficientTip.value) {
+    __.$Toast('聊天时长不足，请先充值')
+    return
+  }
+  isSendingText.value = true
+  try {
+    await __.$Api.User.chat({ uid, content: text })
+    messageText.value = ''
+    void fetchTalkInfo()
+  } catch (e) {
+    __.$Toast(scircleErrMsg(e))
+  } finally {
+    isSendingText.value = false
+  }
 }
 
 async function onPickedImage(e: Event) {
@@ -539,11 +574,25 @@ async function onRecordEnd() {
         <div class="chat-input-area">
           <input
             v-if="composerMode === 'text'"
+            v-model="messageText"
             class="chat-input"
             type="text"
             placeholder="说点好听的吧～"
+            enterkeyhint="send"
+            maxlength="2000"
+            :disabled="isSendingText"
             @focus="showMore = false"
+            @keydown.enter.prevent="sendTextMessage"
           />
+          <button
+            v-if="composerMode === 'text'"
+            class="chat-send"
+            type="button"
+            :disabled="isSendingText || !messageText.trim()"
+            @click="sendTextMessage"
+          >
+            {{ isSendingText ? '…' : '发送' }}
+          </button>
           <button
             v-else
             class="chat-press-talk"
@@ -1008,6 +1057,7 @@ async function onRecordEnd() {
   background: #ffffff;
   display: flex;
   align-items: center;
+  gap: 4px;
   overflow: hidden;
 }
 
@@ -1016,13 +1066,32 @@ async function onRecordEnd() {
 }
 
 .chat-input {
+  flex: 1;
+  min-width: 0;
   height: 38px;
   border: 0;
   background: #ffffff;
-  padding: 0 14px;
+  padding: 0 8px 0 14px;
   font-size: 14px;
   outline: none;
-  width: 100%;
+}
+
+.chat-send {
+  flex-shrink: 0;
+  height: 32px;
+  margin-right: 4px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 16px;
+  background: rgba(36, 148, 255, 0.12);
+  color: #2494ff;
+  font-size: 14px;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chat-send:disabled {
+  opacity: 0.45;
 }
 
 .chat-press-talk {
