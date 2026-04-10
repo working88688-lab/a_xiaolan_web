@@ -533,7 +533,33 @@
                 alt=""
               />
               <div class="tq-detail-top">
-                <button class="tq-detail-back" type="button" @click="backToMatchGrid">‹</button>
+                <div class="tq-detail-top-left">
+                  <button class="tq-detail-back" type="button" aria-label="返回" @click="backToMatchGrid">
+                    <svg width="14" height="26" viewBox="0 0 14 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M13 25L1 13L13 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+
+                  <button 
+                    class="tq-detail-sound"
+                    type="button"
+                  >
+                    <svg width="33" height="33" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <g clip-path="url(#clip0_137_5162)">
+                        <path
+                          d="M0.000773703 24.1082C0.00615994 24.3223 0.0716979 24.5306 0.189892 24.7092C0.308086 24.8878 0.474164 25.0296 0.669132 25.1182L10.776 29.7061C10.9499 29.7851 11.1409 29.8192 11.3314 29.8053C11.5219 29.7914 11.7059 29.7298 11.8664 29.6263C12.027 29.5228 12.159 29.3806 12.2503 29.2129C12.3416 29.0451 12.3894 28.8571 12.3892 28.6661L12.3729 3.93451C12.3727 3.72337 12.314 3.51641 12.2032 3.33667C12.0924 3.15693 11.9339 3.01146 11.7453 2.91644C11.5568 2.82142 11.3456 2.78057 11.1352 2.79845C10.9248 2.81634 10.7235 2.89224 10.5537 3.01772L1.45877 9.73815C1.32673 9.83575 1.2173 9.9607 1.13797 10.1045C1.05863 10.2482 1.01125 10.4074 0.999073 10.5712L0.00338193 23.9944C0.000847602 24.0324 -2.26413e-05 24.0701 0.000773703 24.1082ZM2.3384 23.3694L3.23628 11.2623L10.0917 6.19585L10.1057 26.8957L2.3384 23.3694ZM15.4865 32.6029H17.1166V29.3426H15.4865V32.6029ZM15.4865 27.7124H17.1166V24.4522H15.4865V27.7124ZM15.4865 22.822H17.1166V19.5617H15.4865V22.822ZM15.4865 17.9316H17.1166V14.6713H15.4865V17.9316ZM15.4865 13.0411H17.1166V9.78086H15.4865V13.0411ZM15.4865 8.15072H17.1166V4.89043H15.4865V8.15072ZM15.4865 3.26029H17.1166V0H15.4865V3.26029ZM20.2139 28.6664C20.2137 28.8574 20.2615 29.0453 20.3528 29.2131C20.4441 29.3808 20.5761 29.5229 20.7366 29.6264C20.8971 29.7299 21.081 29.7915 21.2715 29.8055C21.4619 29.8194 21.6529 29.7854 21.8268 29.7064L31.9337 25.1182C32.1287 25.0296 32.2948 24.8879 32.4131 24.7093C32.5313 24.5306 32.5969 24.3223 32.6023 24.1082C32.6031 24.0701 32.6023 24.0321 32.5997 23.9941L31.604 10.5712C31.5919 10.4074 31.5445 10.2482 31.4651 10.1045C31.3858 9.9607 31.2764 9.83575 31.1443 9.73815L22.0494 3.01772C21.8796 2.89224 21.6783 2.81634 21.4679 2.79845C21.2576 2.78057 21.0463 2.82142 20.8578 2.91644C20.6692 3.01146 20.5107 3.15693 20.3999 3.33667C20.2891 3.51641 20.2304 3.72337 20.2302 3.93451L20.2139 28.6664Z"
+                          fill="white"
+                        />
+                      </g>
+                      <defs>
+                        <clipPath id="clip0_137_5162">
+                          <rect width="32.6029" height="32.6029" fill="white" />
+                        </clipPath>
+                      </defs>
+                    </svg>
+                  </button>
+                </div>
+
                 <div class="tq-detail-name">{{ activeMatchItem.nickname || '匿名用户' }}</div>
                 <div class="tq-detail-right" />
               </div>
@@ -2396,11 +2422,17 @@ async function goChat() {
   z-index: 1;
   height: 52px;
   display: grid;
-  grid-template-columns: 44px 1fr 44px;
+  grid-template-columns: 84px 1fr 44px;
   align-items: center;
   padding: 0 10px;
   box-sizing: border-box;
   color: #fff;
+}
+
+.tq-detail-top-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .tq-detail-back {
@@ -2412,6 +2444,28 @@ async function goChat() {
   font-size: 26px;
   line-height: 34px;
   text-align: left;
+}
+.tq-detail-back svg{
+  width: 14px;
+  height: 14px;
+}
+
+.tq-detail-sound {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.tq-detail-sound svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .tq-detail-name {
