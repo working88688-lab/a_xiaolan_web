@@ -1354,6 +1354,10 @@ async function openSettings() {
   }
 }
 
+defineExpose({
+  openSettings
+})
+
 function resetSettings() {
   settingsStep.value = 1
 }
