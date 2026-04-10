@@ -667,10 +667,10 @@ export default defineAppConfig({
     }
   ],
 
-  lines: ['https://api.flivirdz.cc/pwa.php'],
+  lines: ['https://api.cfwhkdv.cc/pwa.php'],
   // 接口配置
   api: {
-    baseURL: 'https://api.flivirdz.cc/pwa.php',
+    baseURL: 'https://api.cfwhkdv.cc/pwa.php',
     withCredentials: false,
     timeout: 50000,
     version: '4.9.7',
