@@ -192,7 +192,14 @@
               <div class="scircle-settings-section-title">个人照片</div>
               <div class="scircle-settings-photo">
                 <button class="scircle-settings-photo-box" type="button" @click="onPickProfileImage">
-                  <img v-if="profileImg" class="scircle-settings-photo-preview" :src="profileImg" alt="个人照片" />
+                  <img
+                    v-if="profileImg"
+                    :key="profileImg"
+                    v-lazyLoad="profileImg"
+                    class="scircle-settings-photo-preview"
+                    src="~/assets/image/img_loading.png"
+                    alt="个人照片"
+                  />
                   <svg
                     v-else
                     class="scircle-settings-photo-cloud"
