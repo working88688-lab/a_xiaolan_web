@@ -6,6 +6,7 @@ const router = useRouter()
 const __ = useNuxtApp()
 
 const recordCancelArcPathId = useId()
+const rechargeCloseClipId = useId()
 
 interface TalkProductItem {
   id: number
@@ -15,6 +16,8 @@ interface TalkProductItem {
   duration: number
   free_duration: number
   icon_url: string
+  /** 条数（若后端有返回，用于「10条」主文案） */
+  msg_count: number
 }
 
 const matchInfoLoading = ref(false)
@@ -156,6 +159,15 @@ function productPayCoins(p: TalkProductItem): number {
   return Number.isFinite(price) ? Math.round(price) : 0
 }
 
+/** 上区主文案：优先条数，其次从 name 里抽「N条」，否则用 name */
+function productQuantityLabel(p: TalkProductItem): string {
+  const n = Number(p.msg_count)
+  if (Number.isFinite(n) && n > 0) return `${Math.round(n)}条`
+  const m = String(p.name ?? '').match(/(\d+)\s*条/)
+  if (m) return `${m[1]}条`
+  return String(p.name || '套餐').trim() || '套餐'
+}
+
 function voiceUrlFromApiItem(item: any): string {
   const u = item?.voice ?? item?.voice_url ?? item?.audio_url ?? item?.audio ?? item?.voice_file ?? ''
   return typeof u === 'string' ? u.trim() : String(u || '').trim()
@@ -256,7 +268,13 @@ async function loadProductList() {
   productsLoading.value = true
   try {
     const res = await __.$Api.Community.talkProductList({})
+    console.log(
+      '%c[chat-room] talkProductList 原始返回',
+      'font-weight:bold;color:#1677ff',
+      res
+    )
     const raw = res?.data
+    console.log('[chat-room] talkProductList data：', raw)
     const list = Array.isArray(raw) ? raw : []
     products.value = list
       .map((it: any) => ({
@@ -266,9 +284,27 @@ async function loadProductList() {
         promo_price: Number(it?.promo_price ?? 0),
         duration: Number(it?.duration ?? 0),
         free_duration: Number(it?.free_duration ?? 0),
-        icon_url: String(it?.icon_url ?? '').trim()
+        icon_url: String(it?.icon_url ?? it?.icon ?? it?.image ?? it?.img ?? it?.cover ?? '').trim(),
+        msg_count: (() => {
+          const n = Number(it?.msg_count ?? it?.num ?? it?.count ?? it?.msg_num ?? 0)
+          return Number.isFinite(n) && n > 0 ? Math.round(n) : 0
+        })()
       }))
       .filter(p => Number.isFinite(p.id) && p.id > 0)
+
+    console.log(
+      '[chat-room] talkProductList 解析后 products：',
+      products.value.map(p => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        promo_price: p.promo_price,
+        duration: p.duration,
+        free_duration: p.free_duration,
+        icon_url: p.icon_url,
+        msg_count: p.msg_count
+      }))
+    )
     if (products.value.length) {
       const exists = products.value.some(p => p.id === selectedProductId.value)
       if (!exists) selectedProductId.value = products.value[0].id
@@ -290,6 +326,16 @@ async function openRecharge() {
   if (!products.value.length && !productsLoading.value) {
     await loadProductList()
   }
+}
+
+function goCoinRecharge() {
+  showRecharge.value = false
+  router.push('/coin-recharge')
+}
+
+function goBuyVip() {
+  showRecharge.value = false
+  router.push('/renewal')
 }
 
 async function onConfirmBuyTime() {
@@ -533,9 +579,9 @@ async function onRecordEnd() {
       <div v-else-if="peerVoiceUrl" class="chat-msg">
         <img
           v-if="peerAvatar"
-          class="chat-avatar chat-avatar-img"
           :key="peerAvatar"
           v-lazyLoad="peerAvatar"
+          class="chat-avatar chat-avatar-img"
           src="~/assets/image/img_loading.png"
           alt=""
         />
@@ -732,45 +778,75 @@ async function onRecordEnd() {
       round
       class="chat-recharge-popup"
       :close-on-click-overlay="true"
+      :style="{ maxHeight: 'min(88vh, 100dvh)' }"
     >
       <div class="chat-recharge">
-        <div class="chat-recharge-title">充值金币与购买会员</div>
-
-        <div v-if="productsLoading" class="chat-recharge-loading">加载套餐中…</div>
-        <div v-else class="chat-recharge-grid">
-          <button
-            v-for="p in products"
-            :key="p.id"
-            type="button"
-            class="chat-recharge-card"
-            :class="{ 'is-selected': selectedProductId === p.id }"
-            @click="selectedProductId = p.id"
+        <button class="chat-recharge-close" type="button" aria-label="关闭" @click="showRecharge = false">
+          <svg
+            class="chat-recharge-close-svg"
+            width="14"
+            height="14"
+            viewBox="0 0 40 40"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
           >
-            <div class="chat-recharge-card-icon">
-              <img v-if="p.icon_url" :src="p.icon_url" alt="" />
-              <span v-else class="chat-recharge-card-placeholder">套餐</span>
-            </div>
-            <div class="chat-recharge-card-name">{{ p.name || '套餐' }}</div>
-            <div v-if="p.duration > 0" class="chat-recharge-card-dur">{{ p.duration }} 小时</div>
-            <div class="chat-recharge-card-price">
-              <template v-if="p.promo_price > 0 && p.promo_price < p.price">
-                <span class="chat-recharge-price-promo">{{ productPayCoins(p) }} 金币</span>
-                <span class="chat-recharge-price-old">{{ p.price }} 金币</span>
-              </template>
-              <template v-else>
-                <span>{{ productPayCoins(p) }} 金币</span>
-              </template>
-            </div>
+            <g opacity="0.3" :clip-path="`url(#${rechargeCloseClipId})`">
+              <path
+                d="M20.0002 0.613281C9.27418 0.613281 0.579102 9.3084 0.579102 20.0345C0.579102 30.7605 9.27418 39.4556 20.0002 39.4556C30.7262 39.4556 39.4213 30.7605 39.4213 20.0345C39.4213 9.3084 30.7263 0.613281 20.0003 0.613281H20.0002ZM28.3288 25.8452C29.024 26.5406 29.024 27.6677 28.3288 28.363C27.6336 29.0582 26.5062 29.0582 25.811 28.363L20.0002 22.5522L14.1893 28.363C13.494 29.0582 12.367 29.0582 11.6717 28.363C10.9762 27.6677 10.9762 26.5406 11.6717 25.8452L17.4824 20.0345L11.6717 14.2237C10.9762 13.5284 10.9762 12.4011 11.6717 11.7059C12.367 11.0107 13.494 11.0107 14.1893 11.7059L20.0002 17.5166L25.811 11.7059C26.5062 11.0107 27.6336 11.0107 28.3288 11.7059C29.024 12.4011 29.024 13.5284 28.3288 14.2237L22.518 20.0345L28.3288 25.8452Z"
+                fill="black"
+              />
+            </g>
+            <defs>
+              <clipPath :id="rechargeCloseClipId">
+                <rect width="40" height="40" fill="white" />
+              </clipPath>
+            </defs>
+          </svg>
+        </button>
+
+        <div class="chat-recharge-body">
+          <div v-if="productsLoading" class="chat-recharge-loading">加载套餐中…</div>
+          <div v-else class="chat-recharge-grid">
+            <button
+              v-for="p in products"
+              :key="p.id"
+              type="button"
+              class="chat-recharge-card"
+              :class="{ 'is-selected': selectedProductId === p.id }"
+              @click="selectedProductId = p.id"
+            >
+              <div class="chat-recharge-card-inner">
+                <div class="chat-recharge-card-top">
+                  <div class="chat-recharge-card-icon-wrap">
+                    <img
+                      v-if="p.icon_url"
+                      :key="p.icon_url"
+                      v-lazyLoad="p.icon_url"
+                      class="chat-recharge-card-icon-img"
+                      src="~/assets/image/img_loading.png"
+                      alt=""
+                    />
+                    <span v-else class="chat-recharge-card-placeholder">套餐</span>
+                  </div>
+                  <div class="chat-recharge-card-qty">{{ productQuantityLabel(p) }}</div>
+                </div>
+                <div class="chat-recharge-card-bottom">
+                  <span class="chat-recharge-price-main">{{ productPayCoins(p) }}金币</span>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="!productsLoading" class="chat-recharge-hint-row">
+          <p class="chat-recharge-hint-left">
+            <span class="chat-recharge-hint-text">成为会员后，可无限发布消息，</span>
+            <button type="button" class="chat-recharge-hint-link" @click="goBuyVip">去购买会员</button>
+          </p>
+          <button type="button" class="chat-recharge-hint-link chat-recharge-hint-right" @click="goCoinRecharge">
+            充值金币
           </button>
-        </div>
-
-        <div class="chat-recharge-vip-hint">
-          成为会员后，可无限发布消息，
-          <span class="chat-recharge-link">去购买会员</span>
-        </div>
-
-        <div class="chat-recharge-footer">
-          <span class="chat-recharge-link" role="button" tabindex="0" @click="openRecharge">充值金币</span>
         </div>
 
         <button
@@ -1373,18 +1449,50 @@ async function onRecordEnd() {
 }
 
 .chat-recharge {
-  padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
-  max-height: 78vh;
-  overflow: auto;
+  /* 与同圈 match-goods 弹层一致：内容区略小于 van-popup 的 max-height，避免裁切 */
+  max-height: min(82vh, calc(100dvh - 24px));
+  padding: 28px 14px 0;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  overflow: hidden;
+  position: relative;
 }
 
-.chat-recharge-title {
-  text-align: center;
-  font-size: 16px;
-  font-weight: 600;
-  color: #111;
-  margin-bottom: 14px;
+.chat-recharge-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chat-recharge-close {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  border: 0;
+  /* background: rgba(0, 0, 0, 0.12); */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chat-recharge-close-svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+.chat-recharge-close:active {
+  opacity: 0.9;
 }
 
 .chat-recharge-loading {
@@ -1399,74 +1507,97 @@ async function onRecordEnd() {
   grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
   margin-bottom: 14px;
+  padding-top: 10px;
 }
 
+/* 上区黄底 + 下区渐变；圆角按 750 设计宽换算 */
 .chat-recharge-card {
-  border: 1px solid #e8e8e8;
-  border-radius: 10px;
-  padding: 10px 8px;
-  background: #fafafa;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  min-height: 118px;
+  --recharge-card-radius: clamp(8px, calc(18 * 100vw / 750), 11px);
+  border: 0;
+  border-radius: var(--recharge-card-radius);
+  padding: 4px;
+  background: linear-gradient(180deg, #ff0000 67.44%, #f9a600 100%);
   box-sizing: border-box;
   cursor: pointer;
   font: inherit;
   -webkit-tap-highlight-color: transparent;
+  min-height: 0;
 }
 
 .chat-recharge-card.is-selected {
-  border-color: #2494ff;
-  background: #f0f8ff;
-  box-shadow: 0 0 0 1px rgba(36, 148, 255, 0.25);
+  box-shadow: 0 0 0 2px rgba(27, 84, 255, 0.55);
 }
 
-.chat-recharge-card-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: #eee;
+.chat-recharge-card-inner {
+  display: flex;
+  flex-direction: column;
+  /* 按 750 设计宽换算卡片高度，避免黄区被拉出一段“空高” */
+  height: clamp(112px, calc(224 * 100vw / 750), 124px);
+  border-radius: inherit;
   overflow: hidden;
+}
+
+.chat-recharge-card-top {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: 8px;
+  background: rgba(242, 255, 0, 0.75);
+  background-image: radial-gradient(ellipse 120% 85% at 50% 35%, rgba(255, 255, 255, 0.55) 0%, transparent 62%);
+}
+
+.chat-recharge-card-icon-wrap {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 4px 4px 2px;
+  box-sizing: border-box;
 }
 
-.chat-recharge-card-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.chat-recharge-card-icon-img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  display: block;
 }
 
 .chat-recharge-card-placeholder {
-  font-size: 11px;
-  color: #999;
-}
-
-.chat-recharge-card-name {
-  font-size: 12px;
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.55);
   font-weight: 600;
-  color: #333;
-  text-align: center;
-  line-height: 1.25;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
-.chat-recharge-card-dur {
+.chat-recharge-card-qty {
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding: 5px 4px 6px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #2b1a0a;
+  line-height: 1.2;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.chat-recharge-card-bottom {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px 0px;
+  box-sizing: border-box;
+}
+
+.chat-recharge-price-main {
   font-size: 11px;
-  color: #888;
-}
-
-.chat-recharge-card-price {
-  font-size: 12px;
-  color: #2494ff;
-  font-weight: 600;
-  text-align: center;
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
 }
 
 .chat-recharge-price-promo {
@@ -1476,34 +1607,55 @@ async function onRecordEnd() {
 .chat-recharge-price-old {
   display: block;
   font-size: 10px;
-  color: #999;
+  color: rgba(255, 255, 255, 0.82);
   font-weight: 400;
   text-decoration: line-through;
 }
 
-.chat-recharge-vip-hint {
-  font-size: 12px;
-  color: #666;
-  text-align: center;
-  line-height: 1.5;
-  margin-bottom: 8px;
+.chat-recharge-hint-row {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 0 2px;
 }
 
-.chat-recharge-link {
+.chat-recharge-hint-left {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #666;
+}
+
+.chat-recharge-hint-text {
+  color: #666;
+}
+
+.chat-recharge-hint-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: 11px;
   color: #2494ff;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.chat-recharge-footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-  font-size: 12px;
+.chat-recharge-hint-right {
+  flex-shrink: 0;
 }
 
 .chat-recharge-submit {
+  flex-shrink: 0;
   width: 100%;
   height: 46px;
+  margin-top: 12px;
   border: 0;
   border-radius: 10px;
   background: #2494ff;
@@ -1515,4 +1667,12 @@ async function onRecordEnd() {
 .chat-recharge-submit:disabled {
   opacity: 0.55;
 }
+</style>
+
+<style>
+/* 与同圈 match-goods-popup-van 一致：抬高 van-popup 根节点 max-height，否则只改内层不生效 */
+/* .chat-recharge-popup.van-popup {
+  height: 50vh !important;
+  min-height: min(55vh, 100dvh) !important;
+} */
 </style>
