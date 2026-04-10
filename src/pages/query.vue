@@ -7,7 +7,7 @@
           :key="key"
           class="px-1.5"
           :class="module?.className"
-          v-bind="module?.config"
+          :api="module.config.api"
           :params="{
             ...get_url_query(),
             [`${route.query._sort_key || 'sort'}`]: tab.name
@@ -25,12 +25,12 @@
                   <div>{{ item.total || (item.series && item.series.length) || 0 }}张</div>
                 </div>
               </dx-cover>
-              <div class="text-sm line-clamp-2">{{ item.title }}</div>
+              <div class="line-clamp-2 text-sm">{{ item.title }}</div>
             </nuxt-link>
 
             <component
-              v-else
               :is="module.component"
+              v-else
               :key="item.id"
               :item="module.rewrite_props ? module.rewrite_props(item) : item"
               v-bind="module.props"
