@@ -1265,6 +1265,12 @@ async function onStartMatch() {
     selectedMatchIndex.value = 0
     showMatchPopup.value = true
     matchView.value = 'grid'
+
+    // 匹配成功后：本地先扣一次（立即反馈），再异步刷新接口数据做校准
+    if (myProfileMatchNum.value > 0) {
+      myProfileMatchNum.value = Math.max(0, Number(myProfileMatchNum.value) - 1)
+    }
+    void fetchTalkHome()
   } catch (error) {
     console.error('匹配失败:', error)
     __.$Toast(scircleErrMsg(error))
