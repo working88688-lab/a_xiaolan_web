@@ -56,6 +56,64 @@ const showInsufficientTip = computed(() => {
 const composerMode = ref<'text' | 'voice'>('text')
 const showMore = ref(false)
 
+const isUploadingImage = ref(false)
+const albumInputRef = useTemplateRef<HTMLInputElement>('albumInputRef')
+const cameraInputRef = useTemplateRef<HTMLInputElement>('cameraInputRef')
+
+function resetAndClickInput(el: HTMLInputElement | null | undefined) {
+  if (!el) return
+  // iOS: 必须在用户点击回调的同步栈内触发 click()
+  try {
+    el.value = ''
+  } catch {
+    /* ignore */
+  }
+  el.click()
+}
+
+function pickFromAlbum() {
+  if (isUploadingImage.value) return
+  showMore.value = false
+  resetAndClickInput(albumInputRef.value)
+}
+
+function pickFromCamera() {
+  if (isUploadingImage.value) return
+  showMore.value = false
+  resetAndClickInput(cameraInputRef.value)
+}
+
+async function onPickedImage(e: Event) {
+  const input = e.target as HTMLInputElement | null
+  const file = input?.files?.[0]
+  if (!file) return
+  if (showInsufficientTip.value) {
+    __.$Toast('聊天时长不足，请先充值')
+    return
+  }
+
+  isUploadingImage.value = true
+  try {
+    const compressed = (await __.$ImageCompression.compressor(file)) as File
+    const url = (await __.$Api.uploadImage({ file: compressed, useCompress: false })) as unknown as string
+    if (!url) throw new Error('图片上传失败')
+    __.$Toast('图片已发送')
+    void fetchTalkInfo()
+  } catch (err) {
+    console.error('[chat-room] 图片上传失败', err)
+    __.$Toast(scircleErrMsg(err))
+  } finally {
+    isUploadingImage.value = false
+    if (input) {
+      try {
+        input.value = ''
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
 function productPayCoins(p: TalkProductItem): number {
   const promo = Number(p.promo_price)
   const price = Number(p.price)
@@ -508,7 +566,7 @@ async function onRecordEnd() {
       </div>
 
       <div v-if="showMore" class="chat-more">
-        <button class="chat-more-item" type="button">
+        <button class="chat-more-item" type="button" :disabled="isUploadingImage" @click="pickFromAlbum">
           <div class="chat-more-icon">
             <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g clip-path="url(#clip0_67_5592)">
@@ -524,9 +582,9 @@ async function onRecordEnd() {
               </defs>
             </svg>
           </div>
-          <div class="chat-more-text">图片</div>
+          <div class="chat-more-text">{{ isUploadingImage ? '上传中…' : '图片' }}</div>
         </button>
-        <button class="chat-more-item" type="button">
+        <button class="chat-more-item" type="button" :disabled="isUploadingImage" @click="pickFromCamera">
           <div class="chat-more-icon">
             <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -547,6 +605,16 @@ async function onRecordEnd() {
         </button>
       </div>
     </div>
+
+    <input ref="albumInputRef" class="sr-only" type="file" accept="image/*" @change="onPickedImage" />
+    <input
+      ref="cameraInputRef"
+      class="sr-only"
+      type="file"
+      accept="image/*"
+      capture="environment"
+      @change="onPickedImage"
+    />
 
     <!-- 与同圈 scircle-tab 一致的录音遮罩（Teleport + 波形/取消/松开发送/底弧麦克风） -->
     <Teleport to="body">
@@ -670,6 +738,16 @@ async function onRecordEnd() {
 </template>
 
 <style scoped>
+.sr-only {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  left: -9999px;
+  top: -9999px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .chat-room {
   min-height: 100vh;
   background: transparent;
@@ -1200,6 +1278,12 @@ async function onRecordEnd() {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+}
+
+.chat-more-item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .chat-more-icon {
