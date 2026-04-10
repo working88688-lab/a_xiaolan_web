@@ -17,7 +17,7 @@
 
       <!-- 底部按钮区 -->
       <div v-if="!isMatching" class="scircle-match px-1.5">
-        <button class="scircle-start" type="button" :disabled="!canStartMatch" @click="onStartMatch">
+        <button class="scircle-start" type="button" @click="onStartMatch">
           <svg
             class="scircle-start-icon"
             width="40"
@@ -1226,7 +1226,10 @@ function onHelp() {
 }
 
 async function onStartMatch() {
-  if (!canStartMatch.value) return
+  if (matchRemainNum.value <= 0) {
+    __.$Toast('匹配次数不足')
+    return
+  }
   isMatching.value = true
   try {
     let res: any = null
