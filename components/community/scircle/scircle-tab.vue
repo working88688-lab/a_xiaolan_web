@@ -380,7 +380,6 @@
                 >
                   {{ item.name }}
                 </button>
-                <span v-if="!expectProfileTags1.length" class="scircle-tag-empty">暂无标签</span>
               </div>
             </div>
 
@@ -399,7 +398,6 @@
                 >
                   {{ item.name }}
                 </button>
-                <span v-if="!expectProfileTags2.length" class="scircle-tag-empty">暂无倾向</span>
               </div>
             </div>
 
@@ -418,7 +416,6 @@
                 >
                   {{ item.name }}
                 </button>
-                <span v-if="!expectProfileTags3.length" class="scircle-tag-empty">暂无标签</span>
               </div>
             </div>
           </div>
@@ -494,6 +491,7 @@
       :close-on-click-overlay="false"
       :closeable="false"
       :show-toolbar="false"
+      :lock-scroll="true"
       class="tq-match-popup"
     >
       <div class="tq-flip" :class="{ 'is-detail': matchView === 'detail' }">
@@ -546,7 +544,6 @@
                 <div class="tq-detail-tags">
                   <div class="tq-detail-tags-scroll">
                     <span v-for="(tag, i) in activeMatchItem.tags" :key="`${tag}-${i}`" class="tq-pill">#{{ tag }}</span>
-                    <span v-if="!activeMatchItem.tags.length" class="tq-pill">#暂无标签</span>
                   </div>
                 </div>
 
@@ -2279,6 +2276,9 @@ async function goChat() {
   max-width: calc(100vw - 16px) !important;
   background: transparent !important;
   box-sizing: border-box !important;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
 }
 
 .tq-flip {
@@ -2286,6 +2286,7 @@ async function goChat() {
   max-height: 86vh;
   aspect-ratio: 1050 / 2250;
   perspective: 1000px;
+  overflow: hidden;
 }
 
 .tq-flip-inner {
