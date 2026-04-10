@@ -1290,13 +1290,24 @@ function resetSettings() {
 
 async function onStepOneNext() {
   if (isSavingStep1.value) return
+  const tagIds = myProfileSelected.value.join(',')
+  const img = profileImg.value?.trim()
+  const voice = profileVoice.value?.trim()
+
+  // 未选择标签直接拦截（第一步/第二步规则一致）
+  if (!tagIds) {
+    __.$Toast('请至少选择一个个人标签')
+    return
+  }
+
   isSavingStep1.value = true
   try {
-    await __.$Api.Community.usersmatchUpdateProfile({
-      tag_ids: myProfileSelected.value.join(','),
-      img: profileImg.value,
-      voice: profileVoice.value
-    })
+    const payload: Record<string, any> = {}
+    if (tagIds) payload.tag_ids = tagIds
+    if (img) payload.img = img
+    if (voice) payload.voice = voice
+
+    await __.$Api.Community.usersmatchUpdateProfile(payload)
     settingsStep.value = 2
   } catch (error) {
     console.error('更新个人资料失败:', error)
@@ -1308,10 +1319,15 @@ async function onStepOneNext() {
 
 async function onStepTwoDone() {
   if (isSavingStep2.value) return
+  const tagIds = expectProfileSelected.value.join(',')
+  if (!tagIds) {
+    __.$Toast('请至少选择一个匹配标签')
+    return
+  }
   isSavingStep2.value = true
   try {
     await __.$Api.Community.usersmatchUpdateExpectProfile({
-      tag_ids: expectProfileSelected.value.join(',')
+      tag_ids: tagIds
     })
     showSettings.value = false
   } catch (error) {
