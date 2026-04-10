@@ -34,19 +34,67 @@
 
           <div v-if="isImageLocked(index)" class="image-footer">
             <div class="image-footer-item image-footer-item--eye">
-              <span class="icon"></span>
+              <svg
+                class="image-footer-icon"
+                width="32"
+                height="32"
+                viewBox="0 0 32 32"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M15.6514 5.33691C22.9207 5.33711 28.994 13.3918 30.4883 15.5459C30.7099 15.8653 30.7088 16.2737 30.4854 16.5918C28.9855 18.7253 22.9132 26.6697 15.6514 26.6699C8.38731 26.6699 2.31303 18.6698 0.815465 16.5254C0.592785 16.2065 0.592738 15.7973 0.815465 15.4785C2.31316 13.3346 8.38743 5.33691 15.6514 5.33691ZM15.7862 11.6836C13.4429 11.6836 11.543 13.6179 11.543 16.0039C11.5431 18.3898 13.443 20.3242 15.7862 20.3242C18.1293 20.3241 20.0292 18.3898 20.0293 16.0039C20.0293 13.6179 18.1294 11.6837 15.7862 11.6836Z"
+                  fill="white"
+                />
+              </svg>
               <span class="image-footer-label">
                 {{ $Utils.formatNumber(pageViews) }}
               </span>
             </div>
             <div class="image-footer-item image-footer-item--star" @click.stop="onLike">
-              <span class="icon"></span>
+              <svg
+                class="image-footer-icon"
+                width="32"
+                height="32"
+                viewBox="0 0 32 32"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <g clip-path="url(#clip0_80_4327_star)">
+                  <path
+                    d="M16.1447 2.41199C16.5339 1.76947 17.4661 1.76947 17.8553 2.41199L22.0676 9.36587C22.2069 9.59577 22.4328 9.75992 22.6945 9.82132L30.6097 11.6786C31.3411 11.8502 31.6291 12.7368 31.1383 13.3055L25.8265 19.4605C25.6509 19.664 25.5646 19.9296 25.587 20.1975L26.2666 28.2992C26.3294 29.0478 25.5752 29.5957 24.8827 29.3047L17.3874 26.1548C17.1396 26.0507 16.8604 26.0507 16.6126 26.1548L9.11735 29.3047C8.42481 29.5957 7.67063 29.0478 7.73342 28.2992L8.41297 20.1975C8.43544 19.9296 8.34914 19.664 8.17353 19.4605L2.86167 13.3055C2.37087 12.7368 2.65894 11.8502 3.39029 11.6786L11.3055 9.82132C11.5672 9.75992 11.7931 9.59577 11.9324 9.36587L16.1447 2.41199Z"
+                    fill="white"
+                  />
+                </g>
+                <defs>
+                  <clipPath id="clip0_80_4327_star">
+                    <rect width="32" height="32" fill="white" />
+                  </clipPath>
+                </defs>
+              </svg>
               <span class="image-footer-label">
                 {{ $Utils.formatNumber(pageData?.favorites ?? 0) }}
               </span>
             </div>
             <div class="image-footer-item image-footer-item--share" @click.stop="onShare">
-              <span class="icon"></span>
+              <svg
+                class="image-footer-icon"
+                width="32"
+                height="32"
+                viewBox="0 0 32 32"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M1.77813 28.937C1.55098 28.8603 1.35391 28.7162 1.21442 28.5245C1.07493 28.3329 0.99997 28.1034 1 27.8681C1 22.7037 2.05866 18.5736 4.14785 15.5915C6.6719 11.9885 10.6534 10.0485 16.0001 9.80756V4.13027C16.0001 3.90893 16.0664 3.69247 16.1909 3.50773C16.3153 3.323 16.4924 3.17812 16.7001 3.09108C16.9079 3.00403 17.1371 2.97865 17.3594 3.01808C17.5818 3.05751 17.7874 3.16001 17.9508 3.31287L30.6431 15.1818C30.7559 15.2873 30.8457 15.4142 30.907 15.5547C30.9684 15.6952 31 15.8464 31 15.9992C31 16.152 30.9684 16.3032 30.907 16.4437C30.8457 16.5842 30.7559 16.711 30.6431 16.8166L17.9508 28.6855C17.7874 28.8383 17.5818 28.9408 17.3594 28.9803C17.1371 29.0197 16.9079 28.9943 16.7001 28.9073C16.4924 28.8202 16.3153 28.6753 16.1909 28.4906C16.0664 28.3059 16.0001 28.0894 16.0001 27.8681V22.2325C12.7548 22.3285 10.3029 22.8436 8.35075 23.8319C6.24136 24.9001 4.71179 26.4961 3.06323 28.5654C2.91534 28.7509 2.71201 28.8866 2.48163 28.9534C2.25125 29.0203 2.00531 29.015 1.77813 28.9384V28.937Z"
+                  fill="white"
+                />
+              </svg>
               <span class="image-footer-label">分享</span>
             </div>
           </div>
@@ -355,7 +403,7 @@ onBeforeMount(async () => {
   align-items: center;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
   color: #fff;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .image-footer-item {
@@ -363,22 +411,11 @@ onBeforeMount(async () => {
   align-items: center;
 }
 
-.image-footer-item .icon {
-  display: inline-block;
+.image-footer-icon {
   width: 14px;
+  height: 14px;
   margin-right: 4px;
-}
-
-.image-footer-item--eye .icon::before {
-  content: '👁';
-}
-
-.image-footer-item--star .icon::before {
-  content: '★';
-}
-
-.image-footer-item--share .icon::before {
-  content: '➤';
+  flex: 0 0 auto;
 }
 
 .image-footer-label {
