@@ -24,8 +24,14 @@
             :class="{ 'image-action--coins': pageData?.coins > 0, 'image-action--vip': !pageData?.coins }"
             @click.stop="handleMainAction"
           >
-            <div v-if="pageData?.coins > 0" class="image-action-primary">{{ pageData?.coins }}金币</div>
-            <div v-else class="image-action-primary">开通VIP</div>
+            <div v-if="pageData?.coins > 0" class="image-action-primary">
+              <img src="~/assets/image/home/icon_coins.png" style="width: 0.32rem; height: 0.32rem;background-color: transparent;" />
+              {{ pageData?.coins }}金币
+            </div>
+            <div v-else class="image-action-primary">
+              <img src="~/assets/image/home/icon_vip.png" style="width: 0.32rem; height: 0.32rem;background-color: transparent;" />
+              开通VIP
+            </div>
             <div v-if="pageData?.coins > 0" class="image-action-sub">
               {{ pageData?.coins }}金币解锁全部{{ pageData?.total }}张
             </div>
@@ -384,6 +390,9 @@ onBeforeMount(async () => {
   height: 40px;
   line-height: 40px;
   border-radius: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .image-action-sub {
