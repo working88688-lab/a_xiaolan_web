@@ -995,7 +995,14 @@ function probeVoiceDurationFromUrl(url: string): Promise<number> {
 
 function pickAudioRecorderMime(): string {
   if (typeof MediaRecorder === 'undefined') return ''
-  const list = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']
+  // iOS / Safari 对 MediaRecorder 支持不完整，尽量多列一些可选项
+  const list = [
+    'audio/mp4;codecs=mp4a.40.2',
+    'audio/mp4',
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/ogg;codecs=opus'
+  ]
   for (const t of list) {
     if (MediaRecorder.isTypeSupported(t)) return t
   }
@@ -1432,9 +1439,27 @@ async function onRecordStart(e: TouchEvent | MouseEvent) {
     if (t) isRecordCancel.value = isInCancelArea(t.clientX, t.clientY)
   }
 
+  // iOS/WKWebView 常见限制：非安全上下文无法使用麦克风
+  if (import.meta.client && typeof window !== 'undefined' && (window as any).isSecureContext === false) {
+    showRecordOverlay.value = false
+    isMouseDown.value = false
+    __.$Toast('当前环境不支持录音（需要安全环境），请改用上传语音')
+    onPickProfileVoice()
+    return
+  }
+
   if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
     showRecordOverlay.value = false
     __.$Toast('当前环境不支持录音')
+    return
+  }
+
+  // MediaRecorder 在 iOS 上可能不可用/不支持音频录制：直接切到上传兜底
+  if (typeof MediaRecorder === 'undefined') {
+    showRecordOverlay.value = false
+    isMouseDown.value = false
+    __.$Toast('当前设备不支持录音，请改用上传语音')
+    onPickProfileVoice()
     return
   }
 
@@ -1449,7 +1474,19 @@ async function onRecordStart(e: TouchEvent | MouseEvent) {
     recordChunksRef.value = []
     recordStartTsRef.value = Date.now()
     const mime = pickAudioRecorderMime()
-    const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
+    let rec: MediaRecorder
+    try {
+      rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
+    } catch (err) {
+      // iOS 不支持当前 mime/录制器：兜底走上传
+      stream.getTracks().forEach(t => t.stop())
+      mediaStreamRef.value = null
+      showRecordOverlay.value = false
+      isMouseDown.value = false
+      __.$Toast('当前设备录音不可用，请改用上传语音')
+      onPickProfileVoice()
+      return
+    }
     rec.ondataavailable = ev => {
       if (ev.data.size > 0) recordChunksRef.value.push(ev.data)
     }
