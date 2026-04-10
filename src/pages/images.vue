@@ -25,11 +25,17 @@
             @click.stop="handleMainAction"
           >
             <div v-if="pageData?.coins > 0" class="image-action-primary">
-              <img src="~/assets/image/home/icon_coins.png" style="width: 0.32rem; height: 0.32rem;background-color: transparent;" />
+              <img
+                src="~/assets/image/home/icon_coins.png"
+                style="width: 0.32rem; height: 0.32rem; background-color: transparent"
+              />
               {{ pageData?.coins }}金币
             </div>
             <div v-else class="image-action-primary">
-              <img src="~/assets/image/home/icon_vip.png" style="width: 0.32rem; height: 0.32rem;background-color: transparent;" />
+              <img
+                src="~/assets/image/home/icon_vip.png"
+                style="width: 0.32rem; height: 0.32rem; background-color: transparent"
+              />
               开通VIP
             </div>
             <div v-if="pageData?.coins > 0" class="image-action-sub">
@@ -110,27 +116,28 @@
 
     <van-image-preview
       v-model:show="showPreview"
-      :images="previewImages"
+      :images="previewVisibleImages"
       :start-position="currentIndex"
-      :show-index="false"
+      :show-index="true"
       closeable
       close-icon-position="top-right"
       :close-on-click-image="false"
       @change="onPreviewChange"
-    >
-      <template #cover>
-        <div class="custom-preview-footer">
-          <div class="custom-preview-index">图 {{ currentIndex + 1 }} / {{ previewImages.length }}</div>
-          <button class="custom-preview-save" type="button" @click.stop="onSaveClick">保存</button>
-        </div>
-      </template>
-    </van-image-preview>
+    ></van-image-preview>
+
+    <teleport to="body">
+      <div v-if="showPreview" class="custom-preview-footer">
+        <div class="custom-preview-index">{{ previewDisplayTotal }}/{{ previewTotalAll }}</div>
+        <span class="custom-preview-save" role="button" tabindex="0" @click.stop="onSaveClick">保存</span>
+      </div>
+    </teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { ImageData } from '@types'
 import coinsicon from '~/assets/image/comics/coins.png'
+import { download_image } from '~/utils/blob-helper'
 
 const route = useRoute()
 const __ = useNuxtApp()
@@ -149,6 +156,29 @@ const {
 const showPreview = ref(false)
 const previewImages = ref<string[]>([])
 const currentIndex = ref(0)
+
+const isPreviewUnlocked = computed(() => {
+  const raw: any = pageData.value || {}
+  return Boolean(raw.has_right) || raw.is_pay === 1
+})
+
+const previewVisibleImages = computed(() => {
+  const images = previewImages.value || []
+  if (isPreviewUnlocked.value) return images
+  return images.slice(0, 1)
+})
+
+const previewTotalAll = computed(() => previewImages.value.length || 0)
+
+const previewDisplayTotal = computed(() => {
+  return previewVisibleImages.value.length || 0
+})
+
+const previewDisplayIndex = computed(() => {
+  const total = previewDisplayTotal.value
+  if (total <= 0) return 0
+  return Math.min(currentIndex.value + 1, total)
+})
 
 const pageViews = computed(() => {
   const raw: any = pageData.value || {}
@@ -212,11 +242,43 @@ const onImageClick = (index: number) => {
 }
 
 const onPreviewChange = (index: number) => {
-  currentIndex.value = index
+  const total = previewDisplayTotal.value || 0
+  if (total <= 0) {
+    currentIndex.value = 0
+    return
+  }
+  currentIndex.value = Math.min(Math.max(index, 0), total - 1)
 }
 
-const onSaveClick = () => {
-  __.$Toast('请截图或长按图片进行保存')
+const safeFilename = (name: string) => name.replace(/[\\/:*?"<>|]/g, '_').slice(0, 120)
+
+const onSaveClick = async () => {
+  const url = previewVisibleImages.value[currentIndex.value]
+  if (!url) {
+    __.$Toast('图片地址无效')
+    return
+  }
+
+  const title = (pageData.value?.title || 'image').toString()
+  const filename = safeFilename(`${title}-${currentIndex.value + 1}.jpg`)
+
+  try {
+    // 优先转 blob 再下载，避免部分端对跨域/下载属性的限制
+    const res = await fetch(url, { mode: 'cors' })
+    const blob = await res.blob()
+    const objectUrl = URL.createObjectURL(blob)
+    download_image(objectUrl, filename)
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1500)
+    __.$Toast('已开始保存')
+  } catch (e) {
+    // 回退：直接触发下载（在部分 WebView / 浏览器会直接走系统保存）
+    try {
+      download_image(url, filename)
+      __.$Toast('已开始保存')
+    } catch {
+      __.$Toast('保存失败，请稍后重试')
+    }
+  }
 }
 
 const handleVipAction = async () => {
@@ -432,7 +494,7 @@ onBeforeMount(async () => {
 }
 
 .custom-preview-footer {
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
   bottom: 16px;
@@ -443,6 +505,7 @@ onBeforeMount(async () => {
   color: #fff;
   font-size: 14px;
   pointer-events: none;
+  z-index: 3000;
 }
 
 .custom-preview-index {
@@ -451,11 +514,8 @@ onBeforeMount(async () => {
 
 .custom-preview-save {
   pointer-events: auto;
-  padding: 6px 18px;
-  border-radius: 999px;
-  border: none;
-  background-image: linear-gradient(to right, #6de6fb, #428af7);
   color: #fff;
   font-size: 14px;
+  padding: 6px 2px;
 }
 </style>
