@@ -138,7 +138,9 @@
         <div v-if="settingsStep === 1" class="scircle-settings-body">
           <div class="scircle-settings-scroll">
             <div class="scircle-settings-section">
-              <div class="scircle-settings-section-title">个人标签（可多选）</div>
+              <div class="scircle-settings-section-title">
+                个人标签（可多选）<span class="scircle-required">*</span>
+              </div>
               <div class="scircle-settings-tags">
                 <button
                   v-for="item in myProfileTags1"
@@ -155,7 +157,9 @@
             </div>
 
             <div class="scircle-settings-section">
-              <div class="scircle-settings-section-title">个人倾向（可多选）</div>
+              <div class="scircle-settings-section-title">
+                个人倾向（可多选）<span class="scircle-required">*</span>
+              </div>
               <div class="scircle-settings-tags scircle-settings-tags--small">
                 <button
                   v-for="item in myProfileTags2"
@@ -172,7 +176,9 @@
             </div>
 
             <div class="scircle-settings-section">
-              <div class="scircle-settings-section-title">个人性癖好（可多选）</div>
+              <div class="scircle-settings-section-title">
+                个人性癖好（可多选）<span class="scircle-required">*</span>
+              </div>
               <div class="scircle-settings-tags">
                 <button
                   v-for="item in myProfileTags3"
@@ -360,7 +366,9 @@
         <div v-else class="scircle-settings-body">
           <div class="scircle-settings-scroll">
             <div class="scircle-settings-section">
-              <div class="scircle-settings-section-title">他的标签（可多选）</div>
+              <div class="scircle-settings-section-title">
+                他的标签（可多选）<span class="scircle-required">*</span>
+              </div>
               <div class="scircle-settings-tags">
                 <button
                   v-for="item in expectProfileTags1"
@@ -377,7 +385,9 @@
             </div>
 
             <div class="scircle-settings-section">
-              <div class="scircle-settings-section-title">他的倾向（可多选）</div>
+              <div class="scircle-settings-section-title">
+                他的倾向（可多选）<span class="scircle-required">*</span>
+              </div>
               <div class="scircle-settings-tags scircle-settings-tags--small">
                 <button
                   v-for="item in expectProfileTags2"
@@ -394,7 +404,9 @@
             </div>
 
             <div class="scircle-settings-section">
-              <div class="scircle-settings-section-title">他的性癖好（可多选）</div>
+              <div class="scircle-settings-section-title">
+                他的性癖好（可多选）<span class="scircle-required">*</span>
+              </div>
               <div class="scircle-settings-tags">
                 <button
                   v-for="item in expectProfileTags3"
@@ -1814,6 +1826,12 @@ async function goChat() {
   font-size: 13px;
   color: #333333;
   margin: 0 0 10px;
+}
+
+.scircle-required {
+  color: #ee0a24;
+  margin-left: 4px;
+  font-weight: 600;
 }
 
 .scircle-settings-tags {
