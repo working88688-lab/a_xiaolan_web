@@ -192,6 +192,15 @@
               <div class="scircle-settings-section-title">个人照片</div>
               <div class="scircle-settings-photo">
                 <button class="scircle-settings-photo-box" type="button" @click="onPickProfileImage">
+                  <button
+                    v-if="profileImg"
+                    class="scircle-settings-photo-delete"
+                    type="button"
+                    aria-label="删除个人照片"
+                    @click.stop.prevent="onDeleteProfileImage"
+                  >
+                    ×
+                  </button>
                   <img
                     v-if="profileImg"
                     :key="profileImg"
@@ -1078,6 +1087,13 @@ function onPickProfileImage() {
   profileImageInputRef.value?.click()
 }
 
+function onDeleteProfileImage() {
+  if (isUploadingImage.value) return
+  profileImg.value = ''
+  const input = profileImageInputRef.value
+  if (input) input.value = ''
+}
+
 async function onProfileImageChange(event: Event) {
   const input = event.target as HTMLInputElement | null
   const file = input?.files?.[0]
@@ -1851,6 +1867,28 @@ async function goChat() {
   gap: 6px;
   padding: 0;
   cursor: pointer;
+  position: relative;
+}
+
+.scircle-settings-photo-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 20px;
+  line-height: 28px;
+  text-align: center;
+  padding: 0;
+  z-index: 2;
+}
+
+.scircle-settings-photo-delete:active {
+  transform: scale(0.96);
 }
 
 .scircle-settings-photo-cloud {
