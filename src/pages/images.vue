@@ -3,7 +3,7 @@
     <dx-navbar
       class="custom-nav-bar"
       :border="false"
-      :title="pageData?.title?.length > 15 ? '图集详情' : pageData?.title"
+      :title="pageData?.title"
       left-arrow
       @click-left="__.$Back"
     ></dx-navbar>
@@ -257,9 +257,13 @@ const handleBuyAction = async () => {
 }
 
 const init = async (id: number) => {
-  await execute({
+  const res = await execute({
     id
   })
+  if (import.meta.env.DEV && import.meta.client) {
+    console.log('[images] detail api response:', res)
+    console.log('[images] detail pageData:', pageData.value)
+  }
 }
 
 onBeforeMount(async () => {
