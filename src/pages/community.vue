@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import type { BannerItem, ForumItem, TabItem } from '@types'
-import { COMMUNITY_NAV_GUIDE_STORAGE_KEY } from '~/utils/communityNavGuide'
+import { nextTick, onActivated } from 'vue'
 
 const activeTab = ref('recomment')
 const mainTabsRef = ref<{ $el?: HTMLElement } | null>(null)
@@ -89,24 +89,34 @@ watch(
 )
 
 function onCommunityNavGuideDismiss() {
-  try {
-    localStorage.setItem(COMMUNITY_NAV_GUIDE_STORAGE_KEY, '1')
-  } catch {
-    /* ignore */
-  }
   showCommunityNavGuide.value = false
 }
 
-onMounted(() => {
+async function maybeShowCommunityNavGuide() {
   if (!import.meta.client) return
-  try {
-    if (!localStorage.getItem(COMMUNITY_NAV_GUIDE_STORAGE_KEY)) {
-      showCommunityNavGuide.value = true
-    }
-  } catch {
-    /* 隐私模式等：不挡主流程 */
-  }
+  // 需求：进入「同圈」tab 时才展示新手提示
+  if (activeTab.value !== 'scircle') return
+
+  // 等 tabs ref 挂载完成，避免 iOS 上首次进来算不到位置
+  await nextTick()
+  if (!mainTabsRef.value) return
+  showCommunityNavGuide.value = true
+}
+
+onMounted(() => {
+  void maybeShowCommunityNavGuide()
 })
+
+onActivated(() => {
+  void maybeShowCommunityNavGuide()
+})
+
+watch(
+  () => activeTab.value,
+  () => {
+    void maybeShowCommunityNavGuide()
+  }
+)
 </script>
 <style lang="postcss" scoped>
 .search-button {
