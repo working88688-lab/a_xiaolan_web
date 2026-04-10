@@ -1565,6 +1565,26 @@ async function fetchMatchDetail() {
 
 async function goChat() {
   const current = activeMatchItem.value
+  // 首次在匹配成功页选择“聊天”时提示；确认后不再提示
+  const CONFIRM_KEY = 'scircle_match_first_chat_confirmed'
+  try {
+    if (import.meta.client) {
+      const confirmed = window.localStorage.getItem(CONFIRM_KEY) === '1'
+      if (!confirmed) {
+        await __.$Alert({
+          title: '提示',
+          message: '是否选择此人进行聊天，选择后其他人将消失在人海。',
+          showCancelButton: true,
+          confirmButtonText: '确认',
+          cancelButtonText: '取消'
+        })
+        window.localStorage.setItem(CONFIRM_KEY, '1')
+      }
+    }
+  } catch {
+    // 用户取消或弹窗异常：直接中断，不进入聊天
+    return
+  }
   try {
     await __.$Api.Community.usersmatchSubmitMatch({
       to_uid: String(current.uid || 0)
