@@ -128,7 +128,7 @@ async function fetchCalendarData() {
     const res = await __.$Api.Checkin.calendar()
     const data = res.data as CalendarResponse
 
-    state.signedDays = data.continuous_day
+    state.signedDays = Number((data as any)?.continuous_day ?? 0) || 0
     state.canSignToday = Boolean(data.is_sign)
     state.drawPoints = data.my_points
     state.myMatchCardTimes = data.my_match_card_times
