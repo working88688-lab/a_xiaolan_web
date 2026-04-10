@@ -540,9 +540,12 @@
                     </svg>
                   </button>
 
-                  <button 
+                  <button
+                    v-if="activeMatchItem.voice_url"
                     class="tq-detail-sound"
                     type="button"
+                    aria-label="播放语音"
+                    @click="toggleMatchVoicePlay"
                   >
                     <svg width="33" height="33" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <g clip-path="url(#clip0_137_5162)">
