@@ -192,15 +192,18 @@
               <div class="scircle-settings-section-title">个人照片</div>
               <div class="scircle-settings-photo">
                 <button class="scircle-settings-photo-box" type="button" @click="onPickProfileImage">
-                  <button
+                  <span
                     v-if="profileImg"
                     class="scircle-settings-photo-delete"
-                    type="button"
+                    role="button"
+                    tabindex="0"
                     aria-label="删除个人照片"
                     @click.stop.prevent="onDeleteProfileImage"
+                    @keydown.enter.stop.prevent="onDeleteProfileImage"
+                    @keydown.space.stop.prevent="onDeleteProfileImage"
                   >
                     ×
-                  </button>
+                  </span>
                   <img
                     v-if="profileImg"
                     :key="profileImg"
