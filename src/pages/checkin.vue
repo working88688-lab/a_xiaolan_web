@@ -84,6 +84,7 @@ const img = {
   cjBg: resolveQiandaoImg('cj-bg.png'),
   zbBg: resolveQiandaoImg('zb-bg.png'),
   zbFront: resolveQiandaoImg('zb-front.png'),
+  zp: resolveQiandaoImg('zp.png'),
   zbCenter: resolveQiandaoImg('zb-center.png'),
   zbBottom: resolveQiandaoImg('zb-bottom.png'),
   zpPointer: resolveQiandaoImg('zp-pointer.png'),
@@ -509,7 +510,7 @@ function getDayIcon(day: CheckinDay) {
     <div class="qd-card" :style="{ backgroundImage: img.qdBg ? `url(${img.qdBg})` : '' }">
       <div class="qd-text">恭喜获得一次抽奖机会</div>
       <div class="qd-wheel">
-        <img class="qd-wheel-img" :src="img.zbFront" alt="" />
+        <img class="qd-wheel-img" :src="img.zp" alt="" />
       </div>
       <button class="qd-ok" type="button" @click="closeCheckinPopup">美美收下</button>
     </div>
