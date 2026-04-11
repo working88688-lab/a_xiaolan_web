@@ -131,6 +131,8 @@ async function fetchCalendarData() {
 
     state.signedDays = Number((data as any)?.continuous_day ?? 0) || 0
     state.canSignToday = Boolean(data.is_sign)
+    // 与 is_sign 一致：今日无可签到格（已全部 signed）时不能再依赖「today」格推断
+    state.hasSignedToday = !state.canSignToday
     state.drawPoints = data.my_points
     state.myMatchCardTimes = data.my_match_card_times
     if (typeof data.my_chances === 'number') {
@@ -165,8 +167,6 @@ async function fetchCalendarData() {
     const tomorrowDay = state.calendarData.find((d) => d.status === 'today')
     if (tomorrowDay) {
       state.tomorrowRewardText = tomorrowDay.rewardText
-      // “是否已签到”不再从日历推断，今日是否可点由 is_sign 控制
-      state.hasSignedToday = !state.canSignToday
     } else {
       const nextDay = state.calendarData.find((d) => d.status === 'future')
       if (nextDay) {
@@ -420,8 +420,8 @@ function getDayIcon(day: CheckinDay) {
         </div>
 
         <button class="checkin-panel-btn" type="button" :disabled="!state.canSignToday || state.hasSignedToday">
-          <img class="checkin-panel-btn-img" :src="state.hasSignedToday ? img.btnSigned : img.btnSign" alt="签到"
-            @click="onSignClick" />
+          <img class="checkin-panel-btn-img" :src="state.hasSignedToday ? img.btnSigned : img.btnSign"
+            :alt="state.hasSignedToday ? '已签到' : '签到'" @click="onSignClick" />
         </button>
       </div>
       <!-- 30天日历（只做上半部分：到这里为止） -->

@@ -55,7 +55,7 @@ export default {
   // 社区漫画-搜索
   manhuaFilter: { method: 'post', url: '/api/manhua/filter' },
   // 社区美图-搜索
-  imageFilter: { method: 'post', url: '/api/image/filter' },
+  imageFilter: { method: 'post', url: '/api/image/newfilter' },
   // 社区小说-搜索,
   storyFilter: { method: 'post', url: '/api/story/filter' },
 
