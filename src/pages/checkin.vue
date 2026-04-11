@@ -182,21 +182,7 @@ async function fetchCalendarData() {
       }
     })
 
-    // 首次尚未签任何一天时，接口偶发把「今天」排在第 2 格及之后；旋转使「今天」固定出现在网格首位（#16614）
-    const hasAnySignedInCalendar = mapped.some((d) => d.signed)
-    const todayIndices = mapped
-      .map((d, i) => (d.status === 'today' ? i : -1))
-      .filter((i) => i >= 0)
-    if (!hasAnySignedInCalendar && todayIndices.length === 1) {
-      const i = todayIndices[0]
-      if (i > 0) {
-        state.calendarData = [...mapped.slice(i), ...mapped.slice(0, i)]
-      } else {
-        state.calendarData = mapped
-      }
-    } else {
-      state.calendarData = mapped
-    }
+    state.calendarData = mapped
 
     // 计算明日奖励文本
     const tomorrowDay = state.calendarData.find((d) => d.status === 'today')
@@ -409,8 +395,12 @@ async function fetchLotteryRecords() {
   }
 }
 
+/** 网格只展示「今天 + 未签到的后续天」；已签过的天不在格子里展示，且把「今天」固定为第一个可见格 */
 const days = computed<CheckinDay[]>(() => {
-  return state.calendarData
+  const unsigned = state.calendarData.filter((d) => !d.signed)
+  const todayIdx = unsigned.findIndex((d) => d.status === 'today')
+  if (todayIdx <= 0) return unsigned
+  return [...unsigned.slice(todayIdx), ...unsigned.slice(0, todayIdx)]
 })
 
 // 抽奖奖品列表
