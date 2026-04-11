@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onActivated } from 'vue'
+import { computed, onActivated } from 'vue'
 
 definePageMeta({
   keepalive: true
@@ -71,8 +71,6 @@ const img = {
   bg: resolveQiandaoImg('bg.png'),
   // 信息面板/按钮
   panelTop: resolveQiandaoImg('panel-top.png'),
-  btnSign: resolveQiandaoImg('btn-sign.png'),
-  btnSigned: resolveQiandaoImg('btn-signed.png'),
 
   // 日历奖励图标（未领取/已领取）
   tx: resolveQiandaoImg('tx.png'),
@@ -123,10 +121,24 @@ const state = reactive({
 })
 
 const loading = ref(true)
+/** 签到请求进行中，防止连点触发多次 /api/sign */
+const signingInFlight = ref(false)
 
 function toDrawPointsNumber(v: unknown) {
   const n = Number(v)
   return Number.isFinite(n) ? n : 0
+}
+
+/** 接口 is_sign 可能为 0/1 或字符串，避免 Boolean("0")===true */
+function parseCanSignToday(v: unknown) {
+  if (v === true || v === 1) return true
+  if (v === false || v === 0) return false
+  if (typeof v === 'string') {
+    const s = v.trim().toLowerCase()
+    if (s === '1' || s === 'true' || s === 'yes') return true
+    if (s === '0' || s === 'false' || s === 'no' || s === '') return false
+  }
+  return Boolean(v)
 }
 
 // 获取日历数据
@@ -137,7 +149,7 @@ async function fetchCalendarData() {
     const data = res.data as CalendarResponse
 
     state.signedDays = Number((data as any)?.continuous_day ?? 0) || 0
-    state.canSignToday = Boolean(data.is_sign)
+    state.canSignToday = parseCanSignToday((data as any).is_sign)
     // 与 is_sign 一致：今日无可签到格（已全部 signed）时不能再依赖「today」格推断
     state.hasSignedToday = !state.canSignToday
     state.drawPoints = toDrawPointsNumber((data as any).my_points)
@@ -150,7 +162,7 @@ async function fetchCalendarData() {
     }
 
     // 转换日历数据（接口按连续签到循环返回 calendar 列表，非自然月）
-    state.calendarData = data.calendar.map((item) => {
+    const mapped: CheckinDay[] = data.calendar.map((item) => {
       const rewardTypeMap: Record<number, RewardType> = {
         1: 'tx', // 金币
         2: 'cj'  // 匹配卡
@@ -169,6 +181,22 @@ async function fetchCalendarData() {
         canSign: item.can_sign
       }
     })
+
+    // 首次尚未签任何一天时，接口偶发把「今天」排在第 2 格及之后；旋转使「今天」固定出现在网格首位（#16614）
+    const hasAnySignedInCalendar = mapped.some((d) => d.signed)
+    const todayIndices = mapped
+      .map((d, i) => (d.status === 'today' ? i : -1))
+      .filter((i) => i >= 0)
+    if (!hasAnySignedInCalendar && todayIndices.length === 1) {
+      const i = todayIndices[0]
+      if (i > 0) {
+        state.calendarData = [...mapped.slice(i), ...mapped.slice(0, i)]
+      } else {
+        state.calendarData = mapped
+      }
+    } else {
+      state.calendarData = mapped
+    }
 
     // 计算明日奖励文本
     const tomorrowDay = state.calendarData.find((d) => d.status === 'today')
@@ -304,12 +332,13 @@ const prizeMessage = computed(() => {
 })
 
 function onSignClick() {
-  if (!state.canSignToday) return
-  if (state.hasSignedToday) return
+  if (!signActionEnabled.value) return
   handleSign()
 }
 
 async function handleSign() {
+  if (signingInFlight.value) return
+  signingInFlight.value = true
   try {
     await __.$Api.Checkin.sign({})
     // 先占位避免连点；最终以 refresh 里日历接口的 is_sign 为准
@@ -319,6 +348,8 @@ async function handleSign() {
     showCheckinPopup.value = true
   } catch (error) {
     console.error('签到失败:', error)
+  } finally {
+    signingInFlight.value = false
   }
 }
 
@@ -420,6 +451,38 @@ function isPrizeIconWorkerUrl(url: string) {
   return isRemoteIconUrl(u) || u.startsWith('/')
 }
 
+/** 日历上标为「今天」的可签格（与 can_sign && !signed 一致） */
+const todaySignSlots = computed(() => state.calendarData.filter((d) => d.status === 'today'))
+
+/**
+ * 仅允许「恰好一个」可签入口：若接口误给多天 can_sign，客户端不再放行，避免连签多天
+ */
+const calendarAllowsOneSignAction = computed(() => {
+  const marked = todaySignSlots.value
+  if (marked.length === 1) return true
+  if (marked.length > 1) return false
+  const byCanSign = state.calendarData.filter((d) => d.canSign)
+  return byCanSign.length === 1
+})
+
+/**
+ * 今日是否仍可点击签到：is_sign + 日历仅单格可签 + 非请求中
+ */
+const signActionEnabled = computed(() => {
+  if (loading.value) return false
+  if (signingInFlight.value) return false
+  if (state.hasSignedToday) return false
+  if (!state.canSignToday) return false
+  return calendarAllowsOneSignAction.value
+})
+
+/** 主按钮文案：可签为「签到」；首屏加载中也为「签到」；否则为「已签到」（不依赖切图上的字） */
+const signPanelButtonLabel = computed(() => {
+  if (signActionEnabled.value) return '签到'
+  if (loading.value) return '签到'
+  return '已签到'
+})
+
 /** 日历格本地兜底图（按 reward_key）；远程图请在模板里用 v-lazyLoad，走 worker 解密 */
 function getDayIcon(day: CheckinDay) {
   if (day.status === 'signed') {
@@ -453,14 +516,10 @@ function getDayIcon(day: CheckinDay) {
         <button
           class="checkin-panel-btn"
           type="button"
-          :disabled="!state.canSignToday || state.hasSignedToday"
+          :disabled="!signActionEnabled"
           @click="onSignClick"
         >
-          <img
-            class="checkin-panel-btn-img"
-            :src="state.hasSignedToday ? img.btnSigned : img.btnSign"
-            :alt="state.hasSignedToday ? '已签到' : '签到'"
-          />
+          {{ signPanelButtonLabel }}
         </button>
       </div>
       <!-- 30天日历（只做上半部分：到这里为止） -->
@@ -674,15 +733,26 @@ function getDayIcon(day: CheckinDay) {
 }
 
 .checkin-panel-btn {
+  flex: 0 0 auto;
+  min-width: 82px;
+  height: 36px;
+  padding: 0 16px;
   border: 0;
-  padding: 0;
-  background: transparent;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  background: linear-gradient(90deg, #ff3b30 0%, #ff9500 100%);
+  box-shadow: 0 2px 8px rgba(255, 75, 48, 0.35);
 }
 
-.checkin-panel-btn-img {
-  width: 82px;
-  height: auto;
-  display: block;
+.checkin-panel-btn:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+  color: #ffffff;
+  background: linear-gradient(180deg, #c4c4c4 0%, #a8a8a8 100%);
+  box-shadow: none;
 }
 
 .checkin-calendar {
