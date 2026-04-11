@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { onActivated } from 'vue'
+
 definePageMeta({
   keepalive: true
 })
@@ -122,6 +124,11 @@ const state = reactive({
 
 const loading = ref(true)
 
+function toDrawPointsNumber(v: unknown) {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : 0
+}
+
 // 获取日历数据
 async function fetchCalendarData() {
   try {
@@ -133,7 +140,7 @@ async function fetchCalendarData() {
     state.canSignToday = Boolean(data.is_sign)
     // 与 is_sign 一致：今日无可签到格（已全部 signed）时不能再依赖「today」格推断
     state.hasSignedToday = !state.canSignToday
-    state.drawPoints = data.my_points
+    state.drawPoints = toDrawPointsNumber((data as any).my_points)
     state.myMatchCardTimes = data.my_match_card_times
     if (typeof data.my_chances === 'number') {
       state.drawChances = data.my_chances
@@ -180,32 +187,49 @@ async function fetchCalendarData() {
   }
 }
 
+/** 日历 + 抽奖配置一并刷新（签到成功、抽奖后、从缓存页返回时复用） */
+async function refreshCheckinPageData() {
+  await fetchCalendarData()
+  await fetchDrawConf()
+}
+
 onMounted(() => {
-  fetchCalendarData()
-  fetchDrawConf()
+  void refreshCheckinPageData()
 })
 
-// 获取抽奖配置
+onActivated(() => {
+  void refreshCheckinPageData()
+})
+
+// 获取抽奖配置（积分/机会以签到日历为准；此处仅在 drawConf 显式返回时再覆盖，避免缺字段时被 ||0 刷成 0）
 async function fetchDrawConf() {
   try {
     const res = await __.$Api.Game.drawConf({})
     const data = (res?.data?.list || res?.data || {}) as {
-      items: Array<{
+      items?: Array<{
         id: number
         title: string
         icon: string
         sort: number
       }>
-      my_chances: number
-      my_points: number
-      points_per_draw: number
+      my_chances?: number
+      my_points?: number
+      points_per_draw?: number
     }
 
-    // 更新抽奖机会次数、积分、每次抽奖消耗的积分和奖品列表
-    state.drawChances = data.my_chances || 0
-    state.drawPoints = data.my_points || 0
-    state.drawPointsPerDraw = data.points_per_draw || 50
-    state.lotteryItems = data.items || []
+    if (typeof data.my_chances === 'number') {
+      state.drawChances = data.my_chances
+    }
+    if (data.my_points !== undefined && data.my_points !== null) {
+      state.drawPoints = toDrawPointsNumber(data.my_points)
+    }
+    if (data.points_per_draw !== undefined && data.points_per_draw !== null) {
+      const p = toDrawPointsNumber(data.points_per_draw)
+      if (p > 0) state.drawPointsPerDraw = p
+    }
+    if (Array.isArray(data.items) && data.items.length > 0) {
+      state.lotteryItems = data.items
+    }
 
     console.log('抽奖配置:', data)
   } catch (error) {
@@ -263,8 +287,7 @@ async function handleLottery(type: 'chance' | 'points') {
     console.log('抽奖结果:', (res as any)?.data ?? res)
 
     // 同步积分、抽奖机会等与后端一致（并更新日历上的积分展示）
-    await fetchCalendarData()
-    await fetchDrawConf()
+    await refreshCheckinPageData()
   } catch (error) {
     console.error('抽奖失败:', error)
   }
@@ -289,11 +312,11 @@ function onSignClick() {
 async function handleSign() {
   try {
     await __.$Api.Checkin.sign({})
+    // 先占位避免连点；最终以 refresh 里日历接口的 is_sign 为准
     state.hasSignedToday = true
+    state.canSignToday = false
+    await refreshCheckinPageData()
     showCheckinPopup.value = true
-    // 日历（连续天数、积分等）+ 抽奖区机会/积分与配置
-    await fetchCalendarData()
-    await fetchDrawConf()
   } catch (error) {
     console.error('签到失败:', error)
   }
@@ -301,6 +324,7 @@ async function handleSign() {
 
 function closeCheckinPopup() {
   showCheckinPopup.value = false
+  void refreshCheckinPageData()
 }
 
 const signRecords = ref<Array<{
@@ -389,6 +413,13 @@ function isRemoteIconUrl(url: string) {
   return u.startsWith('http://') || u.startsWith('https://') || u.startsWith('//')
 }
 
+/** 转盘奖品图：除绝对 URL 外，常见根相对资源路径也需走 v-lazyLoad 解密 */
+function isPrizeIconWorkerUrl(url: string) {
+  const u = url?.trim() ?? ''
+  if (!u) return false
+  return isRemoteIconUrl(u) || u.startsWith('/')
+}
+
 /** 日历格本地兜底图（按 reward_key）；远程图请在模板里用 v-lazyLoad，走 worker 解密 */
 function getDayIcon(day: CheckinDay) {
   if (day.status === 'signed') {
@@ -419,9 +450,17 @@ function getDayIcon(day: CheckinDay) {
           </div>
         </div>
 
-        <button class="checkin-panel-btn" type="button" :disabled="!state.canSignToday || state.hasSignedToday">
-          <img class="checkin-panel-btn-img" :src="state.hasSignedToday ? img.btnSigned : img.btnSign"
-            :alt="state.hasSignedToday ? '已签到' : '签到'" @click="onSignClick" />
+        <button
+          class="checkin-panel-btn"
+          type="button"
+          :disabled="!state.canSignToday || state.hasSignedToday"
+          @click="onSignClick"
+        >
+          <img
+            class="checkin-panel-btn-img"
+            :src="state.hasSignedToday ? img.btnSigned : img.btnSign"
+            :alt="state.hasSignedToday ? '已签到' : '签到'"
+          />
         </button>
       </div>
       <!-- 30天日历（只做上半部分：到这里为止） -->
@@ -471,9 +510,14 @@ function getDayIcon(day: CheckinDay) {
               }">
 
                 <div class="wheel-prize-title">{{ prize.title }}</div>
-                <!--  -->
                 <div class="wheel-prize-icon">
-                  <img v-if="prize.icon" :src="prize.icon" alt="" />
+                  <img
+                    v-if="prize.icon && isPrizeIconWorkerUrl(prize.icon)"
+                    :key="prize.icon"
+                    v-lazyLoad="prize.icon.trim()"
+                    alt=""
+                  />
+                  <img v-else-if="prize.icon" :src="prize.icon" alt="" />
                 </div>
               </div>
             </div>
