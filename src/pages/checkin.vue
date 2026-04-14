@@ -124,6 +124,35 @@ const loading = ref(true)
 /** 签到请求进行中，防止连点触发多次 /api/sign */
 const signingInFlight = ref(false)
 
+const CHECKIN_LAST_SIGN_YMD_KEY = 'checkin_last_sign_ymd'
+
+function getLocalYmd(d = new Date()) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+const lastSignedYmd = ref<string>(import.meta.client ? readLastSignedYmd() : '')
+
+function readLastSignedYmd() {
+  if (!import.meta.client) return ''
+  try {
+    return window.localStorage.getItem(CHECKIN_LAST_SIGN_YMD_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+function writeLastSignedYmd(v: string) {
+  if (!import.meta.client) return
+  try {
+    window.localStorage.setItem(CHECKIN_LAST_SIGN_YMD_KEY, v)
+  } catch {
+    // ignore
+  }
+}
+
 function toDrawPointsNumber(v: unknown) {
   const n = Number(v)
   return Number.isFinite(n) ? n : 0
@@ -148,10 +177,42 @@ async function fetchCalendarData() {
     const res = await __.$Api.Checkin.calendar()
     const data = res.data as CalendarResponse
 
+    if (import.meta.dev) {
+      const styleTitle =
+        'background:#111827;color:#FDE68A;padding:2px 8px;border-radius:6px;font-weight:800;'
+      const styleKey = 'color:#60A5FA;font-weight:700;'
+      const styleWarn = 'color:#F97316;font-weight:800;'
+      console.groupCollapsed('%c[Checkin.calendar] 原始返回(关键字段)', styleTitle)
+      console.log('%cis_sign =>', styleKey, (data as any).is_sign, '（注意：0/1/true/false/字符串）')
+      console.log('%ccontinuous_day =>', styleKey, (data as any).continuous_day)
+      console.log('%cmy_points =>', styleKey, (data as any).my_points)
+      console.log('%cmy_chances =>', styleKey, (data as any).my_chances)
+      const cal = Array.isArray((data as any).calendar) ? (data as any).calendar : []
+      const signables = cal.filter((x: any) => x?.can_sign && !x?.signed)
+      if (signables.length > 1) {
+        console.log('%c警告：接口返回多个可签格(可能导致连签错觉)', styleWarn, signables)
+      }
+      console.table(
+        cal.map((x: any) => ({
+          day: x?.day,
+          signed: x?.signed,
+          can_sign: x?.can_sign,
+          reward_key: x?.reward_key,
+          reward_name: x?.reward_name,
+          reward_times: x?.reward_times,
+          reward_text: x?.reward_text,
+          icon: x?.icon
+        }))
+      )
+      console.groupEnd()
+    }
+
     state.signedDays = Number((data as any)?.continuous_day ?? 0) || 0
-    state.canSignToday = parseCanSignToday((data as any).is_sign)
-    // 与 is_sign 一致：今日无可签到格（已全部 signed）时不能再依赖「today」格推断
-    state.hasSignedToday = !state.canSignToday
+    const localLocked = lastSignedYmd.value === getLocalYmd()
+    const apiCanSign = parseCanSignToday((data as any).is_sign)
+    // 只要本地判定“今天已签”，就强制不可再签；不再让接口的 is_sign 把状态冲掉
+    state.canSignToday = !localLocked && apiCanSign
+    state.hasSignedToday = localLocked || !state.canSignToday
     state.drawPoints = toDrawPointsNumber((data as any).my_points)
     state.myMatchCardTimes = data.my_match_card_times
     if (typeof data.my_chances === 'number') {
@@ -176,7 +237,8 @@ async function fetchCalendarData() {
         rewardTimes: item.reward_times,
         icon: item.icon,
         rewardText: item.reward_text || `${item.reward_times}${item.reward_name}`,
-        status: item.signed ? 'signed' : item.can_sign ? 'today' : 'future',
+        // “今天”只表示当前自然日可签入口；如果今日已签（localLocked），就不再标 today，避免误导/连签错觉
+        status: item.signed ? 'signed' : !localLocked && item.can_sign ? 'today' : 'future',
         signed: item.signed,
         canSign: item.can_sign
       }
@@ -208,6 +270,8 @@ async function refreshCheckinPageData() {
 }
 
 onMounted(() => {
+  // 兜底：某些运行时（如延迟注入、WebView）首次读取可能失败，这里再读一次
+  lastSignedYmd.value = readLastSignedYmd()
   void refreshCheckinPageData()
 })
 
@@ -324,12 +388,39 @@ function onSignClick() {
 
 async function handleSign() {
   if (signingInFlight.value) return
+  if (lastSignedYmd.value === getLocalYmd()) {
+    if (import.meta.dev) {
+      console.log(
+        '%c[Checkin.sign] 已被本地自然日锁拦截',
+        'background:#DC2626;color:#fff;padding:2px 8px;border-radius:6px;font-weight:900;',
+        { lastSignedYmd: lastSignedYmd.value, today: getLocalYmd() }
+      )
+    }
+    return
+  }
   signingInFlight.value = true
   try {
+    if (import.meta.dev) {
+      console.log(
+        '%c[Checkin.sign] 发起签到请求',
+        'background:#065F46;color:#fff;padding:2px 8px;border-radius:6px;font-weight:900;',
+        { lastSignedYmd: lastSignedYmd.value, today: getLocalYmd() }
+      )
+    }
     await __.$Api.Checkin.sign({})
     // 先占位避免连点；最终以 refresh 里日历接口的 is_sign 为准
     state.hasSignedToday = true
     state.canSignToday = false
+    const ymd = getLocalYmd()
+    lastSignedYmd.value = ymd
+    writeLastSignedYmd(ymd)
+    if (import.meta.dev) {
+      console.log(
+        '%c[Checkin.sign] 签到成功，写入本地自然日锁',
+        'background:#1D4ED8;color:#fff;padding:2px 8px;border-radius:6px;font-weight:900;',
+        { lockedYmd: ymd }
+      )
+    }
     await refreshCheckinPageData()
     showCheckinPopup.value = true
   } catch (error) {
@@ -395,12 +486,19 @@ async function fetchLotteryRecords() {
   }
 }
 
-/** 网格只展示「今天 + 未签到的后续天」；已签过的天不在格子里展示，且把「今天」固定为第一个可见格 */
+/**
+ * 日历展示规则（按你的最新口径）
+ * - **从未签到过**：把「今天」放到第一格（更符合新用户从第1天开始的心智）
+ * - **有签到记录**：按正常顺序展示（不再强行把今天挪到第一位），并且展示已签到的天
+ */
 const days = computed<CheckinDay[]>(() => {
-  const unsigned = state.calendarData.filter((d) => !d.signed)
-  const todayIdx = unsigned.findIndex((d) => d.status === 'today')
-  if (todayIdx <= 0) return unsigned
-  return [...unsigned.slice(todayIdx), ...unsigned.slice(0, todayIdx)]
+  const hasAnySigned = state.signedDays > 0 || state.calendarData.some((d) => d.signed)
+  if (hasAnySigned) return state.calendarData
+
+  // 新用户（未签到过）才旋转：把 today 放到第一个
+  const todayIdx = state.calendarData.findIndex((d) => d.status === 'today')
+  if (todayIdx <= 0) return state.calendarData
+  return [...state.calendarData.slice(todayIdx), ...state.calendarData.slice(0, todayIdx)]
 })
 
 // 抽奖奖品列表
