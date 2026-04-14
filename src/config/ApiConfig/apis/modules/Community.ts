@@ -88,7 +88,7 @@ export default {
   // 匹配首页配置
   talkConf: { method: 'post', url: '/api/talk/config' },
   // 匹配用户
-  talkMatch: { method: 'post', url: '/api/talk/match' },
+  talkMatch: { method: 'post', url: '/api/usersmatch/match' },
   // 修改匹配设置
   talkSetting: { method: 'post', url: '/api/talk/setting', showSuccess: true },
   // 获取聊天Token

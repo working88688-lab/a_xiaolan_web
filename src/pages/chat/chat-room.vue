@@ -267,44 +267,48 @@ async function fetchTalkInfo() {
 async function loadProductList() {
   productsLoading.value = true
   try {
-    const res = await __.$Api.Community.talkProductList({})
-    console.log(
-      '%c[chat-room] talkProductList 原始返回',
-      'font-weight:bold;color:#1677ff',
-      res
-    )
-    const raw = res?.data
-    console.log('[chat-room] talkProductList data：', raw)
-    const list = Array.isArray(raw) ? raw : []
+    const res = await __.$Api.User.chat_product({})
+    if (import.meta.env.DEV && import.meta.client) {
+      console.log(
+        '%c[chat-room] POST /api/message/product 原始返回',
+        'font-weight:bold;color:#1677ff',
+        res
+      )
+      console.log('[chat-room] /api/message/product data：', res?.data)
+    }
+    const raw: any = res?.data
+    const list = Array.isArray(raw) ? raw : Array.isArray(raw?.message_product) ? raw.message_product : []
     products.value = list
       .map((it: any) => ({
-        id: Number(it?.id),
-        name: String(it?.name ?? ''),
-        price: Number(it?.price ?? 0),
+        id: Number(it?.key ?? it?.id),
+        name: String(it?.sub_title ?? it?.name ?? it?.title ?? '').trim(),
+        price: Number(it?.value ?? it?.price ?? 0),
         promo_price: Number(it?.promo_price ?? 0),
         duration: Number(it?.duration ?? 0),
         free_duration: Number(it?.free_duration ?? 0),
-        icon_url: String(it?.icon_url ?? it?.icon ?? it?.image ?? it?.img ?? it?.cover ?? '').trim(),
+        icon_url: String(it?.icon ?? it?.icon_url ?? it?.image ?? it?.img ?? it?.cover ?? '').trim(),
         msg_count: (() => {
-          const n = Number(it?.msg_count ?? it?.num ?? it?.count ?? it?.msg_num ?? 0)
+          const n = Number(it?.num ?? it?.msg_count ?? it?.count ?? it?.msg_num ?? 0)
           return Number.isFinite(n) && n > 0 ? Math.round(n) : 0
         })()
       }))
-      .filter(p => Number.isFinite(p.id) && p.id > 0)
+      .filter((p: TalkProductItem) => Number.isFinite(p.id) && p.id > 0)
 
-    console.log(
-      '[chat-room] talkProductList 解析后 products：',
-      products.value.map(p => ({
-        id: p.id,
-        name: p.name,
-        price: p.price,
-        promo_price: p.promo_price,
-        duration: p.duration,
-        free_duration: p.free_duration,
-        icon_url: p.icon_url,
-        msg_count: p.msg_count
-      }))
-    )
+    if (import.meta.env.DEV && import.meta.client) {
+      console.log(
+        '[chat-room] /api/message/product 解析后 products：',
+        products.value.map(p => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          promo_price: p.promo_price,
+          duration: p.duration,
+          free_duration: p.free_duration,
+          icon_url: p.icon_url,
+          msg_count: p.msg_count
+        }))
+      )
+    }
     if (products.value.length) {
       const exists = products.value.some(p => p.id === selectedProductId.value)
       if (!exists) selectedProductId.value = products.value[0].id
@@ -343,11 +347,30 @@ async function onConfirmBuyTime() {
   if (id == null || buying.value) return
   buying.value = true
   try {
-    await __.$Api.Community.talkBuyTime({ product_id: id })
+    const product_id_num = Math.round(Number(id))
+    const product_id = String(product_id_num)
+    if (!Number.isFinite(product_id_num) || product_id_num <= 0) {
+      __.$Toast('产品ID无效')
+      return
+    }
+    const selected = products.value.find(p => Number(p.id) === product_id_num)
+    const coins = selected ? productPayCoins(selected) : 0
+    if (!Number.isFinite(Number(coins)) || Number(coins) <= 0) {
+      __.$Toast('金币参数无效')
+      return
+    }
+    if (import.meta.env.DEV && import.meta.client) {
+      console.log('[chat-room] /api/message/buy payload：', { product_id, coins })
+    }
+    const res = await __.$Api.User.chat_buy({ product_id, coins })
+    if (import.meta.env.DEV && import.meta.client) {
+      console.log('%c[chat-room] POST /api/message/buy 原始返回', 'font-weight:bold;color:#1677ff', res)
+      console.log('[chat-room] /api/message/buy data：', res?.data)
+    }
     showRecharge.value = false
     await fetchTalkInfo()
   } catch (e) {
-    console.error('[chat-room] buy_time', e)
+    console.error('[chat-room] /api/message/buy', e)
     __.$Toast(scircleErrMsg(e))
   } finally {
     buying.value = false
