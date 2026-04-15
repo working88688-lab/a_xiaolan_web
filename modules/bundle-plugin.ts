@@ -47,14 +47,24 @@ export default defineNuxtModule({
       const outdir = args.outdir
       const log = console.log
       const pkg_dir = _join('package.json')
-      const dist_dir = _join('dist')
+      const source_dir = [_join('dist'), _join('.output/public')].find(p => fs.existsSync(p)) ?? null
       const cache_dir = _join('node_modules/.cache/_dx-build.json')
-      const has_cached = await fse.pathExistsSync(cache_dir)
+      const has_cached = fs.existsSync(cache_dir)
       const today = dayjs().format('YYYY-MM-DD')
       const pkg_json = await fse.readJSONSync(pkg_dir)
       const app_name = pkg_json.name
       const app_dir = _join(app_name)
-      log(chalk.greenBright(`🤖 开始压缩发布文件${dist_dir}`))
+
+      if (!source_dir) {
+        log(
+          chalk.yellow(
+            '⚠️ 未找到 dist 或 .output/public，跳过发布压缩（prepare / 未完整 generate 时属正常）'
+          )
+        )
+        return
+      }
+
+      log(chalk.greenBright(`🤖 开始压缩发布文件 ${source_dir}`))
 
       let last_version = 1
       if (has_cached) {
@@ -64,14 +74,15 @@ export default defineNuxtModule({
         }
       }
 
-      const zip_file_name = `${app_name}-${mode}-v${today}-${last_version}.zip`
-      fse.copy(dist_dir, app_dir, err => {
+      const mode_label = mode ?? 'build'
+      const zip_file_name = _join(`${app_name}-${mode_label}-v${today}-${last_version}.zip`)
+      fse.copy(source_dir, app_dir, err => {
         if (err) {
           log(chalk.redBright(`❌: ${err}`))
           return
         }
 
-        log(chalk.green('ℹ️ 复制dist文件完成'))
+        log(chalk.green('ℹ️ 复制静态资源完成'))
 
         const output = fs.createWriteStream(zip_file_name)
         const archive = archiver('zip', { zlib: { level: 9 } })

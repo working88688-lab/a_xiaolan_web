@@ -2,6 +2,8 @@
 import type { AdItem, TabItem } from '@types'
 import { SwiperSlide } from 'swiper/vue'
 import { ROUTE_PARAMS } from '@utils/constants/route'
+import qiandaoIcon from '~/assets/image/qiandao.png'
+import tongquanIcon from '~/assets/image/tongquan.png'
 
 /***
  *  bot_style_one ： 今日热点
@@ -28,6 +30,24 @@ const banners = ref<AdItem[]>([])
 
 const mid_style_category = ref<any[]>([])
 const mid_style_recommend = ref<any[]>([])
+/** 接口无签到/同圈入口时补本地图标，避免漏入口 */
+const mid_style_recommend_with_static = computed(() => {
+  const list = mid_style_recommend.value ?? []
+  const hasQiandao = list.some(i => i?.type === 14)
+  const hasTongquan = list.some(i => i?.type === 10)
+  const staticItems = [
+    ...(hasQiandao
+      ? []
+      : [{ id: -14, type: 14, icon_new: qiandaoIcon }]),
+    ...(hasTongquan
+      ? []
+      : [{ id: -10, type: 10, icon_new: tongquanIcon }])
+  ]
+  return [...staticItems, ...list]
+})
+
+/** 推荐 + 发现精彩：下方双列应为 bot_style_two，不能与 bot_style_one 的区块列表混用 */
+const bot_style_two_list = ref<any[]>([])
 
 const is_recommend = props.tab.name === '推荐'
 // 关注 Tab：根据接口地址判断，更稳
@@ -79,7 +99,11 @@ const { listData, execute, loading, refresh, isEmpty, isEnd, result, isError, is
 
     if (!mid_style_recommend.value.length && result.value.data?.mid_style_recommend?.length) {
       mid_style_recommend.value = result.value.data.mid_style_recommend
-      console.log(result.value.data.mid_style_recommend)
+    }
+
+    const two = _result?.data?.bot_style_two
+    if (is_recommend && Array.isArray(two)) {
+      bot_style_two_list.value = is_refresh ? [...two] : [...bot_style_two_list.value, ...two]
     }
   },
   immediate: true,
@@ -192,6 +216,20 @@ async function onReplace(item: TabItem, newItems: any) {
     item.list = [...newItems]
   } catch (error) { }
 }
+
+const gridVideoList = computed(() => {
+  if (is_recommend && mid_style_category.value.length) {
+    return bot_style_two_list.value
+  }
+  return listData.value
+})
+
+const gridIsEmpty = computed(() => {
+  if (is_recommend && mid_style_category.value.length) {
+    return !loading.value && !gridVideoList.value.length
+  }
+  return isEmpty.value
+})
 </script>
 <template>
   <!-- 关注 Tab：优先展示 list（关注内容）；list 为空时展示 recommend_users -->
@@ -231,9 +269,9 @@ async function onReplace(item: TabItem, newItems: any) {
       </div>
 
       <!-- mid_style_recommend -->
-      <div v-if="mid_style_recommend.length" class="mb-1 px-1.5">
+      <div v-if="mid_style_recommend_with_static.length" class="mb-1 px-1.5">
         <dx-scrollview-swiper>
-          <SwiperSlide v-for="item in mid_style_recommend" :key="item.id" class="recommend-item">
+          <SwiperSlide v-for="item in mid_style_recommend_with_static" :key="item.id" class="recommend-item">
             <nuxt-link class="flex-col-center h-full" :to="navigate(item.type)">
               <div class="mb-0.5 h-full w-full">
                 <dx-image :src="item.icon_new"></dx-image>
@@ -289,11 +327,11 @@ async function onReplace(item: TabItem, newItems: any) {
           <van-tab v-for="item in (mv_nag_tab ?? [])" :key="item.name ?? item.title" v-bind="item"></van-tab>
         </dx-tabs>
         <div class="scroll-container list-container">
-          <scroll-list :loading="loading" :is-empty="isEmpty" :is-end="isEnd" :pullup="execute"
+          <scroll-list :loading="loading" :is-empty="gridIsEmpty" :is-end="isEnd" :pullup="execute"
             :disabled-refresh="scrollTop > 0">
             <div class="grid grid-cols-2 gap-1 px-1 pb-1.5">
-              <video-card v-for="(item, lIndex) in listData" :key="item.id" :list="listData" :index="lIndex"
-                :item="item" lines></video-card>
+              <video-card v-for="(item, lIndex) in gridVideoList" :key="item.id" :list="gridVideoList"
+                :index="lIndex" :item="item" lines></video-card>
             </div>
           </scroll-list>
         </div>
