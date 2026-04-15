@@ -119,6 +119,7 @@ const userStore = defineStore('user', {
               _this.token = token
               _this.u.uid = uid
               _this.isLogin = true
+              __.$WebSDK.setUid(uid)
             } else {
               reject({ msg: '@用户登录失败' })
             }
@@ -204,6 +205,7 @@ const userStore = defineStore('user', {
       return new Promise(resolve => {
         __.$Oauth.reset()
         __.$Store!.$reset()
+        __.$WebSDK.setUid('')
         localStorage.removeItem('user')
         globalStore.synch().then(() => {
           __.$Replace(redirect ? redirect : '/home')

@@ -438,6 +438,13 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 导航路径行为 navigation
     trackNavigation(extra) {
       if (checkRule(this._ctx, 'navigation')) {
+        window.WebSDK?.track({
+          event: 'navigation',
+          payload: {
+            navigation_key: extra.navigation_key,
+            navigation_name: extra.navigation_name,
+          },
+        })
         return send(this._ctx, {
           event: 'navigation',
           ...extra,
@@ -448,6 +455,20 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 应用页面展示 app_page_view
     trackAppPageView(extra) {
       if (checkRule(this._ctx, 'app_page_view')) {
+        window.WebSDK?.track({
+          event: 'app_page_view',
+          payload: {
+            user_type: extra.user_type,
+            page_key: extra.page_key,
+            page_name: extra.page_name,
+            referrer_page_key: extra.referrer_page_key,
+            referrer_page_name: extra.referrer_page_name,
+            current_page_key: extra.current_page_key,
+            current_page_name: extra.current_page_name,
+            page_load_time: extra.page_load_time,
+            recommend_trace_id: extra.recommend_trace_id,
+          },
+        })
         return send(this._ctx, {
           event: 'app_page_view',
           ...extra,
@@ -458,6 +479,20 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 应用页面点击 page_click
     trackPageClick(extra) {
       if (checkRule(this._ctx, 'page_click')) {
+        window.WebSDK?.track({
+          event: 'page_click',
+          payload: {
+            page_key: extra.page_key,
+            page_name: extra.page_name,
+            click_page_x: extra.click_page_x,
+            click_page_y: extra.click_page_y,
+            click_x_percent: extra.click_x_percent,
+            click_y_percent: extra.click_y_percent,
+            screen_width: extra.screen_width,
+            screen_height: extra.screen_height,
+            recommend_trace_id: extra.recommend_trace_id,
+          },
+        })
         return send(this._ctx, {
           event: 'page_click',
           ...extra,
@@ -468,6 +503,15 @@ export default defineNuxtPlugin((nuxtApp) => {
     // APP 广告行为 advertising
     trackAdvertising(extra) {
       if (checkRule(this._ctx, 'advertising')) {
+        window.WebSDK?.track({
+          event: 'advertising',
+          payload: {
+            event_type: extra.event_type,
+            advertising_key: extra.advertising_key,
+            advertising_name: extra.advertising_name,
+            advertising_id: extra.advertising_id,
+          },
+        })
         return send(this._ctx, {
           event: 'advertising',
           ...extra,
@@ -488,6 +532,22 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 视频事件 video_event
     trackVideoEvent(extra) {
       if (checkRule(this._ctx, 'video_event')) {
+        window.WebSDK?.track({
+          event: 'video_event',
+          payload: {
+            media_id: extra.media_id,
+            video_id: extra.video_id,
+            video_title: extra.video_title,
+            video_type_id: extra.video_type_id,
+            video_type_name: extra.video_type_name,
+            video_content_type: extra.video_content_type,
+            video_behavior_key: extra.video_behavior_key,
+            video_behavior_name: extra.video_behavior_name,
+            play_duration: extra.play_duration,
+            play_progress: extra.play_progress,
+            recommend_trace_id: extra.recommend_trace_id,
+          },
+        })
         return send(this._ctx, {
           event: 'video_event',
           ...extra,
@@ -498,6 +558,16 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 关键词搜索 keyword_search
     trackKeywordSearch(extra) {
       if (checkRule(this._ctx, 'keyword_search')) {
+        window.WebSDK?.track({
+          event: 'keyword_search',
+          payload: {
+            keyword: extra.keyword,
+            search_result_count: extra.search_result_count,
+            search_content_type: extra.search_content_type,
+            search_trace_id: extra.search_trace_id,
+            search_id: extra.search_id,
+          },
+        })
         return send(this._ctx, {
           event: 'keyword_search',
           ...extra,
@@ -508,6 +578,17 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 关键词搜索点击 keyword_click
     trackKeywordClick(extra) {
       if (checkRule(this._ctx, 'keyword_click')) {
+        window.WebSDK?.track({
+          event: 'keyword_click',
+          payload: {
+            keyword: extra.keyword,
+            click_item_id: extra.click_item_id,
+            click_item_type_key: extra.click_item_type_key,
+            click_item_type_name: extra.click_item_type_name,
+            click_position: extra.click_position,
+            search_trace_id: extra.search_trace_id,
+          },
+        })
         return send(this._ctx, {
           event: 'keyword_click',
           ...extra,
@@ -526,6 +607,18 @@ export default defineNuxtPlugin((nuxtApp) => {
         ad_impression_timer = setTimeout(() => {
           const adGrounds = groupAds()
           adGrounds.forEach((_data) => {
+            window.WebSDK?.track({
+              event: 'ad_impression',
+              payload: {
+                page_key: _data.page_key,
+                page_name: _data.page_name,
+                ad_slot_key: _data.ad_slot_key,
+                ad_slot_name: _data.ad_slot_name,
+                ad_id: _data.ad_id,
+                creative_id: _data.creative_id,
+                ad_type: _data.ad_type,
+              },
+            })
             send(ctx, {
               event: 'ad_impression',
               ..._data,
@@ -541,6 +634,18 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 广告点击 ad_click
     trackAdClick(extra) {
       if (checkRule(this._ctx, 'ad_click')) {
+        window.WebSDK?.track({
+          event: 'ad_click',
+          payload: {
+            page_key: extra.page_key,
+            page_name: extra.page_name,
+            ad_slot_key: extra.ad_slot_key,
+            ad_slot_name: extra.ad_slot_name,
+            ad_id: extra.ad_id,
+            creative_id: extra.creative_id,
+            ad_type: extra.ad_type,
+          },
+        })
         return send(this._ctx, {
           event: 'ad_click',
           ...extra,

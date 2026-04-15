@@ -81,6 +81,19 @@ export default defineNuxtPlugin(async () => {
     bury_point: toRaw(globalStore.config?.bury_point ?? {}),
     createSign
   })
+
+  try {
+    const { data: webSdkData } = await app.$Api.webSdkConfig()
+app.$WebSDK.init({
+      appId: globalStore.config?.bury_point?.click_app_id ?? '',
+      uid: String(userStore.u.uid ?? ''),
+      channel: userStore.u.build_id ?? '',
+      encryptedConfig: webSdkData ?? ''
+    })
+  } catch (e) {
+    console.error('@WebSDK初始化失败', e)
+  }
+
   return {
     provide: {
       G: g
