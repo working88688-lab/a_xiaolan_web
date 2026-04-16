@@ -2574,8 +2574,10 @@ async function goChat() {
   position: absolute;
   left: 0;
   right: 0;
+  /* safe-area 兜底：部分 WebView 不支持 env(...) 时需要保留基础 bottom 值 */
   bottom: 90px;
-  z-index: 1;
+  bottom: calc(90px + env(safe-area-inset-bottom));
+  z-index: 3;
   padding: 0 14px;
   box-sizing: border-box;
 }
@@ -2752,8 +2754,10 @@ async function goChat() {
   position: absolute;
   left: 14px;
   right: 14px;
-  bottom: 16px;
-  z-index: 1;
+  /* safe-area 兜底：部分 WebView 不支持 env(...) 时需要保留基础 bottom 值 */
+  bottom: 44px;
+  bottom: calc(44px + env(safe-area-inset-bottom));
+  z-index: 6;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
