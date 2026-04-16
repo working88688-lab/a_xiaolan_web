@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ApiLike } from '@types'
+import { watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -41,6 +42,23 @@ const { data, loading } = useMyFetch<any>({
   ...props.fetchOptions
 })
 
+// 调试：打印接口返回和标题映射（用于确认“顶部标题是否动态”）
+watch(
+  data,
+  v => {
+    const titles = Array.isArray(v) ? v.map((tab: any) => tab?.[props.labelKey]) : []
+    // 醒目日志：包含 api、labelKey、data 摘要、最终 titles
+    console.log('%c[dx-api-tabs] ✅ dynamic title debug', 'color:#2494ff;font-weight:700;font-size:13px', {
+      api: props.api,
+      labelKey: props.labelKey,
+      loading: loading?.value,
+      data: Array.isArray(v) ? v.slice(0, 8) : v,
+      titles
+    })
+  },
+  { immediate: true }
+)
+
 function scrollTo(name: number) {
   activeTab.value = name
 }
@@ -73,7 +91,7 @@ function onRendered(name: any) {
     </template>
     <van-tab v-for="(tab, index) in data" :key="index" :title="tab[props.labelKey]">
       <slot
-        v-if="Math.abs(activeTab - index) <= 3 && cacheMap[index]"
+        v-if="Math.abs(Number(activeTab) - Number(index)) <= 3 && cacheMap[index]"
         name="tab"
         :is-recommend="tab.name === '推荐'"
         :is-rec="tab.type === props.recKey"

@@ -651,7 +651,7 @@ export default defineAppConfig({
       path: '/ai/face',
       meta: {
         keepalive: true,
-        title: '图片换脸',
+        title: 'AI换脸',
         nav: {
           rightTitle: '我的记录',
           to: '/ai/record?_index=1'
@@ -690,7 +690,7 @@ export default defineAppConfig({
       meta: {
         title: '',
         keepalive: true,
-        trackPageName: '图片换脸',
+        trackPageName: 'AI换脸',
         nav: {
           rightTitle: '我的记录',
           to: '/ai/record?_index=1'

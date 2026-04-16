@@ -86,7 +86,7 @@ function onPay() {
   is_custom_tpl.value = false
   __.$Alert({
     title: '支付成功',
-    message: '提交成功，稍后请前往【图片换脸-我的记录】中查看！'
+    message: '提交成功，稍后请前往【AI换脸-我的记录】中查看！'
   })
 
   execute()
