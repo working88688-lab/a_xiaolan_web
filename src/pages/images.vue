@@ -9,17 +9,17 @@
     ></dx-navbar>
     <div class="scroll-container">
       <scroll-list v-model:loading="loading" :is-ready="!loading">
-        <div v-for="(item, index) in pageData?.series" :key="index" class="image-item" @click="onImageClick(index)">
+        <div v-for="(item, index) in listSeries" :key="index" class="image-item" @click="onImageClick(index)">
           <img
-            v-lazyLoad:[pageData?.id]="item.img_url_full"
+            v-lazyLoad:[Number(pageData?.id)]="item.img_url_full"
             :data-index="index"
-            src=""
+            :src="item.img_url_full ? '' : imgLoading"
             alt=""
             :class="{ 'is-locked': isImageLocked(index) }"
           />
           <div v-if="isImageLocked(index)" class="image-mask"></div>
           <div
-            v-if="isImageLocked(index) && index === 1"
+            v-if="isImageLocked(index)"
             class="image-action"
             :class="{ 'image-action--coins': pageData?.coins > 0, 'image-action--vip': !pageData?.coins }"
             @click.stop="handleMainAction"
@@ -119,15 +119,49 @@
       :images="previewVisibleImages"
       :start-position="currentIndex"
       :show-index="false"
+      :vertical="false"
       closeable
       close-icon-position="top-right"
       :close-on-click-image="false"
+      :close-on-click-overlay="true"
       @change="onPreviewChange"
-    ></van-image-preview>
+    >
+      <template #image="{ src, onLoad, style }">
+        <div class="dx-preview-image-wrap">
+          <img class="dx-preview-image" :src="src" :style="style" alt="" @load="onLoad" />
+          <div
+            v-if="!isPreviewUnlocked && previewImages?.length > 1 && src !== previewImages?.[0]"
+            class="dx-preview-locked-overlay"
+          >
+            <div class="dx-preview-pay-card">
+              <div class="dx-preview-pay-title">支付</div>
+
+              <div v-if="pageData?.coins > 0" class="dx-preview-pay-coin">
+                <div v-if="isEnoughCoins" class="dx-preview-pay-coin-primary">
+                  {{ pageData.coins }}金币进行解锁
+                </div>
+                <div v-else class="dx-preview-pay-coin-warn">余额不足，去充值</div>
+              </div>
+
+              <div v-else class="dx-preview-pay-vip">开通VIP解锁全套{{ pageData?.total }}张</div>
+
+              <button
+                class="dx-preview-pay-btn"
+                type="button"
+                :class="{ 'dx-preview-pay-btn--warn': !isEnoughCoins && pageData?.coins > 0 }"
+                @click.stop="onPreviewPayConfirm"
+              >
+                {{ pageData?.coins > 0 ? (isEnoughCoins ? '确定' : '去充值') : '前往开通' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+    </van-image-preview>
 
     <teleport to="body">
       <div v-if="showPreview" class="custom-preview-footer">
-        <div class="custom-preview-index">{{ previewDisplayTotal }}/{{ previewTotalAll }}</div>
+        <div class="custom-preview-index">{{ previewDisplayIndex }}/{{ previewTotalAll }}</div>
         <span class="custom-preview-save" role="button" tabindex="0" @click.stop="onSaveClick">保存</span>
       </div>
     </teleport>
@@ -137,6 +171,7 @@
 <script setup lang="ts">
 import type { ImageData } from '@types'
 import coinsicon from '~/assets/image/comics/coins.png'
+import imgLoading from '~/assets/image/img_loading.png'
 import { download_image } from '~/utils/blob-helper'
 
 const route = useRoute()
@@ -157,6 +192,41 @@ const showPreview = ref(false)
 const previewImages = ref<string[]>([])
 const currentIndex = ref(0)
 
+const { u: user } = storeToRefs(useUserStore())
+const userCoins = computed(() => Number(user.value?.coins ?? 0))
+const needCoins = computed(() => Number(pageData.value?.coins ?? 0))
+const isEnoughCoins = computed(() => {
+  if (needCoins.value <= 0) return true
+  return userCoins.value >= needCoins.value
+})
+
+/**
+ * 展示列表兜底：locked 状态下，如果接口 series 只返回 0/1 张，会导致底部遮罩/引导消失
+ * 这里基于 total 伪造占位项（不真实加载更多资源，只提供结构 + 视觉遮罩兜底）。
+ */
+const listSeries = computed(() => {
+  const raw: any = pageData.value || {}
+  const series = Array.isArray(raw.series) ? raw.series : []
+
+  // 已解锁：直接展示接口返回
+  if (Boolean(raw.has_right) || raw.is_pay === 1) return series
+
+  const total = Number(raw.total ?? 0)
+  if (!total || total <= 1) return series
+
+  const PLACEHOLDER_MAX = 8
+  // 至少给到 2 张：保证 index=1 的“金币/VIP 引导”也能出现
+  const placeholderCount = Math.max(2, Math.min(total, PLACEHOLDER_MAX))
+
+  const firstRow = series[0] || {}
+  return Array.from({ length: Math.max(series.length, placeholderCount) }, (_, i) => {
+    // 真实 series 有几张，就展示几张；
+    // 剩余的用空 `img_url_full` 伪造结构，避免触发 v-lazyLoad 解密，同时在模板里直接走静态占位图 `imgLoading`
+    if (series[i]) return series[i]
+    return { ...firstRow, img_url_full: '' }
+  })
+})
+
 const isPreviewUnlocked = computed(() => {
   const raw: any = pageData.value || {}
   return Boolean(raw.has_right) || raw.is_pay === 1
@@ -164,11 +234,16 @@ const isPreviewUnlocked = computed(() => {
 
 const previewVisibleImages = computed(() => {
   const images = previewImages.value || []
-  if (isPreviewUnlocked.value) return images
-  return images.slice(0, 1)
+  // 锁定态也保留多张占位，保证 van-image-preview 可以横向滑动
+  return images
 })
 
-const previewTotalAll = computed(() => previewImages.value.length || 0)
+// footer 的 y：使用接口总数 total，而不是数组长度（series 可能只返回 0/1）
+const previewTotalAll = computed(() => {
+  const raw: any = pageData.value || {}
+  const n = Number(raw.total ?? 0)
+  return Number.isFinite(n) && n > 0 ? n : previewImages.value.length || 0
+})
 
 const previewDisplayTotal = computed(() => {
   return previewVisibleImages.value.length || 0
@@ -198,14 +273,15 @@ const onShare = () => {
   __.$NavigateTo('/myinvite')
 }
 
-const isImageLocked = (index: number) => {
+const isImageLocked = (index: number | string) => {
+  const i = Number(index)
   if (!pageData.value) return false
 
   // 已拥有观看权限或已购买整套，全部解锁
   if (pageData.value.has_right || pageData.value.is_pay === 1) return false
 
   // 未解锁时，只放开第一张，其余全部锁定
-  return index > 0
+  return i > 0
 }
 
 const handleMainAction = () => {
@@ -218,26 +294,46 @@ const handleMainAction = () => {
   }
 }
 
-const onImageClick = (index: number) => {
+function onPreviewPayConfirm() {
   if (!pageData.value) return
 
+  if (pageData.value.coins > 0) {
+    if (isEnoughCoins.value) {
+      handleBuyAction()
+    } else {
+      __.$NavigateTo('/recharge')
+    }
+  } else {
+    handleVipAction()
+  }
+}
+
+const onImageClick = (index: number | string) => {
+  if (!pageData.value) return
+  const i = Number(index)
+
   // 锁定状态下，点击图片走主 CTA（购买 / 开通会员）
-  if (isImageLocked(index)) {
+  if (isImageLocked(i)) {
     handleMainAction()
     return
   }
 
-  const series = pageData.value.series || []
+  const series = listSeries.value || []
   const globalObject: any = (__ as any).$GlobalObject || {}
   const groups = globalObject._IMAGE_PREVIE_GROUPS?.get(pageData.value.id) || []
 
   // 优先使用已经解密的本地图片地址，若不存在则回退到原始地址
-  const images = series.map((item, idx) => groups[idx] || item.img_url_full)
+  const images: string[] = series.map((item: any, idx: number): string => groups[idx] || item?.img_url_full || imgLoading)
 
   if (!images.length) return
 
-  previewImages.value = images
-  currentIndex.value = index
+  // 锁定态：给每一张加唯一 fragment，确保预览 slot 内能区分“第1张/其他张”
+  if (!isPreviewUnlocked.value) {
+    previewImages.value = images.map((u: string, idx: number) => `${u}#pv-${idx}`)
+  } else {
+    previewImages.value = images
+  }
+  currentIndex.value = i
   showPreview.value = true
 }
 
@@ -534,5 +630,111 @@ onBeforeMount(async () => {
 :deep(.van-image-preview__close-icon--top-left) {
   top: 20px !important;
   left: 20px !important;
+}
+
+:deep(.dx-preview-image-wrap) {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.dx-preview-image) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+:deep(.dx-preview-locked-overlay) {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 0;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.38);
+  pointer-events: none;
+}
+
+:deep(.dx-preview-locked-tip) {
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.34rem;
+  font-weight: 600;
+  margin-bottom: 0.36rem;
+  text-align: center;
+}
+
+:deep(.dx-preview-locked-btn) {
+  pointer-events: auto;
+  border: 0;
+  padding: 0.18rem 0.36rem;
+  border-radius: 0.18rem;
+  font-size: 0.32rem;
+  font-weight: 700;
+  color: #fff;
+  background: #2494ff;
+  box-shadow: 0 0.04rem 0.18rem rgba(0, 0, 0, 0.25);
+}
+:deep(.dx-preview-pay-card) {
+  width: min(6.6rem, calc(100vw - 1.2rem));
+  border-radius: 0.22rem;
+  background: rgba(255, 255, 255, 0.98);
+  padding: 0.32rem 0.3rem 0.28rem;
+  box-sizing: border-box;
+  box-shadow: 0 0.08rem 0.28rem rgba(0, 0, 0, 0.22);
+  pointer-events: auto;
+}
+
+:deep(.dx-preview-pay-title) {
+  text-align: center;
+  font-size: 0.36rem;
+  font-weight: 800;
+  color: #222;
+  margin-bottom: 0.18rem;
+}
+
+:deep(.dx-preview-pay-coin-primary) {
+  text-align: center;
+  color: #2494ff;
+  font-weight: 700;
+  font-size: 0.32rem;
+  margin-bottom: 0.28rem;
+}
+
+:deep(.dx-preview-pay-coin-warn) {
+  text-align: center;
+  color: #fa8e2b;
+  font-weight: 700;
+  font-size: 0.32rem;
+  margin-top: -0.06rem;
+  margin-bottom: 0.28rem;
+}
+
+:deep(.dx-preview-pay-vip) {
+  text-align: center;
+  color: #666;
+  font-weight: 700;
+  font-size: 0.3rem;
+  margin-bottom: 0.28rem;
+}
+
+:deep(.dx-preview-pay-btn) {
+  width: 100%;
+  height: 0.62rem;
+  border-radius: 0.14rem;
+  border: 0;
+  color: #fff;
+  background: #2494ff;
+  font-size: 0.32rem;
+  font-weight: 800;
+}
+
+:deep(.dx-preview-pay-btn--warn) {
+  background: #fa8e2b;
 }
 </style>
