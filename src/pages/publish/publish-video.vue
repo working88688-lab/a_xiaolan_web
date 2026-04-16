@@ -9,7 +9,7 @@ const formState = reactive({
   images: [] as unknown as UploaderFileListItem[],
   videos: [] as unknown as UploaderFileListItem[]
 })
-const checked = ref(false)
+const checked = ref(true)
 const selectTags = ref<string[]>([])
 
 const selectTagsIds = computed(() => {
@@ -305,6 +305,16 @@ watch(showPicker, val => {
 .container {
   --van-field-label-width: 40px;
   --van-checkbox-size: 20px;
+}
+
+:deep(.van-checkbox__label) {
+  font-size: 13px;
+  line-height: 20px;
+  vertical-align: middle;
+}
+
+:deep(.van-checkbox) {
+  align-items: center;
 }
 
 .form-section + .form-section {
