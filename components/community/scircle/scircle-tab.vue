@@ -210,12 +210,11 @@
                   >
                     ×
                   </span>
-                  <img
+                  <dx-image
                     v-if="profileImg"
                     :key="profileImg"
-                    v-lazyLoad="profileImg"
                     class="scircle-settings-photo-preview"
-                    src="~/assets/image/img_loading.png"
+                    :src="profileImg"
                     alt="个人照片"
                   />
                   <svg
@@ -631,6 +630,45 @@ const props = defineProps<{
 const listRef = useTemplateRef('list')
 const { scrollTop } = useScrollTop(listRef)
 const __ = useNuxtApp()
+
+// 统一处理「根相对路径」资源地址拼接
+const globalStore = useGlobalStore()
+const appConfig = useAppConfig()
+function getMediaOrigin(): string {
+  const thumb = globalStore.config?.activity_thumb || globalStore.config?.index_ads_thumb
+  if (thumb) {
+    try {
+      return new URL(thumb).origin
+    } catch {
+      /* ignore */
+    }
+  }
+  const base = appConfig.api?.baseURL as string | undefined
+  if (base) {
+    try {
+      return new URL(base).origin
+    } catch {
+      /* ignore */
+    }
+  }
+  // 最后兜底：至少保证根相对路径能在当前站点域名下命中
+  if (import.meta.client) return window.location.origin || ''
+  return ''
+}
+
+function resolveMediaUrl(path: string | undefined): string {
+  if (!path?.trim()) return ''
+  const p = path.trim()
+  if (/^https?:\/\//i.test(p) || p.startsWith('data:') || p.startsWith('blob:')) return p
+  if (p.startsWith('//')) {
+    if (import.meta.client) return window.location.protocol + p
+    return 'https:' + p
+  }
+  const origin = getMediaOrigin()
+  if (!origin) return p
+  if (p.startsWith('/')) return origin + p
+  return `${origin}/${p}`
+}
 
 /** 从接口/axios 错误对象取出提示文案 */
 function scircleErrMsg(err: unknown): string {
@@ -1154,8 +1192,22 @@ async function onProfileImageChange(event: Event) {
   try {
     isUploadingImage.value = true
     const compressed = await __.$ImageCompression.compressor(file)
-    const url = (await __.$Api.uploadImage({ file: compressed, useCompress: false })) as unknown as string
-    profileImg.value = String(url || '')
+    const uploadRes = await __.$Api.uploadImage({ file: compressed, useCompress: false })
+    // 兼容：既可能是拦截后返回的字符串，也可能是原始 { code, msg } 对象
+    let raw = ''
+    if (typeof uploadRes === 'string') {
+      raw = uploadRes
+    } else if (uploadRes && typeof uploadRes === 'object') {
+      const code = (uploadRes as any).code
+      raw = String((uploadRes as any).msg ?? (uploadRes as any).data ?? (uploadRes as any).url ?? '')
+      if (code != null && Number(code) !== 1) {
+        throw new Error(String((uploadRes as any).msg ?? '图片上传失败'))
+      }
+    } else {
+      raw = String(uploadRes ?? '')
+    }
+
+    profileImg.value = resolveMediaUrl(raw)
     __.$Toast('图片上传成功')
   } catch (error) {
     console.error('图片上传失败:', error)
