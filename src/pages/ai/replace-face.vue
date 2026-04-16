@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { CommentItem } from '@types'
-
 const __ = useNuxtApp()
 
 const tpl_images = ref([])
@@ -22,7 +20,6 @@ const {
 } = useMyFetch<any>({
   api: 'api/ai/pre_face'
 })
-const { onBeforeComment, reply, commentValue } = useComment()
 
 async function upload_tpl_image(_file: any) {
   try {
@@ -92,30 +89,6 @@ function onPay() {
   execute()
 }
 
-const {
-  listData,
-  execute: getComments,
-  refresh,
-  loading,
-  isEmpty,
-  isEnd,
-  reset
-} = useFetchList<CommentItem>({
-  api: 'api/ai/list_commentsnew'
-})
-
-function refresh_comments() {
-  return refresh({
-    id: route.query.id
-  })
-}
-
-function _getComments() {
-  return getComments({
-    id: route.query.id
-  })
-}
-
 const { key } = useKeepAlive({
   active: () => {
     if (!route.query.id) {
@@ -125,7 +98,6 @@ const { key } = useKeepAlive({
       execute({
         id: route.query.id
       })
-      _getComments()
     }
   },
 
@@ -144,7 +116,6 @@ const { key } = useKeepAlive({
     is_custom_tpl.value = false
     images.value = []
     tpl_images.value = []
-    reset()
   }
 })
 const router = useRouter()
@@ -178,7 +149,7 @@ function submit(type: number) {
       confirmButtonText: '前往充值',
       showCancelButton: true,
       cancelButtonText: '分享好友',
-      beforeClose(action) {
+      beforeClose(action: string) {
         if (action === 'confirm') {
           router.push('/coin-recharge?type=1')
         }
@@ -213,9 +184,6 @@ watch(is_custom_tpl, val => {
   <div v-if="key" :key="key" class="container">
     <scroll-list
       :loading="spining"
-      :pullup="route.query.id ? _getComments : undefined"
-      :is-end="isEnd"
-      :is-empty="!!route.query.id && isEmpty"
     >
       <div class="dx-grid-2">
         <div>
@@ -331,7 +299,8 @@ watch(is_custom_tpl, val => {
         </dx-button>
       </div>
 
-      <!-- 评论 -->
+      <!-- 评论（全部留言已关闭） -->
+      <!--
       <div v-if="route.query.id" class="mt-2 px-1">
         <h4 class="mb-2 text-default font-semibold">全部留言（{{ data.detail?.comment_num ?? 0 }}）</h4>
         <div class="grid grid-cols-1 gap-1">
@@ -357,8 +326,10 @@ watch(is_custom_tpl, val => {
           </ai-comment-item>
         </div>
       </div>
+      -->
     </scroll-list>
-    <!-- 底部评论 -->
+    <!-- 底部评论（留言输入已关闭） -->
+    <!--
     <dx-comment-input
       v-if="route.query.id"
       ref="commentRef"
@@ -412,6 +383,7 @@ watch(is_custom_tpl, val => {
         </dx-btn-like>
       </template>
     </dx-comment-input>
+    -->
     <!-- 购买提示弹框 -->
     <dx-buy-popup
       v-model:paying="paying"
