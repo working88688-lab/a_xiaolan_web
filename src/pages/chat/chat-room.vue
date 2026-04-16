@@ -5,7 +5,6 @@ const route = useRoute()
 const router = useRouter()
 const __ = useNuxtApp()
 
-const recordCancelArcPathId = useId()
 const rechargeCloseClipId = useId()
 
 interface TalkProductItem {
@@ -23,10 +22,7 @@ interface TalkProductItem {
 const matchInfoLoading = ref(false)
 /** 对方头像（get_match_info thumb / avatar） */
 const peerAvatar = ref('')
-const peerVoiceUrl = ref('')
-const peerVoiceDuration = ref('0"')
-const peerVoicePlaying = ref(false)
-const peerVoiceAudioRef = useTemplateRef<HTMLAudioElement>('peerVoiceAudioRef')
+// 语音功能：对方语音展示/播放先注释
 
 /** /api/talk/talk_info */
 const talkInfoLoaded = ref(false)
@@ -56,7 +52,6 @@ const showInsufficientTip = computed(() => {
   return Number(leftTime.value) <= 0
 })
 
-const composerMode = ref<'text' | 'voice'>('text')
 const showMore = ref(false)
 
 /** 对方 uid（路由 query，私信 / 同圈进入均会带） */
@@ -168,20 +163,7 @@ function productQuantityLabel(p: TalkProductItem): string {
   return String(p.name || '套餐').trim() || '套餐'
 }
 
-function voiceUrlFromApiItem(item: any): string {
-  const u = item?.voice ?? item?.voice_url ?? item?.audio_url ?? item?.audio ?? item?.voice_file ?? ''
-  return typeof u === 'string' ? u.trim() : String(u || '').trim()
-}
-
-function voiceDurationLabelFromApi(item: any): string {
-  const v = item?.voice_duration ?? item?.voice_len ?? item?.voice_time ?? item?.duration
-  if (v == null || v === '') return '0"'
-  if (typeof v === 'number' && Number.isFinite(v)) return `${Math.round(v)}"`
-  const s = String(v).trim()
-  if (s.includes('"')) return s
-  const n = Number(s)
-  return Number.isFinite(n) ? `${Math.round(n)}"` : '0"'
-}
+// 语音功能：解析 voice url / duration 先注释
 
 function scircleErrMsg(err: unknown): string {
   if (err == null) return '请求失败'
@@ -195,7 +177,7 @@ function scircleErrMsg(err: unknown): string {
   return '请求失败'
 }
 
-async function fetchMatchPeerVoice() {
+async function fetchMatchPeerAvatar() {
   const uidRaw = route.query.uid
   const scoreRaw = route.query.score ?? route.query.scoreNum
   const thumbRaw = route.query.thumb
@@ -213,27 +195,17 @@ async function fetchMatchPeerVoice() {
       uid: uidNum,
       score: Math.round(Number.isFinite(scoreNum) ? scoreNum : 0)
     })
-    console.log(
-      '%c[chat-room] POST /api/usersmatch/get_match_info 结果',
-      'font-weight:bold;color:#1677ff',
-      res
-    )
+    console.log('%c[chat-room] POST /api/usersmatch/get_match_info 结果', 'font-weight:bold;color:#1677ff', res)
     console.log('[chat-room] get_match_info data 字段：', res?.data)
     const detail = res?.data || {}
     peerAvatar.value = String(detail?.thumb ?? detail?.avatar_url ?? detail?.avatar ?? '').trim()
     if (!peerAvatar.value) {
-      const t =
-        typeof thumbRaw === 'string'
-          ? thumbRaw.trim()
-          : Array.isArray(thumbRaw)
-            ? String(thumbRaw[0] ?? '').trim()
-            : ''
+      let t = ''
+      if (typeof thumbRaw === 'string') t = thumbRaw.trim()
+      else if (Array.isArray(thumbRaw)) t = String(thumbRaw[0] ?? '').trim()
       if (t) peerAvatar.value = t
     }
-    const vUrl = voiceUrlFromApiItem(detail)
-    peerVoiceUrl.value = vUrl
-    const dur = voiceDurationLabelFromApi(detail)
-    peerVoiceDuration.value = dur !== '0"' ? dur : '0"'
+    // 语音功能：对方语音字段先注释
   } catch (e) {
     console.error('[chat-room] get_match_info', e)
     __.$Toast(scircleErrMsg(e))
@@ -242,13 +214,7 @@ async function fetchMatchPeerVoice() {
   }
 }
 
-function togglePeerVoicePlay() {
-  const el = peerVoiceAudioRef.value
-  const url = peerVoiceUrl.value
-  if (!el || !url) return
-  if (peerVoicePlaying.value) el.pause()
-  else void el.play().catch(() => __.$Toast('语音播放失败'))
-}
+// 语音功能：对方语音播放方法先注释
 
 async function fetchTalkInfo() {
   try {
@@ -269,11 +235,7 @@ async function loadProductList() {
   try {
     const res = await __.$Api.User.chat_product({})
     if (import.meta.env.DEV && import.meta.client) {
-      console.log(
-        '%c[chat-room] POST /api/message/product 原始返回',
-        'font-weight:bold;color:#1677ff',
-        res
-      )
+      console.log('%c[chat-room] POST /api/message/product 原始返回', 'font-weight:bold;color:#1677ff', res)
       console.log('[chat-room] /api/message/product data：', res?.data)
     }
     const raw: any = res?.data
@@ -378,201 +340,20 @@ async function onConfirmBuyTime() {
 }
 
 onMounted(() => {
-  void Promise.all([fetchMatchPeerVoice(), fetchTalkInfo()])
+  void Promise.all([fetchMatchPeerAvatar(), fetchTalkInfo()])
 })
 
-function abortChatRecording() {
-  if (!showRecordOverlay.value) return
-  recordGenRef.value++
-  showRecordOverlay.value = false
-  isMouseDown.value = false
-  isRecordCancel.value = false
-  const rec = mediaRecorderRef.value
-  mediaRecorderRef.value = null
-  recordChunksRef.value = []
-  stopMediaStream()
-  if (rec && rec.state !== 'inactive') {
-    try {
-      rec.stop()
-    } catch {
-      /* ignore */
-    }
-  }
-}
+// 语音功能：聊天录音发送先注释
 
 function onBack() {
-  peerVoiceAudioRef.value?.pause()
-  abortChatRecording()
   router.back()
-}
-
-function toggleMode() {
-  composerMode.value = composerMode.value === 'text' ? 'voice' : 'text'
-  showMore.value = false
 }
 
 function toggleMore() {
   showMore.value = !showMore.value
 }
 
-/** —— 与同圈 scircle-tab 一致的按住录音 UI —— */
-const showRecordOverlay = ref(false)
-const isRecordCancel = ref(false)
-const cancelRef = useTemplateRef<HTMLElement>('cancelRef')
-const isMouseDown = ref(false)
-const mediaRecorderRef = ref<MediaRecorder | null>(null)
-const mediaStreamRef = ref<MediaStream | null>(null)
-const recordChunksRef = ref<Blob[]>([])
-const isRecordInitializing = ref(false)
-const recordGenRef = ref(0)
-const isUploadingVoice = ref(false)
-
-function pickAudioRecorderMime(): string {
-  if (typeof MediaRecorder === 'undefined') return ''
-  const list = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']
-  for (const t of list) {
-    if (MediaRecorder.isTypeSupported(t)) return t
-  }
-  return ''
-}
-
-async function uploadVoiceToServer(file: File): Promise<string> {
-  const url = (await __.$Api.uploadVideo(file)) as unknown as string
-  return String(url || '')
-}
-
-function isInCancelArea(clientX: number, clientY: number) {
-  const el = cancelRef.value
-  if (!el) return false
-  const rect = el.getBoundingClientRect()
-  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
-}
-
-function stopMediaStream() {
-  const s = mediaStreamRef.value
-  if (s) {
-    s.getTracks().forEach(t => t.stop())
-    mediaStreamRef.value = null
-  }
-}
-
-async function onRecordStart(e: TouchEvent | MouseEvent) {
-  if (isUploadingVoice.value) return
-  if (showInsufficientTip.value) {
-    __.$Toast('聊天时长不足，请先充值')
-    return
-  }
-  if (isRecordInitializing.value || (mediaRecorderRef.value && mediaRecorderRef.value.state === 'recording')) return
-
-  const gen = ++recordGenRef.value
-  showMore.value = false
-
-  if (e instanceof MouseEvent) {
-    isMouseDown.value = true
-  }
-  showRecordOverlay.value = true
-  isRecordCancel.value = false
-  if (e instanceof TouchEvent) {
-    const t = e.touches?.[0]
-    if (t) isRecordCancel.value = isInCancelArea(t.clientX, t.clientY)
-  }
-
-  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-    showRecordOverlay.value = false
-    __.$Toast('当前环境不支持录音')
-    return
-  }
-
-  isRecordInitializing.value = true
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    if (gen !== recordGenRef.value) {
-      stream.getTracks().forEach(t => t.stop())
-      return
-    }
-    mediaStreamRef.value = stream
-    recordChunksRef.value = []
-    const mime = pickAudioRecorderMime()
-    const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
-    rec.ondataavailable = ev => {
-      if (ev.data.size > 0) recordChunksRef.value.push(ev.data)
-    }
-    rec.start(120)
-    mediaRecorderRef.value = rec
-  } catch (err) {
-    stopMediaStream()
-    mediaRecorderRef.value = null
-    showRecordOverlay.value = false
-    isMouseDown.value = false
-    __.$Toast(scircleErrMsg(err) || '无法使用麦克风')
-  } finally {
-    isRecordInitializing.value = false
-  }
-}
-
-function onRecordMove(e: TouchEvent) {
-  const t = e.touches?.[0]
-  if (!t) return
-  isRecordCancel.value = isInCancelArea(t.clientX, t.clientY)
-}
-
-function onRecordMouseMove(e: MouseEvent) {
-  if (!isMouseDown.value) return
-  isRecordCancel.value = isInCancelArea(e.clientX, e.clientY)
-}
-
-async function onRecordEnd() {
-  if (!showRecordOverlay.value) return
-  recordGenRef.value++
-  const cancelled = isRecordCancel.value
-  showRecordOverlay.value = false
-  isMouseDown.value = false
-  isRecordCancel.value = false
-
-  const rec = mediaRecorderRef.value
-  mediaRecorderRef.value = null
-  const chunks = [...recordChunksRef.value]
-  recordChunksRef.value = []
-  stopMediaStream()
-
-  if (!rec || rec.state === 'inactive') {
-    return
-  }
-
-  await new Promise<void>(resolve => {
-    rec.onstop = () => resolve()
-    try {
-      rec.stop()
-    } catch {
-      resolve()
-    }
-  })
-
-  if (cancelled || !chunks.length) {
-    return
-  }
-
-  const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' })
-  if (blob.size < 80) {
-    __.$Toast('录音过短')
-    return
-  }
-
-  const ext = blob.type.includes('mp4') ? 'm4a' : blob.type.includes('webm') ? 'webm' : 'webm'
-  const file = new File([blob], `voice.${ext}`, { type: blob.type || 'audio/webm' })
-
-  isUploadingVoice.value = true
-  try {
-    await uploadVoiceToServer(file)
-    __.$Toast('语音已发送')
-    void fetchTalkInfo()
-  } catch (error) {
-    console.error('[chat-room] 语音上传失败', error)
-    __.$Toast(scircleErrMsg(error))
-  } finally {
-    isUploadingVoice.value = false
-  }
-}
+// 语音功能：按住说话录音发送 + 录音遮罩层先注释（含 MediaRecorder 上传）
 </script>
 
 <template>
@@ -599,6 +380,7 @@ async function onRecordEnd() {
 
       <div v-if="matchInfoLoading" class="chat-match-loading">加载中…</div>
 
+      <!-- 语音功能：顶部对方语音展示先注释
       <div v-else-if="peerVoiceUrl" class="chat-msg">
         <img
           v-if="peerAvatar"
@@ -631,18 +413,18 @@ async function onRecordEnd() {
           @ended="peerVoicePlaying = false"
         />
       </div>
+      -->
     </div>
 
     <div class="chat-composer-wrap">
-      <div class="chat-composer" :class="{ 'is-voice-mode': composerMode === 'voice' }">
-        <button class="chat-mode" type="button" @click="toggleMode">
-          <span v-if="composerMode === 'text'" class="chat-mode-icon">🔊</span>
-          <span v-else class="chat-mode-icon">⌨</span>
-        </button>
+      <div class="chat-composer">
+        <!-- 语音功能：输入框模式切换按钮先注释 -->
+        <!-- <button class="chat-mode" type="button" @click="toggleMode">
+          <span class="chat-mode-icon">🔊</span>
+        </button> -->
 
         <div class="chat-input-area">
           <input
-            v-if="composerMode === 'text'"
             v-model="messageText"
             class="chat-input"
             type="text"
@@ -654,7 +436,6 @@ async function onRecordEnd() {
             @keydown.enter.prevent="sendTextMessage"
           />
           <button
-            v-if="composerMode === 'text'"
             class="chat-send"
             type="button"
             :disabled="isSendingText || !messageText.trim()"
@@ -662,22 +443,7 @@ async function onRecordEnd() {
           >
             {{ isSendingText ? '…' : '发送' }}
           </button>
-          <button
-            v-else
-            class="chat-press-talk"
-            type="button"
-            :disabled="isUploadingVoice"
-            @touchstart.prevent="onRecordStart"
-            @touchmove.prevent="onRecordMove"
-            @touchend.prevent="onRecordEnd"
-            @touchcancel.prevent="onRecordEnd"
-            @mousedown.prevent="onRecordStart"
-            @mousemove.prevent="onRecordMouseMove"
-            @mouseup.prevent="onRecordEnd"
-            @mouseleave.prevent="onRecordEnd"
-          >
-            {{ isUploadingVoice ? '发送中…' : '按住说话' }}
-          </button>
+          <!-- 语音功能：按住说话按钮先注释 -->
         </div>
 
         <button class="chat-plus" type="button" @click="toggleMore">+</button>
@@ -734,65 +500,7 @@ async function onRecordEnd() {
       @change="onPickedImage"
     />
 
-    <!-- 与同圈 scircle-tab 一致的录音遮罩（Teleport + 波形/取消/松开发送/底弧麦克风） -->
-    <Teleport to="body">
-      <div v-if="showRecordOverlay" class="scircle-record-overlay">
-        <div class="scircle-record-dim">
-          <div class="scircle-record-actions" :class="{ 'is-cancel-mode': isRecordCancel }">
-            <div class="scircle-record-voice" :class="{ 'is-cancel': isRecordCancel }">
-              <div class="scircle-record-bars">
-                <span class="bar" />
-                <span class="bar" />
-                <span class="bar" />
-                <span class="bar" />
-                <span class="bar" />
-              </div>
-            </div>
-
-            <div class="scircle-record-cancel-wrap">
-              <svg
-                v-if="isRecordCancel"
-                class="scircle-record-cancel-arc-text"
-                viewBox="0 0 120 36"
-                aria-hidden="true"
-              >
-                <defs>
-                  <path :id="recordCancelArcPathId" d="M 8 28 Q 60 4 112 28" fill="none" />
-                </defs>
-                <text class="scircle-record-cancel-arc-fill" text-anchor="middle">
-                  <textPath :href="`#${recordCancelArcPathId}`" startOffset="50%">松手 取消</textPath>
-                </text>
-              </svg>
-              <div ref="cancelRef" class="scircle-record-cancel" :class="{ 'is-active': isRecordCancel }">取消</div>
-            </div>
-          </div>
-          <div class="scircle-record-tip">松开发送</div>
-        </div>
-        <div class="scircle-record-arch" aria-hidden="true">
-          <svg class="scircle-record-mic-icon" width="56" height="56" viewBox="0 0 56 56" fill="none">
-            <path
-              d="M28 36c4.42 0 8-3.58 8-8V18c0-4.42-3.58-8-8-8s-8 3.58-8 8v10c0 4.42 3.58 8 8 8z"
-              stroke="currentColor"
-              stroke-width="2.2"
-            />
-            <path
-              d="M18 26v2c0 5.52 4.48 10 10 10s10-4.48 10-10v-2"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-            />
-            <path d="M28 40v6M22 46h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
-            <path
-              d="M38 22c0-5.52-4.48-10-10-10M18 22c0-5.52 4.48-10 10-10"
-              stroke="currentColor"
-              stroke-width="1.6"
-              stroke-linecap="round"
-              opacity="0.45"
-            />
-          </svg>
-        </div>
-      </div>
-    </Teleport>
+    <!-- 语音功能：录音遮罩（Teleport + 波形/取消/松开发送/底弧麦克风）先注释 -->
 
     <van-popup
       v-model:show="showRecharge"

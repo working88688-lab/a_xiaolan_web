@@ -251,6 +251,7 @@
               </div>
             </div>
 
+            <!-- 语音功能：先整体注释（包含上传/播放/录音）
             <div class="scircle-settings-section">
               <div class="scircle-settings-voice-head">
                 <div class="scircle-settings-section-title scircle-settings-voice-title">个人语音（可选）</div>
@@ -295,7 +296,6 @@
 
               <template v-else>
                 <div class="scircle-settings-voice-actions">
-                  <!-- <button class="scircle-settings-voice-btn" type="button" @click="onPickProfileVoice">上传语音</button> -->
                   <span class="scircle-settings-voice-tip">{{ isUploadingVoice ? '语音上传中...' : '' }}</span>
                 </div>
                 <input
@@ -307,9 +307,11 @@
                 />
               </template>
             </div>
+            -->
           </div>
 
           <div class="scircle-settings-footer">
+            <!-- 语音功能：录音入口先注释
             <button
               v-if="!profileVoice && !isUploadingVoice"
               class="scircle-settings-primary"
@@ -350,11 +352,12 @@
               </svg>
               <span class="scircle-settings-record-text">按住录制</span>
             </button>
+            -->
             <button
               class="scircle-settings-next"
               type="button"
               :disabled="isSavingStep1"
-              :class="{ 'scircle-settings-next--solo': profileVoice || isUploadingVoice }"
+              :class="{ 'scircle-settings-next--solo': false }"
               @click="onStepOneNext"
             >
               {{ isSavingStep1 ? '提交中...' : '下一步' }}
@@ -428,10 +431,9 @@
       </div>
     </van-popup>
 
-    <!-- 必须挂到 body，否则 z-index 受祖先层叠上下文限制，会被 teleport 的 van-popup 盖住 -->
+    <!-- 语音功能：录音遮罩层先注释
     <Teleport to="body">
       <div v-if="showRecordOverlay" class="scircle-record-overlay">
-        <!-- 结构对齐设计稿：上区暗色 + 波形气泡与右侧取消；中区「松开发送」；下区浅灰弧形 + 麦克风 -->
         <div class="scircle-record-dim">
           <div class="scircle-record-actions" :class="{ 'is-cancel-mode': isRecordCancel }">
             <div class="scircle-record-voice" :class="{ 'is-cancel': isRecordCancel }">
@@ -445,12 +447,7 @@
             </div>
 
             <div class="scircle-record-cancel-wrap">
-              <svg
-                v-if="isRecordCancel"
-                class="scircle-record-cancel-arc-text"
-                viewBox="0 0 120 36"
-                aria-hidden="true"
-              >
+              <svg v-if="isRecordCancel" class="scircle-record-cancel-arc-text" viewBox="0 0 120 36" aria-hidden="true">
                 <defs>
                   <path :id="recordCancelArcPathId" d="M 8 28 Q 60 4 112 28" fill="none" />
                 </defs>
@@ -465,24 +462,15 @@
         </div>
         <div class="scircle-record-arch" aria-hidden="true">
           <svg class="scircle-record-mic-icon" width="56" height="56" viewBox="0 0 56 56" fill="none">
-            <path
-              d="M28 36c4.42 0 8-3.58 8-8V18c0-4.42-3.58-8-8-8s-8 3.58-8 8v10c0 4.42 3.58 8 8 8z"
-              stroke="currentColor"
-              stroke-width="2.2"
-            />
+            <path d="M28 36c4.42 0 8-3.58 8-8V18c0-4.42-3.58-8-8-8s-8 3.58-8 8v10c0 4.42 3.58 8 8 8z" stroke="currentColor" stroke-width="2.2" />
             <path d="M18 26v2c0 5.52 4.48 10 10 10s10-4.48 10-10v-2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
             <path d="M28 40v6M22 46h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
-            <path
-              d="M38 22c0-5.52-4.48-10-10-10M18 22c0-5.52 4.48-10 10-10"
-              stroke="currentColor"
-              stroke-width="1.6"
-              stroke-linecap="round"
-              opacity="0.45"
-            />
+            <path d="M38 22c0-5.52-4.48-10-10-10M18 22c0-5.52 4.48-10 10-10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity="0.45" />
           </svg>
         </div>
       </div>
     </Teleport>
+    -->
 
     <van-popup
       v-model:show="showMatchPopup"
@@ -539,6 +527,7 @@
                     </svg>
                   </button>
 
+                  <!-- 语音功能：详情页播放按钮先注释
                   <button
                     v-if="activeMatchItem.voice_url"
                     class="tq-detail-sound"
@@ -560,6 +549,7 @@
                       </defs>
                     </svg>
                   </button>
+                  -->
                 </div>
 
                 <div class="tq-detail-name">{{ activeMatchItem.nickname || '匿名用户' }}</div>
@@ -575,6 +565,7 @@
                   </div>
                 </div>
 
+                <!-- 语音功能：详情页语音模块先注释
                 <div v-if="activeMatchItem.voice_url" class="tq-voice">
                   <button class="tq-voice-play" type="button" aria-label="播放语音" @click="toggleMatchVoicePlay">
                     <span v-if="!matchVoicePlaying" class="tq-voice-play-icon tq-voice-play-icon--play" />
@@ -603,11 +594,13 @@
                   />
                 </div>
                 <div v-else class="tq-voice-empty">对方暂无语音</div>
+                -->
               </div>
 
               <div class="tq-detail-footer">
                 <button class="tq-btn tq-btn-ghost" type="button" @click="closeMatchPopup">返回匹配</button>
-                <button class="tq-btn tq-btn-primary" type="button" @click="goChat">聊天</button>
+                <!-- 后续进入聊天：先注释 -->
+                <!-- <button class="tq-btn tq-btn-primary" type="button" @click="goChat">聊天</button> -->
               </div>
             </div>
           </div>
@@ -618,11 +611,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, useId, watch } from 'vue'
+import { computed, onMounted } from 'vue'
 import successBgUrl from '~/assets/image/success-bg.png'
 import tqItemUrl from '~/assets/image/tq-item.png'
-
-const recordCancelArcPathId = useId()
 
 const props = defineProps<{
   data: any
@@ -925,36 +916,18 @@ const showHelp = ref(false)
 const isMatching = ref(false)
 const showSettings = ref(false)
 const settingsStep = ref<1 | 2>(1)
-const showRecordOverlay = ref(false)
-const isRecordCancel = ref(false)
-const cancelRef = useTemplateRef<HTMLElement>('cancelRef')
-const isMouseDown = ref(false)
 const showMatchPopup = ref(false)
 const matchView = ref<'grid' | 'detail'>('grid')
 const selectedMatchIndex = ref(0)
-const router = useRouter()
 const myProfileGroups = ref<Record<number, MatchTagItem[]>>({ 1: [], 2: [], 3: [] })
 const expectProfileGroups = ref<Record<number, MatchTagItem[]>>({ 1: [], 2: [], 3: [] })
 const myProfileSelected = ref<string[]>([])
 const expectProfileSelected = ref<string[]>([])
 const profileImg = ref('')
-const profileVoice = ref('')
-const profileVoiceDurationSec = ref<number | null>(null)
-const profileVoiceAudioRef = ref<HTMLAudioElement | null>(null)
-const voicePlaying = ref(false)
 const profileImageInputRef = ref<HTMLInputElement | null>(null)
-const profileVoiceInputRef = ref<HTMLInputElement | null>(null)
 const isSavingStep1 = ref(false)
 const isSavingStep2 = ref(false)
 const isUploadingImage = ref(false)
-const isUploadingVoice = ref(false)
-const mediaRecorderRef = ref<MediaRecorder | null>(null)
-const mediaStreamRef = ref<MediaStream | null>(null)
-const recordChunksRef = ref<Blob[]>([])
-const recordStartTsRef = ref(0)
-const isRecordInitializing = ref(false)
-/** 防止松手早于 getUserMedia 完成时仍创建录音 */
-const recordGenRef = ref(0)
 
 const myProfileTags1 = computed(() => myProfileGroups.value[1] || [])
 const myProfileTags2 = computed(() => myProfileGroups.value[2] || [])
@@ -1018,77 +991,7 @@ const expectProfileTags3 = computed(() => expectProfileGroups.value[3] || [])
 //   matchView.value = 'detail'
 // })
 
-function probeVoiceDurationFromUrl(url: string): Promise<number> {
-  return new Promise(resolve => {
-    const a = new Audio()
-    a.preload = 'metadata'
-    a.src = url
-    a.onloadedmetadata = () => {
-      const d = Math.round(a.duration)
-      resolve(Number.isFinite(d) && d > 0 ? d : 0)
-    }
-    a.onerror = () => resolve(0)
-  })
-}
-
-function pickAudioRecorderMime(): string {
-  if (typeof MediaRecorder === 'undefined') return ''
-  // iOS / Safari 对 MediaRecorder 支持不完整，尽量多列一些可选项
-  const list = [
-    'audio/mp4;codecs=mp4a.40.2',
-    'audio/mp4',
-    'audio/webm;codecs=opus',
-    'audio/webm',
-    'audio/ogg;codecs=opus'
-  ]
-  for (const t of list) {
-    if (MediaRecorder.isTypeSupported(t)) return t
-  }
-  return ''
-}
-
-async function getAudioDurationFromFile(file: File): Promise<number> {
-  const u = URL.createObjectURL(file)
-  try {
-    return await new Promise(resolve => {
-      const a = new Audio()
-      a.src = u
-      a.onloadedmetadata = () => {
-        const d = Math.round(a.duration)
-        resolve(Number.isFinite(d) && d > 0 ? d : 0)
-      }
-      a.onerror = () => resolve(0)
-    })
-  } finally {
-    URL.revokeObjectURL(u)
-  }
-}
-
-/** 语音走 R2 分片通道；imgUpload 只收图片，音频会提示「格式不支持」 */
-async function uploadVoiceToServer(file: File): Promise<string> {
-  const url = (await __.$Api.uploadVideo(file)) as unknown as string
-  return String(url || '')
-}
-
-const profileVoiceDurationDisplay = computed(() => {
-  const s = profileVoiceDurationSec.value
-  if (s == null || s <= 0) return '0"'
-  return `${Math.min(599, s)}"`
-})
-
-watch(
-  () => profileVoice.value,
-  url => {
-    if (!url) {
-      profileVoiceDurationSec.value = null
-      voicePlaying.value = false
-      return
-    }
-    void probeVoiceDurationFromUrl(url).then(sec => {
-      if (sec > 0) profileVoiceDurationSec.value = sec
-    })
-  }
-)
+// 语音功能：相关工具方法/录音逻辑先注释（包含时长探测、mime 选择、上传等）
 
 function normalizeTagId(id: number | string | null | undefined) {
   return String(id ?? '')
@@ -1165,7 +1068,8 @@ async function loadSettingsProfiles() {
   myProfileSelected.value = myParsed.selected
   expectProfileSelected.value = expectParsed.selected
   profileImg.value = myParsed.img
-  profileVoice.value = myParsed.voice
+  // 语音功能：先注释
+  // profileVoice.value = myParsed.voice
 }
 
 function onPickProfileImage() {
@@ -1218,56 +1122,10 @@ async function onProfileImageChange(event: Event) {
   }
 }
 
-function onPickProfileVoice() {
-  if (isUploadingVoice.value) return
-  profileVoiceInputRef.value?.click()
-}
-
-async function onProfileVoiceChange(event: Event) {
-  const input = event.target as HTMLInputElement | null
-  const file = input?.files?.[0]
-  if (!file) return
-  try {
-    isUploadingVoice.value = true
-    const dur = await getAudioDurationFromFile(file)
-    const url = await uploadVoiceToServer(file)
-    profileVoice.value = url
-    if (dur > 0) profileVoiceDurationSec.value = dur
-    __.$Toast('语音上传成功')
-  } catch (error) {
-    console.error('语音上传失败:', error)
-    __.$Toast(scircleErrMsg(error))
-  } finally {
-    isUploadingVoice.value = false
-    if (input) input.value = ''
-  }
-}
-
-function onVoiceDeleteRerecord() {
-  const el = profileVoiceAudioRef.value
-  if (el) {
-    el.pause()
-    el.removeAttribute('src')
-    el.load()
-  }
-  voicePlaying.value = false
-  profileVoice.value = ''
-  profileVoiceDurationSec.value = null
-}
-
-function toggleProfileVoicePlay() {
-  const el = profileVoiceAudioRef.value
-  if (!el || !profileVoice.value) return
-  if (voicePlaying.value) {
-    el.pause()
-  } else {
-    void el.play().catch(() => {})
-  }
-}
+// 语音功能：上传/删除/播放个人语音先注释
 
 const matchItems = ref<MatchItem[]>([])
-const matchDetailAudioRef = useTemplateRef<HTMLAudioElement>('matchDetailAudioRef')
-const matchVoicePlaying = ref(false)
+// 语音功能：匹配详情语音播放先注释
 
 const activeMatchItem = computed<MatchItem>(() => {
   return matchItems.value[selectedMatchIndex.value] || {
@@ -1321,28 +1179,13 @@ function normalizeMatchItems(raw: any): MatchItem[] {
     match_percent: Number(item?.match_percent ?? item?.match_score ?? item?.score ?? 0),
     match_line_text: '',
     tags: Array.isArray(item?.tags) ? item.tags : [],
-    voice_url: voiceUrlFromApiItem(item),
-    voice_duration: voiceDurationLabelFromApi(item)
+    // 语音功能：先注释
+    voice_url: '',
+    voice_duration: '0"'
   }))
 }
 
-function stopMatchDetailVoice() {
-  matchDetailAudioRef.value?.pause()
-  matchVoicePlaying.value = false
-}
-
-function toggleMatchVoicePlay() {
-  const el = matchDetailAudioRef.value
-  const url = activeMatchItem.value.voice_url
-  if (!el || !url) return
-  if (matchVoicePlaying.value) {
-    el.pause()
-  } else {
-    void el.play().catch(() => {
-      __.$Toast('语音播放失败')
-    })
-  }
-}
+// 语音功能：匹配详情语音播放相关方法先注释
 
 function onHelp() {
   showHelp.value = true
@@ -1418,7 +1261,8 @@ async function onStepOneNext() {
   if (isSavingStep1.value) return
   const tagIds = myProfileSelected.value.join(',')
   const img = profileImg.value?.trim()
-  const voice = profileVoice.value?.trim()
+  // 语音功能：先注释
+  // const voice = profileVoice.value?.trim()
 
   // 未选择标签直接拦截（第一步/第二步规则一致）
   if (!tagIds) {
@@ -1431,7 +1275,8 @@ async function onStepOneNext() {
     const payload: Record<string, any> = {}
     if (tagIds) payload.tag_ids = tagIds
     if (img) payload.img = img
-    if (voice) payload.voice = voice
+    // 语音功能：先注释
+    // if (voice) payload.voice = voice
 
     await __.$Api.Community.usersmatchUpdateProfile(payload)
     settingsStep.value = 2
@@ -1464,185 +1309,19 @@ async function onStepTwoDone() {
   }
 }
 
-function isInCancelArea(clientX: number, clientY: number) {
-  const el = cancelRef.value
-  if (!el) return false
-  const rect = el.getBoundingClientRect()
-  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
-}
-
-function stopMediaStream() {
-  const s = mediaStreamRef.value
-  if (s) {
-    s.getTracks().forEach(t => t.stop())
-    mediaStreamRef.value = null
-  }
-}
-
-async function onRecordStart(e: TouchEvent | MouseEvent) {
-  if (profileVoice.value || isUploadingVoice.value) return
-  if (isRecordInitializing.value || (mediaRecorderRef.value && mediaRecorderRef.value.state === 'recording')) return
-
-  const gen = ++recordGenRef.value
-
-  if (e instanceof MouseEvent) {
-    isMouseDown.value = true
-  }
-  showRecordOverlay.value = true
-  isRecordCancel.value = false
-  if (e instanceof TouchEvent) {
-    const t = e.touches?.[0]
-    if (t) isRecordCancel.value = isInCancelArea(t.clientX, t.clientY)
-  }
-
-  // iOS/WKWebView 常见限制：非安全上下文无法使用麦克风
-  if (import.meta.client && typeof window !== 'undefined' && (window as any).isSecureContext === false) {
-    showRecordOverlay.value = false
-    isMouseDown.value = false
-    __.$Toast('当前环境不支持录音（需要安全环境），请改用上传语音')
-    onPickProfileVoice()
-    return
-  }
-
-  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-    showRecordOverlay.value = false
-    __.$Toast('当前环境不支持录音')
-    return
-  }
-
-  // MediaRecorder 在 iOS 上可能不可用/不支持音频录制：直接切到上传兜底
-  if (typeof MediaRecorder === 'undefined') {
-    showRecordOverlay.value = false
-    isMouseDown.value = false
-    __.$Toast('当前设备不支持录音，请改用上传语音')
-    onPickProfileVoice()
-    return
-  }
-
-  isRecordInitializing.value = true
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    if (gen !== recordGenRef.value) {
-      stream.getTracks().forEach(t => t.stop())
-      return
-    }
-    mediaStreamRef.value = stream
-    recordChunksRef.value = []
-    recordStartTsRef.value = Date.now()
-    const mime = pickAudioRecorderMime()
-    let rec: MediaRecorder
-    try {
-      rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
-    } catch (err) {
-      // iOS 不支持当前 mime/录制器：兜底走上传
-      stream.getTracks().forEach(t => t.stop())
-      mediaStreamRef.value = null
-      showRecordOverlay.value = false
-      isMouseDown.value = false
-      __.$Toast('当前设备录音不可用，请改用上传语音')
-      onPickProfileVoice()
-      return
-    }
-    rec.ondataavailable = ev => {
-      if (ev.data.size > 0) recordChunksRef.value.push(ev.data)
-    }
-    rec.start(120)
-    mediaRecorderRef.value = rec
-  } catch (err) {
-    stopMediaStream()
-    mediaRecorderRef.value = null
-    showRecordOverlay.value = false
-    isMouseDown.value = false
-    __.$Toast(scircleErrMsg(err) || '无法使用麦克风')
-  } finally {
-    isRecordInitializing.value = false
-  }
-}
-
-function onRecordMove(e: TouchEvent) {
-  const t = e.touches?.[0]
-  if (!t) return
-  isRecordCancel.value = isInCancelArea(t.clientX, t.clientY)
-}
-
-function onRecordMouseMove(e: MouseEvent) {
-  if (!isMouseDown.value) return
-  isRecordCancel.value = isInCancelArea(e.clientX, e.clientY)
-}
-
-async function onRecordEnd() {
-  if (!showRecordOverlay.value) return
-  recordGenRef.value++
-  const cancelled = isRecordCancel.value
-  showRecordOverlay.value = false
-  isMouseDown.value = false
-  isRecordCancel.value = false
-
-  const rec = mediaRecorderRef.value
-  mediaRecorderRef.value = null
-  const chunks = [...recordChunksRef.value]
-  recordChunksRef.value = []
-  stopMediaStream()
-
-  if (!rec || rec.state === 'inactive') {
-    return
-  }
-
-  await new Promise<void>(resolve => {
-    rec.onstop = () => resolve()
-    try {
-      rec.stop()
-    } catch {
-      resolve()
-    }
-  })
-
-  if (cancelled || !chunks.length) {
-    return
-  }
-
-  const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' })
-  if (blob.size < 80) {
-    __.$Toast('录音过短')
-    return
-  }
-
-  const ext = blob.type.includes('mp4') ? 'm4a' : blob.type.includes('webm') ? 'webm' : 'webm'
-  const file = new File([blob], `voice.${ext}`, { type: blob.type || 'audio/webm' })
-  const approx = Math.max(1, Math.round((Date.now() - recordStartTsRef.value) / 1000))
-
-  isUploadingVoice.value = true
-  try {
-    const url = await uploadVoiceToServer(file)
-    profileVoice.value = url
-    profileVoiceDurationSec.value = approx
-    const precise = await probeVoiceDurationFromUrl(profileVoice.value)
-    if (precise > 0) profileVoiceDurationSec.value = precise
-    __.$Toast('语音上传成功')
-  } catch (error) {
-    console.error('语音上传失败:', error)
-    profileVoice.value = ''
-    profileVoiceDurationSec.value = null
-    __.$Toast(scircleErrMsg(error))
-  } finally {
-    isUploadingVoice.value = false
-  }
-}
+// 语音功能：录音相关逻辑先注释（含遮罩层、取消区域判断、MediaRecorder 等）
 
 function openMatchDetail(idx: number) {
-  stopMatchDetailVoice()
   selectedMatchIndex.value = idx
   matchView.value = 'detail'
   void fetchMatchDetail()
 }
 
 function backToMatchGrid() {
-  stopMatchDetailVoice()
   matchView.value = 'grid'
 }
 
 function closeMatchPopup() {
-  stopMatchDetailVoice()
   showMatchPopup.value = false
   matchView.value = 'grid'
 }
@@ -1661,11 +1340,7 @@ async function fetchMatchDetail() {
     const scoreRaw = detail?.score
     const matchLineText =
       typeof scoreRaw === 'string' && scoreRaw.trim() !== '' ? scoreRaw.trim() : ''
-    const voiceFromDetail = voiceUrlFromApiItem(detail)
-    const voiceUrl = voiceFromDetail || current.voice_url
-    const durationFromDetail = voiceDurationLabelFromApi(detail)
-    const voiceDuration =
-      durationFromDetail !== '0"' ? durationFromDetail : current.voice_duration || '0"'
+    // 语音功能：先注释（详情接口的语音字段解析）
     const nextItem: MatchItem = {
       ...current,
       uid: detail?.uid ?? current.uid,
@@ -1675,8 +1350,9 @@ async function fetchMatchDetail() {
       match_percent: current.match_percent,
       match_line_text: matchLineText,
       tags: list.map((it: any) => it?.name).filter(Boolean),
-      voice_url: voiceUrl,
-      voice_duration: voiceDuration
+      // 语音功能：先注释
+      voice_url: '',
+      voice_duration: '0"'
     }
     matchItems.value[selectedMatchIndex.value] = nextItem
   } catch (error) {
@@ -1685,53 +1361,7 @@ async function fetchMatchDetail() {
   }
 }
 
-async function goChat() {
-  const current = activeMatchItem.value
-  // 首次在匹配成功页选择“聊天”时提示；确认后不再提示
-  const CONFIRM_KEY = 'scircle_match_first_chat_confirmed'
-  try {
-    if (import.meta.client) {
-      const confirmed = window.localStorage.getItem(CONFIRM_KEY) === '1'
-      if (!confirmed) {
-        await __.$Alert({
-          title: '提示',
-          message: '是否选择此人进行聊天，选择后其他人将消失在人海。',
-          showCancelButton: true,
-          confirmButtonText: '确认',
-          cancelButtonText: '取消'
-        })
-        window.localStorage.setItem(CONFIRM_KEY, '1')
-      }
-    }
-  } catch {
-    // 用户取消或弹窗异常：直接中断，不进入聊天
-    return
-  }
-  try {
-    await __.$Api.Community.usersmatchSubmitMatch({
-      to_uid: String(current.uid || 0)
-    })
-    stopMatchDetailVoice()
-    showMatchPopup.value = false
-    matchView.value = 'grid'
-    const score = Math.round(Number(current.match_percent) || 0)
-    await router.push({
-      path: '/chat/room',
-      query: {
-        uid: String(current.uid || 0),
-        name: current.nickname || '匿名用户',
-        // get_match_info 需要列表分数；同时兼容历史参数名 scoreNum
-        score: String(score),
-        scoreNum: String(score),
-        // chat-room 头像兜底：优先用详情/列表 thumb（这里用当前项 cover）
-        thumb: String(current.cover || '')
-      }
-    })
-  } catch (error) {
-    console.error('提交匹配结果失败:', error)
-    __.$Toast(scircleErrMsg(error))
-  }
-}
+// 后续进入聊天：先整体注释
 </script>
 
 <style scoped>
@@ -2155,7 +1785,7 @@ async function goChat() {
 }
 
 .scircle-settings-footer {
-  /* padding-top: 10px; */
+  padding-top: 0;
 }
 
 .scircle-settings-primary {
