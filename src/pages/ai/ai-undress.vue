@@ -28,17 +28,66 @@ const stripData = ref<PreStripData>({
   tips: ''
 })
 
+function pickNumericField(row: Record<string, unknown> | undefined, keys: string[]): number {
+  if (!row) return 0
+  for (const k of keys) {
+    const v = row[k]
+    if (v === undefined || v === null || v === '') continue
+    const n = Number(v)
+    if (Number.isFinite(n)) return n
+  }
+  return 0
+}
+
+function pickStringField(row: Record<string, unknown> | undefined, keys: string[]): string {
+  if (!row) return ''
+  for (const k of keys) {
+    const v = row[k]
+    if (v === undefined || v === null) continue
+    const s = String(v).trim()
+    if (s) return s
+  }
+  return ''
+}
+
+// 左侧“次数卡”只用 free_num
+const canUseFree = computed(() => stripData.value.free_num > 0)
+const canPayCoin = computed(() => stripData.value.cost_coin > 0)
+
 async function fetchPreStrip() {
   try {
     const res = await __.$Api.AI.preStrip({})
-    const d = res?.data as Partial<PreStripData> | undefined
-    if (d) {
-      stripData.value = {
-        free_num: Number(d.free_num ?? 0),
-        coin: Number(d.coin ?? 0),
-        cost_coin: Number(d.cost_coin ?? 0),
-        tips: d.tips ?? ''
-      }
+    console.log(
+      '%c[AI-UNDRESS] 进入页面接口返回：/api/ai/pre_strip',
+      'color:#fff;background:#ff3b30;padding:4px 10px;border-radius:6px;font-weight:800;',
+    )
+    console.log('%c[AI-UNDRESS] res.data（醒目重点）','color:#000;background:#ffd60a;padding:3px 8px;border-radius:6px;font-weight:800;', res?.data)
+    console.log('%c[AI-UNDRESS] res（完整）','color:#fff;background:#333;padding:3px 8px;border-radius:6px;font-weight:800;', res)
+    const d = (res?.data ?? {}) as Record<string, unknown>
+    stripData.value = {
+      // free_num / 次数：兼容后端不同命名
+      free_num: pickNumericField(d, ['free_num', 'freeNum', 'free_times', 'free_time', 'free_count', 'free', 'num', 'left_free_num', 'remain_free_num', 'ai_ty_free_num']),
+      // coin / 余额：兼容你截图里的 ai_ty_coins
+      coin: pickNumericField(d, ['coin', 'coins', 'balance', 'ai_type_coins', 'ai_ty_coin', 'ai_type_coin']),
+      // cost_coin / 价格：兼容 cost_coin、need_coin、price 以及 ai_ty_price/ai_strip_price 之类
+      cost_coin: pickNumericField(d, [
+        'cost_coin',
+        'cost',
+        'need_coin',
+        'needCoins',
+        'price',
+        'gold_coin',
+        'gold',
+        // 你当前 pre_strip 返回里：ai_ty_coins=190（支付价格）
+        'ai_ty_coins',
+        'ai_ty_cost',
+        'ai_ty_price',
+        'ai_strip_price',
+        'strip_price',
+        'pay_coin',
+        'payCoins'
+      ]),
+      tips: pickStringField(d, ['tips', 'tip', 'message', 'msg'])
     }
   } catch (error) {
     console.error('获取AI去衣预检查失败:', error)
@@ -46,6 +95,10 @@ async function fetchPreStrip() {
 }
 
 onMounted(() => {
+  console.log(
+    '%c[AI-UNDRESS] onMounted 触发 fetchPreStrip（即将请求 /api/ai/pre_strip）',
+    'color:#fff;background:#0b84ff;padding:4px 10px;border-radius:6px;font-weight:800;',
+  )
   fetchPreStrip()
 })
 
@@ -65,10 +118,15 @@ async function afterRead(file: any) {
   }
 }
 
-async function onPay() {
-  if (!images.value.length) {
-    return __.$Toast('请先上传图片')
-  }
+async function onUseFree() {
+  if (!images.value.length) return __.$Toast('请先上传图片')
+  if (!canUseFree.value) return
+  await confirmPay(1)
+}
+
+async function onPayCoins() {
+  if (!images.value.length) return __.$Toast('请先上传图片')
+  if (!canPayCoin.value) return
   showPayPopup.value = true
 }
 
@@ -81,7 +139,7 @@ function pickTaskMsg(res: any): string | undefined {
   return res?.msg ?? res?.data?.msg
 }
 
-async function confirmPay() {
+async function confirmPay(payType: number) {
   if (!images.value.length) {
     return __.$Toast('请先上传图片')
   }
@@ -94,7 +152,9 @@ async function confirmPay() {
       const res = await __.$Api.AI.strip({
         thumb: file.content || file.url,
         thumb_w: img.width,
-        thumb_h: img.height
+        thumb_h: img.height,
+        // 约定：1=使用免费次数卡，0=支付金币
+        type: payType
       })
       const tip = pickTaskMsg(res)
       if (tip) __.$Toast(tip)
@@ -166,16 +226,29 @@ async function confirmPay() {
           </div>
 
           <div class="action-bar">
-            <dx-button
-              block
-              class="action-bar-btn"
-              color="#2494ff"
-              :round="false"
-              :disabled="!images.length"
-              @click="onPay"
-            >
-              支付{{ stripData.cost_coin }}金币
-            </dx-button>
+            <div class="action-choice">
+              <dx-button
+                block
+                class="action-choice-btn action-free-btn"
+                color="#2494ff"
+                :round="false"
+                :disabled="!canUseFree"
+                @click="onUseFree"
+              >
+                使用次数卡（可用{{ stripData.free_num }}次）
+              </dx-button>
+              <dx-button
+                block
+                class="action-choice-btn action-pay-btn"
+                color="#2494ff"
+                :round="false"
+                :disabled="!canPayCoin"
+                @click="onPayCoins"
+              >
+                支付{{ stripData.cost_coin }}金币
+              </dx-button>
+            </div>
+
             <div class="action-bar-text">
               当前余额：{{ stripData.coin }}，
               <button class="action-bar-recharge" type="button" @click="toRecharge">去充值</button>
@@ -204,7 +277,14 @@ async function confirmPay() {
           <div class="pay-popup-label">实际支付</div>
           <div class="pay-popup-value pay-popup-value-strong">{{ stripData.cost_coin }}</div>
         </div>
-        <button class="pay-popup-btn" type="button" :disabled="!images.length" @click="confirmPay">立即支付</button>
+        <button
+          class="pay-popup-btn"
+          type="button"
+          :disabled="!images.length || !canPayCoin"
+          @click="confirmPay(0)"
+        >
+          立即支付
+        </button>
       </div>
     </van-popup>
   </div>
@@ -212,12 +292,21 @@ async function confirmPay() {
 
 <style scoped lang="postcss">
 .ai-undress-page {
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
   background-color: #f5f5f7;
 }
 
 .ai-undress-content {
   padding: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+:deep(.dx-container.container) {
+  overflow-y: hidden !important;
 }
 
 .upload-card {
@@ -371,18 +460,24 @@ async function confirmPay() {
   z-index: 10;
 }
 
-.action-bar-btn {
-  height: 44px;
-  font-size: 13px;
+.action-choice {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.action-bar-btn:deep(.van-button--disabled) {
+.action-choice-btn {
+  height: 44px;
+  font-size: 12px;
+}
+
+.action-choice-btn:deep(.van-button--disabled) {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
 .action-bar-text {
-  margin-top: 20px;
+  margin-top: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
