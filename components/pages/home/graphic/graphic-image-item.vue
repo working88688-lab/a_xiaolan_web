@@ -156,7 +156,17 @@ onMounted(() => {
             })}`"
             class="more"
           >
-            查看更多 >
+            <span>查看更多</span>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M7 4L13.0938 10.1451L7 16.4106"
+                stroke="#070710"
+                stroke-opacity="0.6"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </nuxt-link>
         </div>
         <div class="dx-list" @touchmove.stop>
@@ -277,7 +287,17 @@ onMounted(() => {
             })}`"
             class="more"
           >
-            查看更多 >
+            <span>查看更多</span>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M7 4L13.0938 10.1451L7 16.4106"
+                stroke="#070710"
+                stroke-opacity="0.6"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </nuxt-link>
         </div>
         <div class="graphic-layout-two grid grid-cols-2 gap-1 px-1">
@@ -482,8 +502,11 @@ onMounted(() => {
   }
 
   .more {
-    color: #999999;
+    color: #666666;
     font-size: 0.34rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.12rem;
   }
 }
 
