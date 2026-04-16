@@ -78,10 +78,7 @@ function __logHeaderDataOnce(data: any) {
     const icons = Array.isArray(data?.icon) ? data.icon : []
     console.log('[home-resource][graphic-image-item] header data(object):', data)
     try {
-      console.log(
-        '[home-resource][graphic-image-item] header data(json):',
-        JSON.stringify(data, null, 2)
-      )
+      console.log('[home-resource][graphic-image-item] header data(json):', JSON.stringify(data, null, 2))
     } catch (e) {
       console.warn('[home-resource][graphic-image-item] header data stringify failed:', e)
     }
@@ -116,10 +113,7 @@ onMounted(() => {
         :ad-name="props.title"
         :items="data?.ads ?? []"
       ></dx-resource-ads>
-      <div
-        class="graphic-filter-state"
-        :class="props.type === 'comics' ? 'icon-type-two' : 'icon-type-one'"
-      >
+      <div class="graphic-filter-state" :class="props.type === 'comics' ? 'icon-type-two' : 'icon-type-one'">
         <div class="graphic-filter-state-scroll" @touchmove.stop>
           <scroll-x-view ref="iconScrollRef">
             <div class="graphic-filter-scroll-content">
@@ -196,6 +190,24 @@ onMounted(() => {
               <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
             </div>
           </scroll-x-view>
+        </div>
+        <div class="graphic-layout-bottom">
+          <div class="graphic-layout-bottom-button" @click="onReplaceClick(card)">
+            <img class="icon" src="~/assets/image/home/icon_refresh.png" alt="" />
+            <div class="title">换一换</div>
+          </div>
+          <nuxt-link
+            :to="`/query?${format_url_params({
+              tab: card.tab_id,
+              title: card.tab_name,
+              _type: props.type,
+              _sort_key: 'order'
+            })}`"
+            class="graphic-layout-bottom-button"
+          >
+            <img class="icon" src="~/assets/image/home/icon_more2.png" alt="" />
+            <div class="title">查看更多</div>
+          </nuxt-link>
         </div>
       </div>
       <div v-else-if="card.show_style === 'V-3*N'" :key="index + 1" class="graphic-layout-item">
@@ -291,6 +303,24 @@ onMounted(() => {
             <div class="line-clamp-1">{{ cardItem.title }}</div>
           </div>
           <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
+        </div>
+        <div class="graphic-layout-bottom">
+          <div class="graphic-layout-bottom-button" @click="onReplaceClick(card)">
+            <img class="icon" src="~/assets/image/home/icon_refresh.png" alt="" />
+            <div class="title">换一换</div>
+          </div>
+          <nuxt-link
+            :to="`/query?${format_url_params({
+              tab: card.tab_id,
+              title: card.tab_name,
+              _type: props.type,
+              _sort_key: 'order'
+            })}`"
+            class="graphic-layout-bottom-button"
+          >
+            <img class="icon" src="~/assets/image/home/icon_more2.png" alt="" />
+            <div class="title">查看更多</div>
+          </nuxt-link>
         </div>
       </div>
     </template>

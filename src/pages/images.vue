@@ -118,7 +118,7 @@
       v-model:show="showPreview"
       :images="previewVisibleImages"
       :start-position="currentIndex"
-      :show-index="true"
+      :show-index="false"
       closeable
       close-icon-position="top-right"
       :close-on-click-image="false"
@@ -517,5 +517,22 @@ onBeforeMount(async () => {
   color: #fff;
   font-size: 14px;
   padding: 6px 2px;
+}
+
+:deep(.van-popup.van-image-preview) {
+  width: 100vw !important;
+  max-width: none !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+:deep(.van-image-preview__close-icon--top-right) {
+  top: 20px !important;
+  right: 20px !important;
+}
+
+:deep(.van-image-preview__close-icon--top-left) {
+  top: 20px !important;
+  left: 20px !important;
 }
 </style>
