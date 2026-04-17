@@ -9,7 +9,7 @@
     ></dx-navbar>
     <div class="scroll-container">
       <scroll-list v-model:loading="loading" :is-ready="!loading">
-        <div v-for="(item, index) in listSeries" :key="index" class="image-item" @click="onImageClick(index)">
+        <div v-for="(item, index) in displaySeries" :key="index" class="image-item" @click="onImageClick(index)">
           <img
             v-lazyLoad:[Number(pageData?.id)]="item.img_url_full"
             :data-index="index"
@@ -17,9 +17,9 @@
             alt=""
             :class="{ 'is-locked': isImageLocked(index) }"
           />
-          <div v-if="isImageLocked(index)" class="image-mask"></div>
+          <div v-if="shouldShowLockOverlay(index)" class="image-mask"></div>
           <div
-            v-if="isImageLocked(index)"
+            v-if="shouldShowLockOverlay(index)"
             class="image-action"
             :class="{ 'image-action--coins': pageData?.coins > 0, 'image-action--vip': !pageData?.coins }"
             @click.stop="handleMainAction"
@@ -44,7 +44,7 @@
             <div v-else class="image-action-sub">开通VIP，即可解锁全套{{ pageData?.total }}张</div>
           </div>
 
-          <div v-if="isImageLocked(index)" class="image-footer">
+          <div v-if="shouldShowLockOverlay(index)" class="image-footer">
             <div class="image-footer-item image-footer-item--eye">
               <svg
                 class="image-footer-icon"
@@ -149,7 +149,10 @@
                 class="dx-preview-pay-btn"
                 type="button"
                 :class="{ 'dx-preview-pay-btn--warn': !isEnoughCoins && pageData?.coins > 0 }"
-                @click.stop="onPreviewPayConfirm"
+                @click.stop.prevent="onPreviewPayConfirm"
+                @touchstart.stop.prevent="onPreviewPayConfirm"
+                @touchend.stop.prevent
+                @mousedown.stop.prevent
               >
                 {{ pageData?.coins > 0 ? (isEnoughCoins ? '确定' : '去充值') : '前往开通' }}
               </button>
@@ -232,6 +235,17 @@ const isPreviewUnlocked = computed(() => {
   return Boolean(raw.has_right) || raw.is_pay === 1
 })
 
+const isPageUnlocked = computed(() => {
+  const raw: any = pageData.value || {}
+  return Boolean(raw.has_right) || raw.is_pay === 1
+})
+
+// 未解锁/非 VIP：列表只渲染 2 张（第1张可看 + 第2张引导解锁）
+const displaySeries = computed(() => {
+  const list = listSeries.value || []
+  return isPageUnlocked.value ? list : list.slice(0, 2)
+})
+
 const previewVisibleImages = computed(() => {
   const images = previewImages.value || []
   // 锁定态也保留多张占位，保证 van-image-preview 可以横向滑动
@@ -282,6 +296,14 @@ const isImageLocked = (index: number | string) => {
 
   // 未解锁时，只放开第一张，其余全部锁定
   return i > 0
+}
+
+// 未解锁时：只在第 2 张（index=1）展示遮罩与 CTA，其它锁定图仅保留模糊效果
+const shouldShowLockOverlay = (index: number | string) => {
+  const i = Number(index)
+  if (!pageData.value) return false
+  if (pageData.value.has_right || pageData.value.is_pay === 1) return false
+  return i === 1
 }
 
 const handleMainAction = () => {
@@ -600,12 +622,14 @@ onBeforeMount(async () => {
   align-items: center;
   color: #fff;
   font-size: 14px;
-  pointer-events: none;
+  pointer-events: auto;
   z-index: 3000;
 }
 
 .custom-preview-index {
   pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .custom-preview-save {
@@ -732,6 +756,8 @@ onBeforeMount(async () => {
   background: #2494ff;
   font-size: 0.32rem;
   font-weight: 800;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 :deep(.dx-preview-pay-btn--warn) {

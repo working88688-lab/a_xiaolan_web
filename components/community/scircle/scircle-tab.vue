@@ -600,7 +600,7 @@
               <div class="tq-detail-footer">
                 <button class="tq-btn tq-btn-ghost" type="button" @click="closeMatchPopup">返回匹配</button>
                 <!-- 后续进入聊天：先注释 -->
-                <!-- <button class="tq-btn tq-btn-primary" type="button" @click="goChat">聊天</button> -->
+                <button class="tq-btn tq-btn-primary" type="button" @click="goChat">聊天</button>
               </div>
             </div>
           </div>
@@ -621,6 +621,7 @@ const props = defineProps<{
 const listRef = useTemplateRef('list')
 const { scrollTop } = useScrollTop(listRef)
 const __ = useNuxtApp()
+const router = useRouter()
 
 // 统一处理「根相对路径」资源地址拼接
 const globalStore = useGlobalStore()
@@ -1199,15 +1200,46 @@ async function onStartMatch() {
   isMatching.value = true
   try {
     let res: any = null
+    let apiName = ''
     try {
       res = await __.$Api.Community.usersmatchMatch({})
+      apiName = 'usersmatchMatch'
     } catch (e) {
       __.$Toast(scircleErrMsg(e))
     }
     if (!res) {
       res = await __.$Api.Community.talkMatch({})
+      apiName = 'talkMatch'
     }
     const rows = normalizeMatchItems(res?.data)
+    if (scircleDebug) {
+      const styleTitle =
+        'background:#111827;color:#fff;padding:4px 8px;border-radius:6px;font-weight:800;font-size:12px'
+      const styleWarn =
+        'background:#b91c1c;color:#fff;padding:2px 6px;border-radius:6px;font-weight:800'
+      const raw = res?.data
+      const rawCount = Array.isArray(raw) ? raw.length : Array.isArray(raw?.list) ? raw.list.length : undefined
+      console.groupCollapsed(
+        `%c[iOS][同圈] 匹配接口返回（${apiName || 'unknown'}）%c rawCount=${rawCount ?? 'unknown'} normalizeCount=${rows.length}`,
+        styleTitle,
+        rawCount == null && rows.length === 0 ? styleWarn : 'color:#16a34a;font-weight:800'
+      )
+      console.log('%c[scircle][match] 接口整包 res =', 'font-weight:800;color:#111827', res)
+      console.log('%c[scircle][match] res.data =', 'font-weight:800;color:#111827', raw)
+      console.log('%c[scircle][match] res.data(推测原始条数) =', 'font-weight:800;color:#111827', rawCount)
+      console.log('%c[scircle][match] normalizeMatchItems(res.data) 长度 =', 'font-weight:800;color:#111827', rows.length)
+      console.table(
+        rows.map((it, i) => ({
+          i,
+          uid: it.uid,
+          nickname: it.nickname,
+          cover: it.cover,
+          match_percent: it.match_percent,
+          tags_len: Array.isArray(it.tags) ? it.tags.length : 0
+        }))
+      )
+      console.groupEnd()
+    }
     matchItems.value = rows.length
       ? rows.slice(0, 6)
       : Array.from({ length: 6 }).map((_, index) => ({
@@ -1360,8 +1392,55 @@ async function fetchMatchDetail() {
     __.$Toast(scircleErrMsg(error))
   }
 }
+ 
 
-// 后续进入聊天：先整体注释
+async function goChat() {
+  const current = activeMatchItem.value
+  // 首次在匹配成功页选择“聊天”时提示；确认后不再提示
+  const CONFIRM_KEY = 'scircle_match_first_chat_confirmed'
+  try {
+    if (import.meta.client) {
+      const confirmed = window.localStorage.getItem(CONFIRM_KEY) === '1'
+      if (!confirmed) {
+        await __.$Alert({
+          title: '提示',
+          message: '是否选择此人进行聊天，选择后其他人将消失在人海。',
+          showCancelButton: true,
+          confirmButtonText: '确认',
+          cancelButtonText: '取消'
+        })
+        window.localStorage.setItem(CONFIRM_KEY, '1')
+      }
+    }
+  } catch {
+    // 用户取消或弹窗异常：直接中断，不进入聊天
+    return
+  }
+  try {
+    await __.$Api.Community.usersmatchSubmitMatch({
+      to_uid: String(current.uid || 0)
+    })
+    // stopMatchDetailVoice()
+    showMatchPopup.value = false
+    matchView.value = 'grid'
+    const score = Math.round(Number(current.match_percent) || 0)
+    await router.push({
+      path: '/chat/room',
+      query: {
+        uid: String(current.uid || 0),
+        name: current.nickname || '匿名用户',
+        // get_match_info 需要列表分数；同时兼容历史参数名 scoreNum
+        score: String(score),
+        scoreNum: String(score),
+        // chat-room 头像兜底：优先用详情/列表 thumb（这里用当前项 cover）
+        thumb: String(current.cover || '')
+      }
+    })
+  } catch (error) {
+    console.error('提交匹配结果失败:', error)
+    __.$Toast(scircleErrMsg(error))
+  }
+}
 </script>
 
 <style scoped>
@@ -2044,8 +2123,8 @@ async function fetchMatchDetail() {
 }
 
 :global(.van-popup.tq-match-popup:not(.van-popup--bottom):not(.van-toast)) {
-  width: calc(100vw - 16px) !important;
-  max-width: calc(100vw - 16px) !important;
+  width: calc(100vw - 20px) !important;
+  max-width: calc(100vw - 20px) !important;
   background: transparent !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
@@ -2055,8 +2134,11 @@ async function fetchMatchDetail() {
 
 .tq-flip {
   width: 100%;
-  max-height: 86vh;
-  aspect-ratio: 1050 / 2250;
+  /* iOS 二次打开时 vh/max-height + aspect-ratio 容易抖动导致裁切，直接固定视口高度更稳 */
+  height: 92vh;
+  height: 92svh;
+  max-height: none;
+  aspect-ratio: auto;
   perspective: 1000px;
   overflow: hidden;
 }
@@ -2093,6 +2175,9 @@ async function fetchMatchDetail() {
   background-position: center;
   padding: 78px 15px 18px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .tq-success-title {
@@ -2106,6 +2191,12 @@ async function fetchMatchDetail() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px 15px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+  align-content: start;
 }
 
 .tq-grid-item {
@@ -2116,7 +2207,8 @@ async function fetchMatchDetail() {
 
 .tq-grid-img {
   width: 100%;
-  height: 180px;
+  /* iOS 上 aspect-ratio/auto 高度易造成行高被拉大，固定一个随屏宽变化的高度更稳 */
+  height: min(42vw, 176px);
   object-fit: cover;
   border-radius: 14px;
   display: block;
@@ -2385,8 +2477,8 @@ async function fetchMatchDetail() {
   left: 14px;
   right: 14px;
   /* safe-area 兜底：部分 WebView 不支持 env(...) 时需要保留基础 bottom 值 */
-  bottom: 44px;
-  bottom: calc(44px + env(safe-area-inset-bottom));
+  bottom: 20px;
+  /* bottom: calc(44px + env(safe-area-inset-bottom)); */
   z-index: 6;
   display: grid;
   grid-template-columns: 1fr 1fr;
