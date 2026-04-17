@@ -155,11 +155,10 @@ const stripRight = computed(() => ({
 }))
 
 const panelStyle = computed(() => {
-  const cx = m.value.x + m.value.w / 2
   const top = m.value.y + m.value.h + 14
   return {
     top: `${top}px`,
-    left: `${cx}px`,
+    left: '50%',
     transform: 'translateX(-50%)'
   }
 })
