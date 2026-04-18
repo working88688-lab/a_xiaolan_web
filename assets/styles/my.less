@@ -211,10 +211,19 @@
     .user-avatar-info {
       flex: 1;
       color: #fff;
+      min-width: 0;
+
+      .user-avatar-name-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.06rem 0.12rem;
+      }
 
       .user-avatar-title {
         font-size: 14px;
         font-weight: bold;
+        min-width: 0;
       }
 
       .user-avatar-subtitle {
@@ -223,6 +232,8 @@
       }
 
       .user-avatar-vip {
+        margin-top: 4px;
+
         .auth-level {
           display: flex;
           align-items: center;

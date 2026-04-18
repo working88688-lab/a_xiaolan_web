@@ -23,12 +23,12 @@
               <dx-avatar :uid="user.uid" :size="1.4" :img="user.avatar_url" />
             </div>
             <div class="user-avatar-info">
-              <div class="user-avatar-title">{{ user?.nickname }}</div>
-              <div class="user-avatar-vip">
+              <div class="user-avatar-name-row">
+                <div class="user-avatar-title">{{ user?.nickname }}</div>
                 <vip-icon :data="user"></vip-icon>
-                <!-- <img v-if="user.is_vip == 1" class="vip-level" :src="setVipIcon(user.vip_level)" /> -->
-
-                <div v-if="user.auth_level >= 4" class="auth-level">
+              </div>
+              <div v-if="user.auth_level >= 4" class="user-avatar-vip">
+                <div class="auth-level">
                   <img src="~/assets/image/creator.png" />
                   <span>制片人LV.{{ user.auth_level }}</span>
                 </div>
@@ -263,8 +263,10 @@ useSyncCacheData(cacheData => {
 <style lang="less" scoped>
 @import '@styles/my.less';
 
-:deep(.vip-level) {
-  margin-top: 2px;
+:deep(.user-avatar-name-row .vip-level) {
+  margin-top: 0;
+  flex-shrink: 0;
+  display: block;
 }
 
 .icon {
