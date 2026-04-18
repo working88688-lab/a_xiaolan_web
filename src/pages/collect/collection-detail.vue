@@ -25,7 +25,7 @@
           :class="data.info?.is_like ? '!text-[#ffde00]' : '!text-white'"
           @click="toggle"
         >
-          <van-icon name="star" size="0.5rem" class="mr-0.5" />
+          <nuxt-icon name="my/star" filled class="mr-0.5 !text-[0.5rem]" />
           <template v-if="data.info?.is_like">已收藏</template>
           <template v-else>收藏合集</template>
         </dx-button>

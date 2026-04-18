@@ -220,13 +220,19 @@ const { key } = useKeepAlive({
               api="api/porngame/favorite"
               align="row"
               size="0.6rem"
-              icon="star-o"
-              active-icon="star"
               :likes="detail?.detail?.favorite_ct"
               :like="detail?.detail?.is_favorite === 1"
-              active-color="rgb(255, 169, 9)"
               :use-toast="false"
             >
+              <template #icon="{ isLike }">
+                <nuxt-icon
+                  name="my/star"
+                  filled
+                  class="btn_like--icon !block shrink-0"
+                  :class="{ 'opacity-40': !isLike }"
+                  :style="{ fontSize: '0.6rem' }"
+                />
+              </template>
               <template #default="{ likes }">
                 {{ $Utils.formatNumber(likes) }}
               </template>
