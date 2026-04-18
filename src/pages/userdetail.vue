@@ -351,8 +351,8 @@ const is_show_bg = computed(() => {
             简介：
             <div class="flex-1" v-html="userInfo.person_signnatrue.replaceAll('\n', '<br/>')"></div>
           </div>
-          <div class="number_info flex items-center justify-between">
-            <div class="flex items-center space-x-[25px]">
+          <div class="number_info">
+            <div class="number-info-stats flex min-w-0 flex-1 items-center space-x-3 sm:space-x-[25px]">
               <div v-link="`/fans?uid=${userInfo?.uid}`" class="number_item cursor-pointer">
                 <div class="number">{{ $Utils.formatNumber(userInfo?.fans_count ?? 0, 'en') }}</div>
                 <div class="title">粉丝</div>
@@ -367,7 +367,7 @@ const is_show_bg = computed(() => {
               </div>
             </div>
 
-            <div v-if="!isMyDetail && !loading" class="user-action-buttons flex">
+            <div v-if="!isMyDetail && !loading" class="user-action-buttons flex shrink-0">
               <btn-follow :key="userInfo.uid" :attention="follow ? 1 : 0" :uid="userInfo.uid" use-toast>
                 <template #default="{ text }">
                   <dx-button color="linear-gradient(to right, #FF0000,  #FDA03D)">
@@ -677,12 +677,18 @@ const is_show_bg = computed(() => {
     width: 100%;
     display: flex;
     flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     padding: 4px 12px 12px;
     position: relative;
     z-index: 1;
     background: #fff;
     justify-content: space-between;
+
+    .number-info-stats {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
 
     .number_item {
       display: flex;
@@ -704,8 +710,9 @@ const is_show_bg = computed(() => {
     }
 
     .user-action-buttons {
-      align-items: baseline;
+      align-items: center;
       gap: 10px;
+      /* baseline 在 iOS WebKit 上与同行 flex 搭配时容易整体上移/错位 */
       :deep(.van-button) {
         height: 24px;
         padding: 3px 10px;
