@@ -4,7 +4,11 @@
 
     <div v-for="user in list" :key="user.uid" class="recommend-card">
       <div class="recommend-card-header">
-        <div class="user-info">
+        <div
+          class="user-info"
+          :class="{ 'cursor-pointer': user.uid }"
+          v-link="user.uid ? `/userdetail?id=${user.uid}` : ''"
+        >
           <dx-image
             class="avatar"
             :src="resolveMediaUrl(user.avatar_url || user.avatar || user.headimg || user.face_url || user.thumb)"
