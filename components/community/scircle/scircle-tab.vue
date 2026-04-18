@@ -622,6 +622,7 @@ const listRef = useTemplateRef('list')
 const { scrollTop } = useScrollTop(listRef)
 const __ = useNuxtApp()
 const router = useRouter()
+const userStore = useUserStore()
 
 // 统一处理「根相对路径」资源地址拼接
 const globalStore = useGlobalStore()
@@ -905,6 +906,12 @@ async function onBuyMatchGoods() {
     await __.$Api.Community.buyMatchGoods({ goods_id: String(g.id) })
     showMatchGoodsPopup.value = false
     await fetchTalkHome()
+    // 扣费后同步 Pinia 金币余额，否则返回「我的」等页仍显示旧 coins（iOS 上尤为明显）
+    try {
+      await userStore.info()
+    } catch {
+      /* 忽略 info 失败，避免掩盖购买成功提示 */
+    }
   } catch (e) {
     console.error('[scircle] buy_match_goods 失败', e)
     __.$Toast(scircleErrMsg(e))
