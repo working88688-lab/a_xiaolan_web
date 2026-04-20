@@ -101,6 +101,38 @@ onMounted(() => {
   // 便于排查当前 tab 实际请求的接口地址
   console.log('[home-resource][graphic-image-item] request api:', props.api)
 })
+
+const sortLabelToKey: Record<string, string> = {
+  最近更新: 'refresh_at',
+  最新: 'refresh_at',
+  最热: 'rating',
+  畅销: 'pay_num',
+  随机: 'rand'
+}
+
+function buildResourceFilterUrl(query: Record<string, any>) {
+  return `/home/resource-filter?${format_url_params({
+    title: props.title,
+    _type: props.type,
+    ...query
+  })}`
+}
+
+function buildThemeFilterUrl(iconItem: any) {
+  const key = iconItem?.type ?? iconItem?.key ?? 'tag'
+  const type = iconItem?.key ?? iconItem?.value ?? iconItem?.label ?? iconItem?.name ?? ''
+  return buildResourceFilterUrl({
+    ...(type ? { key, type } : {})
+  })
+}
+
+function buildSortFilterUrl(sortLabel: any) {
+  const label = (sortLabel ?? '').toString().trim()
+  const sort = sortLabelToKey[label] ?? label
+  return buildResourceFilterUrl({
+    ...(sort ? { sort } : {})
+  })
+}
 </script>
 <template>
   <dx-hoc-list ref="hocListRef" :api="`${props.api}`" fields="data" :pullup="false">
@@ -120,14 +152,7 @@ onMounted(() => {
               <div
                 v-for="(_item, index) in data?.icon"
                 :key="index"
-                v-link="
-                  `/home/resource-filter?${format_url_params({
-                    title: props.title,
-                    _type: props.type,
-                    type: _item.type,
-                    key: _item.key
-                  })}`
-                "
+                v-link="buildThemeFilterUrl(_item)"
                 class="graphic-filter-item"
               >
                 <div class="title">{{ _item.label || _item.name }}</div>
@@ -135,7 +160,13 @@ onMounted(() => {
             </div>
           </scroll-x-view>
         </div>
-        <nuxt-link :to="'/home/male-beauty-category'" class="graphic-filter-state-more">
+        <nuxt-link
+          :to="`/home/resource-filter?${format_url_params({
+            title: props.title,
+            _type: props.type
+          })}`"
+          class="graphic-filter-state-more"
+        >
           <img class="icon" src="~/assets/image/home/icon_more.png" alt="" />
 
           <div class="title">全部</div>
@@ -147,6 +178,19 @@ onMounted(() => {
       <div v-if="card.show_style === 'H-1*N'" :key="index" class="graphic-layout-item">
         <div class="graphic-index-title">
           <div class="title">{{ card.tab_name }}</div>
+          <nuxt-link :to="buildSortFilterUrl(card.tab_name)" class="more">
+            <span>查看更多</span>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M7 4L13.0938 10.1451L7 16.4106"
+                stroke="#070710"
+                stroke-opacity="0.6"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </nuxt-link>
         </div>
         <div class="dx-list" @touchmove.stop>
           <scroll-x-view>
@@ -222,15 +266,7 @@ onMounted(() => {
             <img class="icon" src="~/assets/image/home/icon_refresh.png" alt="" />
             <div class="title">换一换</div>
           </div>
-          <nuxt-link
-            :to="`/query?${format_url_params({
-              tab: card.tab_id,
-              title: card.tab_name,
-              _type: props.type,
-              _sort_key: 'order'
-            })}`"
-            class="graphic-layout-bottom-button"
-          >
+          <nuxt-link :to="buildSortFilterUrl(card.tab_name)" class="graphic-layout-bottom-button">
             <img class="icon" src="~/assets/image/home/icon_more2.png" alt="" />
             <div class="title">查看更多</div>
           </nuxt-link>
@@ -239,15 +275,7 @@ onMounted(() => {
       <div v-else-if="card.show_style === 'V-2*N'" :key="index + 2" class="graphic-layout-item">
         <div class="graphic-index-title">
           <div class="title">{{ card.tab_name }}</div>
-          <nuxt-link
-            :to="`/query?${format_url_params({
-              tab: card.tab_id,
-              title: card.tab_name,
-              _type: props.type,
-              _sort_key: 'order'
-            })}`"
-            class="more"
-          >
+          <nuxt-link :to="buildSortFilterUrl(card.tab_name)" class="more">
             <span>查看更多</span>
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -290,15 +318,7 @@ onMounted(() => {
             <img class="icon" src="~/assets/image/home/icon_refresh.png" alt="" />
             <div class="title">换一换</div>
           </div>
-          <nuxt-link
-            :to="`/query?${format_url_params({
-              tab: card.tab_id,
-              title: card.tab_name,
-              _type: props.type,
-              _sort_key: 'order'
-            })}`"
-            class="graphic-layout-bottom-button"
-          >
+          <nuxt-link :to="buildSortFilterUrl(card.tab_name)" class="graphic-layout-bottom-button">
             <img class="icon" src="~/assets/image/home/icon_more2.png" alt="" />
             <div class="title">查看更多</div>
           </nuxt-link>
