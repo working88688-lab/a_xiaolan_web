@@ -193,7 +193,8 @@ function buildSortFilterUrl(sortLabel: any) {
           </nuxt-link>
         </div>
         <div class="dx-list" @touchmove.stop>
-          <scroll-x-view>
+          <!-- 这里改用原生横向滚动，避免 iOS 下 better-scroll 计算边界导致“滑到空白” -->
+          <div class="graphic-native-scroll">
             <div class="graphic-scroll-content">
               <div
                 v-for="(cardItem, cardIndex) in card?.items"
@@ -222,7 +223,7 @@ function buildSortFilterUrl(sortLabel: any) {
               </div>
               <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
             </div>
-          </scroll-x-view>
+          </div>
         </div>
       </div>
       <div v-else-if="card.show_style === 'V-3*N'" :key="index + 1" class="graphic-layout-item">
@@ -338,8 +339,10 @@ function buildSortFilterUrl(sortLabel: any) {
     padding-left: 12px;
 
     .graphic-filter-scroll-content {
-      display: flex;
+      display: inline-flex;
+      flex-wrap: nowrap;
       gap: 6px;
+      width: max-content;
     }
 
     .graphic-filter-item {
@@ -491,8 +494,21 @@ function buildSortFilterUrl(sortLabel: any) {
   }
 }
 
+/* H-1*N 横向列表：原生横向滚动（iOS 更稳，不会滑到空白） */
+.graphic-native-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  /* 让内容和标题左右边距一致 */
+  padding: 0 12px;
+  /* iOS 下减少误触发页面左右滑动/回弹 */
+  touch-action: pan-x;
+}
+
 .graphic-scroll-content {
   display: flex;
+  flex-wrap: nowrap;
   gap: 14px;
 }
 
