@@ -2,9 +2,17 @@
   <div class="comment-content-rezension">
     <div class="comment-content-rezension_left">
       <dx-btn-like align="row" icon="eye-o" :likes="item.view_num"></dx-btn-like>
-      <dx-btn-like :id="item.id" class="cursor-pointer" :like="item.is_follow === 1" :likes="item.like_num"
-        :api="__.$Api.User.likePost" :use-toast="false" align="row" :disabled="disabled"
-        @success="onLike(item)"></dx-btn-like>
+      <dx-btn-like
+        :id="item.id"
+        class="cursor-pointer"
+        :like="item.is_follow === 1"
+        :likes="item.like_num"
+        :api="__.$Api.User.likePost"
+        :use-toast="false"
+        align="row"
+        :disabled="disabled"
+        @success="onLike(item)"
+      ></dx-btn-like>
 
       <dx-btn-like align="row" icon-type="nuxt" icon="comment" :likes="item.comment_num"></dx-btn-like>
     </div>

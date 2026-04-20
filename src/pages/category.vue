@@ -6,22 +6,43 @@
         <dx-tabs v-model:active="activeTab" shrink class="sticky-title mb-1" theme="button" @change="onTabIdChange">
           <van-tab v-for="tab in data" :key="tab.tab_id" :title="tab.tab_name"></van-tab>
         </dx-tabs>
-        <dx-tabs v-model:active="secondActiveTab" line-height="0" line-width="0" shrink theme="button"
-          class="sticky-title mb-1" @change="onCommonChange">
+        <dx-tabs
+          v-model:active="secondActiveTab"
+          line-height="0"
+          line-width="0"
+          shrink
+          theme="button"
+          class="sticky-title mb-1"
+          @change="onCommonChange"
+        >
           <!-- <template #left>
             <span class="van-tab mr-1.5 flex-shrink-0 bg-white !pr-0.5 font-medium text-[#111111]">类型</span>
           </template> -->
           <van-tab v-for="(item, index) in secondTabs" :key="index" :title="item"></van-tab>
         </dx-tabs>
-        <dx-tabs v-model:active="typeTab" class="mb-1" line-height="0" line-width="0" shrink theme="button"
-          @change="onCommonChange">
+        <dx-tabs
+          v-model:active="typeTab"
+          class="mb-1"
+          line-height="0"
+          line-width="0"
+          shrink
+          theme="button"
+          @change="onCommonChange"
+        >
           <!-- <template #left>
             <span class="mr-1.5 flex-shrink-0 bg-white !pr-0.5 font-medium text-[#111111]">规格</span>
           </template> -->
           <van-tab v-for="(item, index) in typeList" :key="index" :title="item.name"></van-tab>
         </dx-tabs>
-        <dx-tabs v-model:active="sort" class="mb-1" line-height="0" line-width="0" shrink theme="button"
-          @change="onSort">
+        <dx-tabs
+          v-model:active="sort"
+          class="mb-1"
+          line-height="0"
+          line-width="0"
+          shrink
+          theme="button"
+          @change="onSort"
+        >
           <!-- <template #left>
             <span class="mr-1.5 flex-shrink-0 !pr-0.5 font-medium text-[#111111]">排序</span>
           </template> -->
@@ -30,11 +51,21 @@
         </dx-tabs>
       </div>
       <div class="scroll-container">
-        <scroll-list v-model:loading="loading" :pullup="_fetch" :pull-down-refresh="_refresh" :is-empty="isEmpty"
-          :is-end="isEnd">
+        <scroll-list
+          v-model:loading="loading"
+          :pullup="_fetch"
+          :pull-down-refresh="_refresh"
+          :is-empty="isEmpty"
+          :is-end="isEnd"
+        >
           <div class="grid grid-cols-2 gap-1 px-1">
-            <video-card v-for="(item, index) in listData" :key="item.id" :list="listData" :index="index"
-              :item="item"></video-card>
+            <video-card
+              v-for="(item, index) in listData"
+              :key="item.id"
+              :list="listData"
+              :index="index"
+              :item="item"
+            ></video-card>
           </div>
         </scroll-list>
       </div>

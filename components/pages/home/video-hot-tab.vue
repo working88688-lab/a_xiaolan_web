@@ -16,10 +16,19 @@ import { SwiperSlide } from 'swiper/vue'
           </template>
         </van-cell>
         <dx-scrollview-swiper v-if="data.rank?.item?.length" class="mt-0.5">
-          <SwiperSlide v-for="(creator, index) in data.rank.item" :key="index"
-            class="flex-col-center !mr-1 !w-[46px] overflow-hidden">
-            <dx-avatar :size="1.2" :uid="creator.uid" :aff="creator.aff" :is-creater="!!creator.auth_status"
-              :img="creator.avatar_url" class="avatar-img" />
+          <SwiperSlide
+            v-for="(creator, index) in data.rank.item"
+            :key="index"
+            class="flex-col-center !mr-1 !w-[46px] overflow-hidden"
+          >
+            <dx-avatar
+              :size="1.2"
+              :uid="creator.uid"
+              :aff="creator.aff"
+              :is-creater="!!creator.auth_status"
+              :img="creator.avatar_url"
+              class="avatar-img"
+            />
             <div class="w-full truncate text-mini">{{ creator.nickname }}</div>
           </SwiperSlide>
         </dx-scrollview-swiper>
@@ -29,7 +38,12 @@ import { SwiperSlide } from 'swiper/vue'
     <template #list="{ items }">
       <div class="px-1.5 pb-1">
         <div v-for="item in items" :key="item.uid">
-          <van-cell :to="`/tag?_type=user&title=${item.nickname}&uid=${item.uid}`" :border="false" value="查看更多" is-link>
+          <van-cell
+            :to="`/tag?_type=user&title=${item.nickname}&uid=${item.uid}`"
+            :border="false"
+            value="查看更多"
+            is-link
+          >
             <template #title>
               <div class="flex items-center">
                 <dx-avatar class="mr-1 flex-shrink-0" :img="item.avatar_url"></dx-avatar>
@@ -40,8 +54,11 @@ import { SwiperSlide } from 'swiper/vue'
           </van-cell>
 
           <dx-scrollview-swiper v-if="item.mv_list?.length">
-            <SwiperSlide v-for="(_item, index) in item.mv_list" :key="_item.id"
-              class="img-container mr-1 flex items-center">
+            <SwiperSlide
+              v-for="(_item, index) in item.mv_list"
+              :key="_item.id"
+              class="img-container mr-1 flex items-center"
+            >
               <video-card :list="item.mv_list" :index="index" :item="_item" lines></video-card>
             </SwiperSlide>
           </dx-scrollview-swiper>

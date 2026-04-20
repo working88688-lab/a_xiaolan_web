@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 import type { ResourceType } from '@types'
 
 const props = withDefaults(
@@ -63,7 +64,7 @@ onDeactivated(onClose)
       <div
         v-if="resource_vip_tip"
         class="share-content whitespace-pre-line px-1 pt-2.5 text-center text-base"
-        v-html="resource_vip_tip"
+        v-html="DOMPurify.sanitize(resource_vip_tip ?? '')"
       />
       <div v-else class="share-content whitespace-pre-line px-1 pt-2.5 text-center text-base">
         {{ props.message }}

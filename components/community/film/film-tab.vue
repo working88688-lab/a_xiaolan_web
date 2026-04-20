@@ -3,8 +3,18 @@
     <div class="mb-1 px-1.5">
       <dx-ads :items="data?.ads ?? []" ad-key="film" ad-name="求片"></dx-ads>
     </div>
-    <dx-tabs v-model:active="active" title-active-color="#548aef" title-inactive-color="#666" line-height="0"
-      line-width="0" swipeable lazy-render shrink theme="button" class="dx-tabs">
+    <dx-tabs
+      v-model:active="active"
+      title-active-color="#548aef"
+      title-inactive-color="#666"
+      line-height="0"
+      line-width="0"
+      swipeable
+      lazy-render
+      shrink
+      theme="button"
+      class="dx-tabs"
+    >
       <van-tab v-for="(item, index) in data?.tab" :key="item.name" :title="item.name">
         <film-tab-item :disabled-refresh="scrollTop > 0" :type="item.id" :item="item"></film-tab-item>
       </van-tab>

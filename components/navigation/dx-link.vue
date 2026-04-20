@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
 defineOptions({
-  inheritAttrs: false,
+  inheritAttrs: false
 })
 
 const props = defineProps({
@@ -12,8 +12,8 @@ const props = defineProps({
   inactiveClass: String,
   to: {
     type: String,
-    default: '',
-  },
+    default: ''
+  }
 })
 
 const isExternalLink = computed(() => {
@@ -28,20 +28,10 @@ function _to(navigate) {
 </script>
 
 <template>
-  <a
-    v-if="isExternalLink"
-    v-bind="$attrs"
-    :href="to"
-    target="_blank"
-  >
+  <a v-if="isExternalLink" v-bind="$attrs" :href="to" target="_blank">
     <slot />
   </a>
-  <nuxt-link
-    v-else
-    v-slot="{ isActive, href, navigate }"
-    v-bind="$props"
-    custom
-  >
+  <nuxt-link v-else v-slot="{ isActive, href, navigate }" v-bind="$props" custom>
     <span
       class="cursor-pointer"
       v-bind="$attrs"

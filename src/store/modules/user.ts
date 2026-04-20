@@ -92,7 +92,9 @@ const userStore = defineStore('user', {
               share_url: data.share_url,
               isBindMobile: data.username,
               can_aw: data.can_aw,
-              can_aw_tips: data.can_aw_tips
+              can_aw_tips: data.can_aw_tips,
+              new_can_aw_tips_title: data.new_can_aw_tips_title,
+              new_can_aw_tips_vip: data.new_can_aw_tips_vip
             })
             resolve(data)
           })

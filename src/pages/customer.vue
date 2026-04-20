@@ -1,7 +1,12 @@
 <template>
   <div class="container">
-    <dx-navbar class="my-nav-bar !text-white" :border="false" title="客服中心" left-arrow
-      @click-left="$router.back"></dx-navbar>
+    <dx-navbar
+      class="my-nav-bar !text-white"
+      :border="false"
+      title="客服中心"
+      left-arrow
+      @click-left="$router.back"
+    ></dx-navbar>
     <div class="scroll-container">
       <dx-spin v-show="loading" size="0.6rem" class="my-2 text-center" />
       <iframe class="h-full w-full" :src="serviceSrc" frameborder="0"></iframe>

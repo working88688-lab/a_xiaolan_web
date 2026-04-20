@@ -1,9 +1,15 @@
 <template>
   <div @touchstart.stop>
-    <Swiper :modules="[FreeMode, Mousewheel]" :slides-per-view="'auto'" :free-mode="true" direction="horizontal"
+    <Swiper
+      :modules="[FreeMode, Mousewheel]"
+      :slides-per-view="'auto'"
+      :free-mode="true"
+      direction="horizontal"
       :mousewheel="{
         forceToAxis: true
-      }" class="my-free-swiper">
+      }"
+      class="my-free-swiper"
+    >
       <slot></slot>
     </Swiper>
   </div>

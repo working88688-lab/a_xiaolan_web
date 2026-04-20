@@ -7,6 +7,7 @@
 
 import loading from '@/assets/image/img_loading.png'
 import { showImagePreview } from 'vant'
+import DOMPurify from 'dompurify'
 
 // 向 Worker 发送消息
 export default defineNuxtPlugin(nuxtApp => {
@@ -274,7 +275,7 @@ export default defineNuxtPlugin(nuxtApp => {
 
       fetch_resouce_from_worker(url, { type: 'text' })
         .then(result => {
-          el.innerHTML = result
+          el.innerHTML = DOMPurify.sanitize(result)
         })
         .catch(e => {
           Reflect.deleteProperty($GlobalObject._IMAGE_DECRY_SCHEDULER, url)

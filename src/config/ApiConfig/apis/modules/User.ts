@@ -88,6 +88,12 @@ export default {
   myReply: { method: 'post', url: '/api/find/myReply' },
   // 获取其他用户消息
   getOtherUserInfo: { method: 'post', url: '/api/users/getUserHome' },
+  // 个人资料标签（我的资料弹层）
+  myProfile: { method: 'post', url: '/api/users/myprofile' },
+  // 更新个人资料标签 tag_ids 逗号分隔
+  updateUserProfile: { method: 'post', url: '/api/users/update_profile', showSuccess: true },
+  // 他人主页标签
+  getUserhomeTags: { method: 'post', url: '/api/users/get_userhome_tags' },
   // 我的关注
   myFollowed: { method: 'post', url: '/api//users/followed' },
   // 用户合集

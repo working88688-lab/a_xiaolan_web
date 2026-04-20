@@ -13,7 +13,7 @@ export default defineComponent({
   props: {
     item: {
       type: Object as PropType<RecTabItem>,
-      default: () => { }
+      default: () => {}
     },
     replaceApi: {
       type: Function
@@ -43,18 +43,18 @@ export default defineComponent({
     const to =
       item.type === 5
         ? navigate(
-          item.type,
-          `/tag?_type=home&${format_url_params({
+            item.type,
+            `/tag?_type=home&${format_url_params({
+              construct_id: item.id,
+              has_sort: item.has_tab,
+              title: item.title
+            })}`
+          )
+        : `/tag?_type=home&${format_url_params({
             construct_id: item.id,
             has_sort: item.has_tab,
             title: item.title
           })}`
-        )
-        : `/tag?_type=home&${format_url_params({
-          construct_id: item.id,
-          has_sort: item.has_tab,
-          title: item.title
-        })}`
     const renderTitle = () => {
       const cellSlots = {
         title: () => {

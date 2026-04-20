@@ -17,8 +17,16 @@ function to() {
 
 <template>
   <div :key="key" class="container">
-    <dx-api-tabs v-if="key" ref="tab" :fetch-options="{ fields: 'list' }" line-width="0" line-height="0"
-      api="api/ai/list_face_cate" label-key="name" default-key="">
+    <dx-api-tabs
+      v-if="key"
+      ref="tab"
+      :fetch-options="{ fields: 'list' }"
+      line-width="0"
+      line-height="0"
+      api="api/ai/list_face_cate"
+      label-key="name"
+      default-key=""
+    >
       <template #tab="{ tab }">
         <face-tab-item :id="tab.id" />
       </template>

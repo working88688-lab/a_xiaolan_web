@@ -26,7 +26,6 @@ export default defineNuxtPlugin(() => {
     ga(function (tracker) {
       localStorage.setItem('ga:clientId', tracker.get('clientId'))
     })
-    ga('set', 'checkProtocolTask', null)
     ga('set', 'page', 'index')
     ga('send', 'pageview')
   }

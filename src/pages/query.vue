@@ -7,19 +7,34 @@
           :key="key"
           class="px-1.5"
           :class="module?.className"
-          v-bind="module?.config"
+          :api="module.config.api"
           :params="{
             ...get_url_query(),
             [`${route.query._sort_key || 'sort'}`]: tab.name
           }"
         >
           <template #item="{ item }">
+            <nuxt-link v-if="isImagesType" class="graphic-information-common" :to="`/images?id=${item.id}`">
+              <dx-cover class="aspect-h-4 aspect-w-3" :poster="item?.thumb_full">
+                <dx-pay-type :coins="item.coins" class="absolute right-0.5 top-0.5" />
+                <div class="absolute bottom-0.5 left-0.5 right-0.5 z-10 flex justify-between text-[0.28rem] text-white">
+                  <div class="flex items-center gap-0.5">
+                    <van-icon name="eye-o" size="0.32rem" />
+                    <span>{{ $Utils.formatNumber(item.view_count || item.view_num || item.rating || 0) }}</span>
+                  </div>
+                  <div>{{ item.total || (item.series && item.series.length) || 0 }}张</div>
+                </div>
+              </dx-cover>
+              <div class="line-clamp-2 text-sm">{{ item.title }}</div>
+            </nuxt-link>
+
             <component
               :is="module.component"
+              v-else
               :key="item.id"
               :item="module.rewrite_props ? module.rewrite_props(item) : item"
               v-bind="module.props"
-            ></component>
+            />
           </template>
         </dx-hoc-list>
       </van-tab>
@@ -51,7 +66,15 @@ const get_url_query = () => {
   )
 }
 
-const MAP = {
+type QueryModule = {
+  config: Record<string, any>
+  component: any
+  className?: string
+  props?: Record<string, any>
+  rewrite_props?: (item: any) => any
+}
+
+const MAP: Record<string, QueryModule> = {
   comics: {
     config: {
       api: __.$Api.Community.manhuaClass
@@ -125,6 +148,8 @@ const module = computed(() => {
 
   return MAP[type]
 })
+
+const isImagesType = computed(() => String(route.query._type || '') === 'images')
 
 const tabs = computed(() => {
   const type = route.query._type as keyof typeof TABS

@@ -10,7 +10,7 @@ export class Tiktok extends Plugin {
 
   static get defaultConfig() {
     return {
-      position: POSITIONS.ROOT,
+      position: POSITIONS.ROOT
     }
   }
 
@@ -53,7 +53,7 @@ export class BackRate extends Plugin {
 
   static get defaultConfig() {
     return {
-      position: POSITIONS.ROOT,
+      position: POSITIONS.ROOT
     }
   }
 
@@ -61,15 +61,14 @@ export class BackRate extends Plugin {
     const { player } = this
     let timer
     let touchAt = 0
-    this.moveHandler = (e) => {
+    this.moveHandler = e => {
       const moveAt = Date.now()
       const difftime = moveAt - touchAt
       // 大于1s 快进
       if (difftime >= 1000) {
         e.preventDefault()
         e.stopImmediatePropagation()
-      }
-      else {
+      } else {
         clearTimeout(timer)
         timer = null
         player.root.removeEventListener('touchmove', this.moveHandler)
@@ -79,9 +78,14 @@ export class BackRate extends Plugin {
     const controlsRoot = player.getPlugin('controls')?.root
     const tiktokRoot = player.getPlugin('tiktok')?.root
     const startRoot = player.getPlugin('start')?.root
-    this.startHandler = (e) => {
+    this.startHandler = e => {
       const target = e.target
-      if (e.targetTouches.length === 1 && !startRoot?.contains(target) && !tiktokRoot?.contains(target) && !controlsRoot?.contains(target)) {
+      if (
+        e.targetTouches.length === 1 &&
+        !startRoot?.contains(target) &&
+        !tiktokRoot?.contains(target) &&
+        !controlsRoot?.contains(target)
+      ) {
         touchAt = Date.now()
         player.root.addEventListener('touchmove', this.moveHandler)
         timer = setTimeout(() => {
@@ -100,8 +104,7 @@ export class BackRate extends Plugin {
       if (difftime <= 300) {
         if (player.paused) {
           player.play()
-        }
-        else {
+        } else {
           player.pause()
         }
       }

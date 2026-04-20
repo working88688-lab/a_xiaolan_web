@@ -18,20 +18,20 @@ function runHooks(obj, hookName, handler, ...args) {
       const hook = hooks[index]
       const ret = hook.call(obj, obj, ...args)
       if (ret && ret.then) {
-        return ret.then((data) => {
-          return data === false ? null : runHooksRecursive(obj, hookName, handler, ...args)
-        }).catch((e) => {
-          console.warn(`[runHooks]${hookName} reject`, e.message)
-        })
-      }
-      else if (ret !== false) {
+        return ret
+          .then(data => {
+            return data === false ? null : runHooksRecursive(obj, hookName, handler, ...args)
+          })
+          .catch(e => {
+            console.warn(`[runHooks]${hookName} reject`, e.message)
+          })
+      } else if (ret !== false) {
         return runHooksRecursive(obj, hookName, handler, ...args)
       }
     }
 
     return runHooksRecursive(obj, hookName, handler, ...args)
-  }
-  else {
+  } else {
     return handler.call(obj, obj, ...args)
   }
 }
@@ -40,7 +40,7 @@ const ACTIONS = {
   AUTO: 'auto',
   SEEKING: 'seeking',
   PLAYBACK: 'playbackrate',
-  LIGHT: '',
+  LIGHT: ''
 }
 
 const HOOKS = ['videoClick', 'videoDbClick']
@@ -77,7 +77,7 @@ export class Mobile extends Plugin {
       closedbClick: false, // Whether to turn off the double tap gesture
       disablePress: true, // Whether to turn off the long press gesture
       disableSeekIcon: false, // Disable seek prompt
-      focusVideoClick: false, // Click on force toggle to pause/play
+      focusVideoClick: false // Click on force toggle to pause/play
     }
   }
 
@@ -100,7 +100,7 @@ export class Mobile extends Plugin {
       scopeR: 0,
       scopeM1: 0,
       scopeM2: 0,
-      scope: -1,
+      scope: -1
     }
     /**
      * @private
@@ -117,7 +117,7 @@ export class Mobile extends Plugin {
   }
 
   afterCreate() {
-    HOOKS.map((item) => {
+    HOOKS.map(item => {
       this.__hooks[item] = null
     })
     const { playerConfig, config, player } = this
@@ -140,7 +140,7 @@ export class Mobile extends Plugin {
     this.touch = new Touche(this.root, player.root, { eventType, needPreventDefault: !this.config.disableGesture })
     const { controls } = this.player
 
-    this.root.addEventListener('contextmenu', (e) => {
+    this.root.addEventListener('contextmenu', e => {
       e.preventDefault()
     })
 
@@ -176,11 +176,11 @@ export class Mobile extends Plugin {
       press: 'onPress',
       pressend: 'onPressEnd',
       click: 'onClick',
-      doubleclick: 'onDbClick',
+      doubleclick: 'onDbClick'
     }
 
-    Object.keys(eventsMap).map((key) => {
-      this.touch.on(key, (e) => {
+    Object.keys(eventsMap).map(key => {
+      this.touch.on(key, e => {
         this[eventsMap[key]](e)
       })
     })
@@ -189,10 +189,10 @@ export class Mobile extends Plugin {
       // Add progress bar drag event callback
       const progressPlugin = player.plugins.progress
       if (progressPlugin) {
-        progressPlugin.addCallBack('dragmove', (data) => {
+        progressPlugin.addCallBack('dragmove', data => {
           this.activeSeekNote(data.currentTime, data.forward)
-        });
-        ['dragend', 'click'].forEach((key) => {
+        })
+        ;['dragend', 'click'].forEach(key => {
           progressPlugin.addCallBack(key, () => {
             this.changeAction(ACTIONS.AUTO)
           })
@@ -222,7 +222,7 @@ export class Mobile extends Plugin {
     }
     if (timePreviewStyle) {
       const previewDom = this.find('.time-preview')
-      Object.keys(timePreviewStyle).forEach((key) => {
+      Object.keys(timePreviewStyle).forEach(key => {
         previewDom.style[key] = timePreviewStyle[key]
       })
     }
@@ -236,12 +236,11 @@ export class Mobile extends Plugin {
   resetPos(time = 0) {
     if (this.pos) {
       this.pos.isStart = false
-      this.pos.scope = -1;
-      ['x', 'y', 'width', 'height', 'scopeL', 'scopeR', 'scopeM1', 'scopeM2'].map((item) => {
+      this.pos.scope = -1
+      ;['x', 'y', 'width', 'height', 'scopeL', 'scopeR', 'scopeM1', 'scopeM2'].map(item => {
         this.pos[item] = 0
       })
-    }
-    else {
+    } else {
       this.pos = {
         isStart: false,
         x: 0,
@@ -256,7 +255,7 @@ export class Mobile extends Plugin {
         scopeM1: 0,
         scopeM2: 0,
         scope: -1,
-        time: 0,
+        time: 0
       }
     }
   }
@@ -277,11 +276,11 @@ export class Mobile extends Plugin {
     return rotateDeg === 0
       ? {
           pageX: touche.pageX,
-          pageY: touche.pageY,
+          pageY: touche.pageY
         }
       : {
           pageX: touche.pageX,
-          pageY: touche.pageY,
+          pageY: touche.pageY
         }
   }
 
@@ -303,9 +302,8 @@ export class Mobile extends Plugin {
     const mold = diffy === 0 ? Math.abs(diffx) : Math.abs(diffx / diffy)
     if (Math.abs(diffx) > 0 && mold >= 1.73 && x > pos.scopeM1 && x < pos.scopeM2) {
       scope = 0
-    }
-    else if (Math.abs(diffx) === 0 || mold <= 0.57) {
-      scope = x < pos.scopeL ? 1 : (x > pos.scopeR ? 2 : 3)
+    } else if (Math.abs(diffx) === 0 || mold <= 0.57) {
+      scope = x < pos.scopeL ? 1 : x > pos.scopeR ? 2 : 3
     }
     return scope
   }
@@ -321,7 +319,7 @@ export class Mobile extends Plugin {
   executeMove(diffx, diffy, scope, width, height) {
     switch (scope) {
       case 0:
-        this.updateTime(diffx / width * this.config.scopeM)
+        this.updateTime((diffx / width) * this.config.scopeM)
         break
       case 1:
         this.updateBrightness(diffy / height)
@@ -360,7 +358,7 @@ export class Mobile extends Plugin {
     this.changeAction(ACTIONS.AUTO)
   }
 
-  onTouchStart = (e) => {
+  onTouchStart = e => {
     const { player, config, pos, playerConfig } = this
     const touche = this.getTouche(e)
     if (touche && !config.disableGesture && this.duration > 0 && !player.ended) {
@@ -376,8 +374,7 @@ export class Mobile extends Plugin {
         pos.left = rect.top
         pos.width = rect.height
         pos.height = rect.width
-      }
-      else {
+      } else {
         pos.top = rect.top
         pos.left = rect.left
         pos.width = rect.width
@@ -390,12 +387,12 @@ export class Mobile extends Plugin {
       pos.y = player.rotateDeg === 90 ? _x : _y // parseInt(touche.pageY - pos.top, 10)
       pos.scopeL = config.scopeL * pos.width
       pos.scopeR = (1 - config.scopeR) * pos.width
-      pos.scopeM1 = pos.width * (1 - config.scopeM) / 2
+      pos.scopeM1 = (pos.width * (1 - config.scopeM)) / 2
       pos.scopeM2 = pos.width - pos.scopeM1
     }
   }
 
-  onTouchMove = (e) => {
+  onTouchMove = e => {
     const touche = this.getTouche(e)
     const { pos, config, player } = this
     if (!touche || config.disableGesture || !this.duration || !pos.isStart) {
@@ -429,13 +426,12 @@ export class Mobile extends Plugin {
       this.executeMove(diffx, diffy, scope, pos.width, pos.height)
       pos.x = x
       pos.y = y
-    }
-    else {
+    } else {
       // console.log('touche.pageX - pos.x', touche.pageX - pos.x)
     }
   }
 
-  onTouchEnd = (e) => {
+  onTouchEnd = e => {
     const { player, pos, playerConfig } = this
     setTimeout(() => {
       player.getPlugin('progress') && player.getPlugin('progress').resetSeekState()
@@ -450,8 +446,7 @@ export class Mobile extends Plugin {
     const { disableGesture, gestureX } = this.config
     if (!disableGesture && gestureX) {
       this.endLastMove(pos.scope)
-    }
-    else {
+    } else {
       pos.time = 0
     }
     pos.scope = -1
@@ -465,10 +460,13 @@ export class Mobile extends Plugin {
     // if (plugins.progress && plugins.progress.root.contains(e.target)) {
     //   return false
     // }
-    return (plugins.start && plugins.start.root.contains(e.target)) || (plugins.controls && plugins.controls.root.contains(e.target))
+    return (
+      (plugins.start && plugins.start.root.contains(e.target)) ||
+      (plugins.controls && plugins.controls.root.contains(e.target))
+    )
   }
 
-  onRootTouchMove = (e) => {
+  onRootTouchMove = e => {
     if (this.config.disableGesture || !this.config.gestureX) {
       return
     }
@@ -476,14 +474,13 @@ export class Mobile extends Plugin {
       e.stopPropagation()
       if (!this.pos.isStart) {
         this.onTouchStart(e)
-      }
-      else {
+      } else {
         this.onTouchMove(e)
       }
     }
   }
 
-  onRootTouchEnd = (e) => {
+  onRootTouchEnd = e => {
     if (this.pos.scope > -1) {
       this.onTouchEnd(e)
       // const { controls } = this.player
@@ -496,7 +493,7 @@ export class Mobile extends Plugin {
     this.emitUserAction(event, 'switch_play_pause', {
       prop: 'paused',
       from: paused,
-      to: !paused,
+      to: !paused
     })
   }
 
@@ -512,8 +509,7 @@ export class Mobile extends Plugin {
 
     if (!config.closedbClick || playerConfig.closeVideoClick) {
       player.isActive ? player.blur() : player.focus()
-    }
-    else if (!playerConfig.closeVideoClick) {
+    } else if (!playerConfig.closeVideoClick) {
       if (player.isActive || config.focusVideoClick) {
         this.sendUseAction(Util.createEvent('click'))
         this.switchPlayPause()
@@ -532,16 +528,26 @@ export class Mobile extends Plugin {
 
   onClick(e) {
     const { player } = this
-    runHooks(this, HOOKS[0], (plugin, data) => {
-      this.clickHandler(data.e)
-    }, { e, paused: player.paused })
+    runHooks(
+      this,
+      HOOKS[0],
+      (plugin, data) => {
+        this.clickHandler(data.e)
+      },
+      { e, paused: player.paused }
+    )
   }
 
   onDbClick(e) {
     const { player } = this
-    runHooks(this, HOOKS[1], (plugin, data) => {
-      this.dbClickHandler(data.e)
-    }, { e, paused: player.paused })
+    runHooks(
+      this,
+      HOOKS[1],
+      (plugin, data) => {
+        this.dbClickHandler(data.e)
+      },
+      { e, paused: player.paused }
+    )
   }
 
   onPress(e) {
@@ -553,7 +559,7 @@ export class Mobile extends Plugin {
     this.emitUserAction('press', 'change_rate', {
       prop: 'playbackRate',
       from: player.playbackRate,
-      to: config.pressRate,
+      to: config.pressRate
     })
     player.playbackRate = config.pressRate
     this.changeAction(ACTIONS.PLAYBACK)
@@ -576,7 +582,7 @@ export class Mobile extends Plugin {
     percent = Number(percent.toFixed(4))
     let time = Number.parseInt(percent * config.moveDuration, 10) + this.timeOffset
     time += this.pos.time
-    time = time < 0 ? 0 : (time > duration * 1000 ? duration * 1000 - 200 : time)
+    time = time < 0 ? 0 : time > duration * 1000 ? duration * 1000 - 200 : time
     player.getPlugin('time') && player.getPlugin('time').updateTime(time / 1000)
     player.getPlugin('progress') && player.getPlugin('progress').updatePercent(time / 1000 / this.duration, true)
     this.activeSeekNote(time / 1000, percent > 0)
@@ -599,7 +605,7 @@ export class Mobile extends Plugin {
       return
     }
     let volume = Number.parseInt(player.volume * 10, 10) - Number.parseInt(pos.volume / 10, 10)
-    volume = volume > 10 ? 10 : (volume < 1 ? 0 : volume)
+    volume = volume > 10 ? 10 : volume < 1 ? 0 : volume
     player.volume = volume / 10
     pos.volume = 0
   }
@@ -612,8 +618,8 @@ export class Mobile extends Plugin {
     if (this.player.rotateDeg) {
       percent = -percent
     }
-    let light = pos.light + (0.8 * percent)
-    light = light > config.maxDarkness ? config.maxDarkness : (light < 0 ? 0 : light)
+    let light = pos.light + 0.8 * percent
+    light = light > config.maxDarkness ? config.maxDarkness : light < 0 ? 0 : light
     if (xgMask) {
       xgMask.style.backgroundColor = `rgba(0,0,0,${light})`
     }
@@ -628,8 +634,7 @@ export class Mobile extends Plugin {
     }
     if (time < 0) {
       time = 0
-    }
-    else if (time > player.duration) {
+    } else if (time > player.duration) {
       time = player.duration - 0.2
     }
     this.changeAction(ACTIONS.SEEKING)
@@ -639,11 +644,10 @@ export class Mobile extends Plugin {
 
     this.find('.xg-dur').innerHTML = Util.format(this.duration)
     this.find('.xg-cur').innerHTML = Util.format(time)
-    this.find('.xg-curbar').style.width = `${time / this.duration * 100}%`
+    this.find('.xg-curbar').style.width = `${(time / this.duration) * 100}%`
     if (isForward) {
       Util.removeClass(this.find('.xg-seek-show'), 'xg-back')
-    }
-    else {
+    } else {
       Util.addClass(this.find('.xg-seek-show'), 'xg-back')
     }
     this.updateThumbnails(time)
@@ -664,12 +668,10 @@ export class Mobile extends Plugin {
     const { player } = this
     if (player.state < STATES.ATTACHED) {
       return false
-    }
-    else if (!player.ended) {
+    } else if (!player.ended) {
       if (player.paused) {
         player.play()
-      }
-      else {
+      } else {
         player.pause()
       }
     }

@@ -31,11 +31,11 @@ export const vSwipe: Directive<HTMLElement, (direction: 'left' | 'right') => voi
       const diffX = endX - startX
       const diffY = endY - startY
       const duration = Date.now() - startTime
-      if (Math.abs(diffY) < threshold && Math.abs(diffX) > threshold && duration < maxDuration) { // 快速滑动
+      if (Math.abs(diffY) < threshold && Math.abs(diffX) > threshold && duration < maxDuration) {
+        // 快速滑动
         if (diffX > 0) {
           binding.value('right') // 右滑
-        }
-        else {
+        } else {
           binding.value('left') // 左滑
         }
       }
@@ -52,5 +52,5 @@ export const vSwipe: Directive<HTMLElement, (direction: 'left' | 'right') => voi
       el.removeEventListener('touchend', el.__swipeHandlers.handleTouchEnd, true)
       delete el.__swipeHandlers
     }
-  },
+  }
 }

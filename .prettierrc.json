@@ -11,5 +11,6 @@
     "jsxBracketSameLine": false,
     "arrowParens": "avoid",
     "proseWrap": "always",
+    "endOfLine": "auto",
     "plugins": ["prettier-plugin-tailwindcss"]
 }

@@ -1,17 +1,34 @@
 <template>
-  <div class="btn_like cursor-pointer" :class="{
-    'is-row': align === 'row',
-    'is-column': align === 'column'
-  }" @click.stop="onLike">
+  <div
+    class="btn_like cursor-pointer"
+    :class="{
+      'is-row': align === 'row',
+      'is-column': align === 'column'
+    }"
+    @click.stop="onLike"
+  >
     <slot name="icon" :is-like="isLike">
-      <van-icon v-if="iconType === 'van'" :size="iconSize" class="btn_like--icon" :class="{
-        'text-mred': isLike
-      }" :color="isLike ? props.activeColor : props.color" :name="isLike ? activeIcon || icon : icon" />
-      <nuxt-icon v-if="iconType === 'nuxt'" class="btn_like--icon" :class="{
-        'text-mred': isLike
-      }" :style="{
+      <van-icon
+        v-if="iconType === 'van'"
+        :size="iconSize"
+        class="btn_like--icon"
+        :class="{
+          'text-mred': isLike
+        }"
+        :color="isLike ? props.activeColor : props.color"
+        :name="isLike ? activeIcon || icon : icon"
+      />
+      <nuxt-icon
+        v-if="iconType === 'nuxt'"
+        class="btn_like--icon"
+        :class="{
+          'text-mred': isLike
+        }"
+        :style="{
           fontSize: size
-        }" :name="isLike ? activeIcon || icon : icon" />
+        }"
+        :name="isLike ? activeIcon || icon : icon"
+      />
     </slot>
     <slot v-if="showCount" :likes="localLikes">
       {{ $Utils.formatNumber(localLikes, 'en') }}
@@ -110,7 +127,7 @@ const onLike = async (_data: any) => {
         like_num: localLikes.value
       }
     })
-  } catch (error) { }
+  } catch (error) {}
 }
 watchEffect(() => {
   isLike.value = props.like

@@ -45,10 +45,14 @@ export const useMyFetch = <T>({
       // @ts-ignore
       data.value = Array.isArray(_data)
         ? [..._data]
-        : fields ? Array.isArray(_data[fields]) ? [..._data[fields]] : {
-          // @ts-ignore
-          ..._data[fields]
-        } : _data
+        : fields
+          ? Array.isArray(_data[fields])
+            ? [..._data[fields]]
+            : {
+                // @ts-ignore
+                ..._data[fields]
+              }
+          : _data
       result.value = { ...res }
       success?.()
       return _data

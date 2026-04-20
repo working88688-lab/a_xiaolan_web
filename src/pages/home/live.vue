@@ -10,11 +10,22 @@ function onClickCell(index: number) {
   <div class="container">
     <dx-api-tabs ref="tab" api="api/live/nav" label-key="name" default-key="current">
       <template #tab="{ tab }">
-        <dx-hoc-list v-if="tab.type === 1" class="dx-grid-2" fields="lives" api="api/live/index"
-          :params="{ id: tab.id }" :start-refresh-empty-data="false">
+        <dx-hoc-list
+          v-if="tab.type === 1"
+          class="dx-grid-2"
+          fields="lives"
+          api="api/live/index"
+          :params="{ id: tab.id }"
+          :start-refresh-empty-data="false"
+        >
           <template #banner="{ data }">
-            <dx-ads v-if="data?.banners?.length" class="mb-1 px-1" :ad-key="tab.id" :ad-name="tab.name"
-              :items="data?.banners ?? []" />
+            <dx-ads
+              v-if="data?.banners?.length"
+              class="mb-1 px-1"
+              :ad-key="tab.id"
+              :ad-name="tab.name"
+              :items="data?.banners ?? []"
+            />
           </template>
           <template #item="{ item }">
             <live-item :key="item.id" :item />

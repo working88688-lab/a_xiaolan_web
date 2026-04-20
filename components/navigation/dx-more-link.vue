@@ -13,8 +13,8 @@ const props = withDefaults(
   {
     icon: 'arrow-right',
     border: true,
-    moreText: '更多',
-  },
+    moreText: '更多'
+  }
 )
 </script>
 
@@ -23,7 +23,7 @@ const props = withDefaults(
     <div
       class="dx-more-link--title text-2xl"
       :class="{
-        'has-border': border,
+        'has-border': border
       }"
     >
       <slot name="title">
@@ -32,7 +32,7 @@ const props = withDefaults(
     </div>
 
     <slot name="more">
-      <div class="flex items-center text-base11">
+      <div class="text-base11 flex items-center">
         {{ moreText }}
         <div class="flex items-center rounded-full">
           <nuxt-icon class="mr-[-8px] text-4xl" :name="icon" />
@@ -62,7 +62,6 @@ const props = withDefaults(
         transform: translateY(-50%);
       }
     }
-
   }
   &.is-sticky {
     position: sticky;

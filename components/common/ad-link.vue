@@ -1,15 +1,19 @@
 <template>
-  <report-click-item stop-propagation :data="props.traceClickData || {
-      page_key: props.data.page_key || page_key,
-      ad_type: props.data.ad_type || ad_type,
-      page_name: props.data.page_name || page_name,
-      ad_slot_key: props.data.advertise_location_code,
-      ad_slot_name: props.data.ad_slot_name || name || props.data.title,
-      ad_id: props.data.advertise_code,
-      event: 'ad_click',
-      creative_id: props.data.creative_id || ''
-    }
-    ">
+  <report-click-item
+    stop-propagation
+    :data="
+      props.traceClickData || {
+        page_key: props.data.page_key || page_key,
+        ad_type: props.data.ad_type || ad_type,
+        page_name: props.data.page_name || page_name,
+        ad_slot_key: props.data.advertise_location_code,
+        ad_slot_name: props.data.ad_slot_name || name || props.data.title,
+        ad_id: props.data.advertise_code,
+        event: 'ad_click',
+        creative_id: props.data.creative_id || ''
+      }
+    "
+  >
     <div ref="link" v-bind="$attrs" class="tracker-item cursor-pointer" @click="onClick">
       <slot></slot>
     </div>
@@ -50,9 +54,10 @@ const toTagList = (tag: string) => {
 const toDetail = (id: string) => {
   __.$Store.stack.updateStacks([
     {
-      ...props.data,
-      id
-    }
+      ...(props.data as any),
+      // AdItem 的 id 多为 number，这里统一转成 number，避免 ts 报错
+      id: Number(id)
+    } as any
   ])
   __.$NavigateTo(`/player?id=${id}index=0`)
 }
@@ -105,6 +110,9 @@ const onClick = () => {
       break
     case 13:
       __.$NavigateTo(`/original-detail?id=${props.data.url}&type=2`)
+      break
+    case 14:
+      __.$NavigateTo('/community?tab=scircle')
       break
     default:
       toWebView()

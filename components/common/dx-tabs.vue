@@ -1,10 +1,19 @@
 <template>
-  <van-tabs ref="tabsRef" line-width="0" line-height="0" lazy-render swipeable animated :shrink="center" :class="[
-    classNames,
-    {
-      'zero-line': zeroLine
-    }
-  ]">
+  <van-tabs
+    ref="tabsRef"
+    line-width="0"
+    line-height="0"
+    lazy-render
+    swipeable
+    animated
+    :shrink="center"
+    :class="[
+      classNames,
+      {
+        'zero-line': zeroLine
+      }
+    ]"
+  >
     <template #nav-left>
       <slot name="left"></slot>
     </template>
@@ -92,7 +101,7 @@ defineExpose({
     font-weight: 600;
   }
 
-  &__button>.van-tabs__wrap {
+  &__button > .van-tabs__wrap {
     .van-tab {
       padding: 0;
       font-size: 14px;
@@ -118,38 +127,38 @@ defineExpose({
     }
   }
 
-  &--static>.van-tabs__wrap {
+  &--static > .van-tabs__wrap {
     .van-tabs__nav {
       /* padding-bottom: 0; */
       align-items: center;
     }
   }
 
-  &.text-lg>.van-tabs__wrap {
+  &.text-lg > .van-tabs__wrap {
     .van-tab__text {
       font-size: 17px;
     }
   }
 
-  &.text-medium>.van-tabs__wrap {
+  &.text-medium > .van-tabs__wrap {
     .van-tab__text {
       font-size: 15px;
     }
   }
 
-  &.text-normal>.van-tabs__wrap {
+  &.text-normal > .van-tabs__wrap {
     .van-tab__text {
       font-size: 14px;
     }
   }
 
-  &.text-mini>.van-tabs__wrap {
+  &.text-mini > .van-tabs__wrap {
     .van-tab__text {
       font-size: 13px;
     }
   }
 
-  &.first-no-padding>.van-tabs__wrap {
+  &.first-no-padding > .van-tabs__wrap {
     .van-tab:first-child {
       margin-left: -8px;
     }
@@ -163,13 +172,13 @@ defineExpose({
   }
 }
 
-.dx-custom-tabs--center>.van-tabs__wrap {
+.dx-custom-tabs--center > .van-tabs__wrap {
   .van-tabs__nav {
     justify-content: center;
   }
 }
 
-.dx-custom-tabs--sticky>.van-tabs__wrap {
+.dx-custom-tabs--sticky > .van-tabs__wrap {
   position: sticky;
   top: 0;
   left: 0;

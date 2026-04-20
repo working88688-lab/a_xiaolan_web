@@ -7,8 +7,12 @@
     <scroll-list :pull-down-refresh="userStore.info">
       <div class="user-content">
         <div class="user-top">
-          <nuxt-icon v-link="`/my/notice?_index=1`" class="cursor-pointer text-[24px]" name="my/notice"
-            filled></nuxt-icon>
+          <nuxt-icon
+            v-link="`/my/notice?_index=1`"
+            class="cursor-pointer text-[24px]"
+            name="my/notice"
+            filled
+          ></nuxt-icon>
           <div v-if="user.message_tip > 0" class="mark" />
         </div>
 
@@ -19,12 +23,12 @@
               <dx-avatar :uid="user.uid" :size="1.4" :img="user.avatar_url" />
             </div>
             <div class="user-avatar-info">
-              <div class="user-avatar-title">{{ user?.nickname }}</div>
-              <div class="user-avatar-vip">
+              <div class="user-avatar-name-row">
+                <div class="user-avatar-title">{{ user?.nickname }}</div>
                 <vip-icon :data="user"></vip-icon>
-                <!-- <img v-if="user.is_vip == 1" class="vip-level" :src="setVipIcon(user.vip_level)" /> -->
-
-                <div v-if="user.auth_level >= 4" class="auth-level">
+              </div>
+              <div v-if="user.auth_level >= 4" class="user-avatar-vip">
+                <div class="auth-level">
                   <img src="~/assets/image/creator.png" />
                   <span>制片人LV.{{ user.auth_level }}</span>
                 </div>
@@ -74,6 +78,13 @@
           <img src="@/assets/image/my/model.png" class="model" alt="" />
         </div>
         <!-- 用户级别 end -->
+
+        <!-- 同圈入口 banner start -->
+        <div v-link="`/community?tab=scircle`" class="user-tongquan-banner cursor-pointer">
+          <img class="user-tongquan-banner-img" src="~/assets/image/my-tongquan.png" alt="同圈" />
+        </div>
+        <!-- 同圈入口 banner end -->
+
         <!-- 导航 start -->
         <div class="user-active-box grid grid-cols-4 gap-1">
           <div v-link="`/my/collect`" class="user-active-item">
@@ -99,7 +110,7 @@
           <div v-link="`/my/work`">
             <div class="user-active-item">
               <nuxt-icon name="my/work" class="icon" filled></nuxt-icon>
-              <p class="user-active-title">作品管理</p>
+              <p class="user-active-title">创作中心</p>
             </div>
           </div>
 
@@ -147,6 +158,13 @@
         <!-- 导航 end -->
         <!-- 设置 start -->
         <div class="user-server-box">
+          <div class="user-server-item" @click="showProfilePopup = true">
+            <div class="user-server-item-left">
+              <nuxt-icon name="my/info" class="s-icon" filled></nuxt-icon>
+              <div class="user-server-item-title">我的资料</div>
+            </div>
+            <div class="user-server-item-right"></div>
+          </div>
           <div v-link="`/my/afilm`" class="user-server-item">
             <div class="user-server-item-left">
               <nuxt-icon name="my/want" class="s-icon" filled></nuxt-icon>
@@ -193,6 +211,7 @@
         <!-- 设置 end -->
       </div>
     </scroll-list>
+    <ProfilePopup v-model:show="showProfilePopup" />
   </div>
 </template>
 
@@ -202,6 +221,7 @@ const userStore = useUserStore()
 const globalStore = useGlobalStore()
 const __ = useNuxtApp()
 const { u: user } = storeToRefs(userStore)
+const showProfilePopup = ref(false)
 
 const setVipLevelItem = () => {
   const _user = user.value
@@ -243,8 +263,10 @@ useSyncCacheData(cacheData => {
 <style lang="less" scoped>
 @import '@styles/my.less';
 
-:deep(.vip-level) {
-  margin-top: 2px;
+:deep(.user-avatar-name-row .vip-level) {
+  margin-top: 0;
+  flex-shrink: 0;
+  display: block;
 }
 
 .icon {
@@ -263,13 +285,24 @@ useSyncCacheData(cacheData => {
   bottom: 0;
 }
 
+.user-tongquan-banner {
+  margin: 10px 12px 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.user-tongquan-banner-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .user-active-box.income-card {
   background: linear-gradient(180deg, #fff2ed 0%, #ffffff 22.12%);
   border: 1px solid #fff;
 }
 
 .user-server-box {
-
   .s-icon,
   .icon {
     margin-right: 6px;

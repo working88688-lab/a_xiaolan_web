@@ -16,6 +16,8 @@ export interface GlobalState {
     tg?: string
     can_aw?: 0 | 1
     can_aw_tips?: string
+    new_can_aw_tips_title?: string
+    new_can_aw_tips_vip?: string
     pop_ads_v2?: Array<AdItem>
 
     mv_find_tab: SortType[]

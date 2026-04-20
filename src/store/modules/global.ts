@@ -85,7 +85,7 @@ const globalStore = defineStore('global', {
           localStorage.setItem('_github_url_', this.config.github_url)
           return data
         }
-      } catch (error) { }
+      } catch (error) {}
     },
 
     async getReports() {

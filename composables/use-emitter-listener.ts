@@ -25,10 +25,10 @@ export function useEmitterListener<T extends EventType>(
 
   const handler = options?.once
     ? (...args: any[]) => {
-      listener(...args)
+        listener(...args)
 
-      __.$Emitter.off(eventType, handler)
-    }
+        __.$Emitter.off(eventType, handler)
+      }
     : listener
 
   _listener(() => {

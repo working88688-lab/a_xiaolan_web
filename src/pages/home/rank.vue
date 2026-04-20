@@ -31,27 +31,60 @@ const { key, activeTab } = useKeepAlive({
 <template>
   <div class="container">
     <div :key="key" ref="element" class="scroll-container is-scroll">
-      <dx-tabs v-model:active="activeTab" class="rank-tabs dx-tabs h-full" line-width="24px" line-height="4px"
-        title-active-color="#fff" title-inactive-color="rgba(255, 255, 255, 0.7)" gap="0.4rem" center>
+      <dx-tabs
+        v-model:active="activeTab"
+        class="rank-tabs dx-tabs h-full"
+        line-width="24px"
+        line-height="4px"
+        title-active-color="#fff"
+        title-inactive-color="rgba(255, 255, 255, 0.7)"
+        gap="0.4rem"
+        center
+      >
         <template #left>
-          <nuxt-icon class="absolute left-1 top-1 text-4xl text-white" name="arrow-left"
-            @click="$router.back"></nuxt-icon>
+          <nuxt-icon
+            class="absolute left-1 top-1 text-4xl text-white"
+            name="arrow-left"
+            @click="$router.back"
+          ></nuxt-icon>
         </template>
         <van-tab v-for="tab in data.list" :key="tab.id" class="h-full" :title="tab.name">
-          <dx-ads v-if="data.ads?.length" :items="data.ads" :ad-key="tab.id" :ad-name="tab.name"
-            class="mb-1 px-1"></dx-ads>
-          <dx-hoc-list v-if="tab.type === 'recommend'" :api="tab.api" :list-props="{
-            usePageSize: false,
-            disabledRefresh: !!(scrollTop && scrollTop > 0)
-          }" :loading-when-refresh="false" :params="{ type: tab.params }">
+          <dx-ads
+            v-if="data.ads?.length"
+            :items="data.ads"
+            :ad-key="tab.id"
+            :ad-name="tab.name"
+            class="mb-1 px-1"
+          ></dx-ads>
+          <dx-hoc-list
+            v-if="tab.type === 'recommend'"
+            :api="tab.api"
+            :list-props="{
+              usePageSize: false,
+              disabledRefresh: !!(scrollTop && scrollTop > 0)
+            }"
+            :loading-when-refresh="false"
+            :params="{ type: tab.params }"
+          >
             <template #list="{ items }">
               <div class="top mb-2 grid grid-cols-3 gap-0.5 px-1 text-center text-white">
-                <rank-tab-top-item v-for="(item, index) in sortTopItem(items.slice(0, 3))" :key="item.uid" :item :tab
-                  :index></rank-tab-top-item>
+                <rank-tab-top-item
+                  v-for="(item, index) in sortTopItem(items.slice(0, 3))"
+                  :key="item.uid"
+                  :item
+                  :tab
+                  :index
+                ></rank-tab-top-item>
               </div>
               <div class="grid grid-cols-1 gap-1 px-1">
-                <rank-tab-item v-for="(item, index) in items.slice(3, items.length)" :key="item.uid" :item :tab :index
-                  class="flex"></rank-tab-item>
+                <rank-tab-item
+                  v-for="(item, index) in items.slice(3, items.length)"
+                  :key="item.uid"
+                  :item
+                  :tab
+                  :index
+                  class="flex"
+                ></rank-tab-item>
               </div>
             </template>
           </dx-hoc-list>
@@ -91,7 +124,7 @@ const { key, activeTab } = useKeepAlive({
 }
 
 .rank-tabs {
-  &> :deep(.van-tabs__content) {
+  & > :deep(.van-tabs__content) {
     height: 100%;
 
     .van-tab__panel {

@@ -10,8 +10,14 @@
       </div>
       <div class="login-swiper-box">
         <van-form>
-          <van-field v-model="formState.username" class="login-input-box" :border="false" name="username" clearable
-            placeholder="请输入账号或手机号" />
+          <van-field
+            v-model="formState.username"
+            class="login-input-box"
+            :border="false"
+            name="username"
+            clearable
+            placeholder="请输入账号或手机号"
+          />
 
           <dx-password v-model="formState.password"></dx-password>
 
@@ -34,12 +40,11 @@
 <script setup>
 // 当前实例
 
-const USER_NAME = '__USER_NAME__'
 const __ = useNuxtApp()
 const route = useRoute()
 const userStore = useUserStore()
 const formState = reactive({
-  username: localStorage.getItem(USER_NAME),
+  username: '',
   password: ''
 })
 
@@ -74,12 +79,10 @@ const onSubmit = async type => {
         })
         break
     }
-    const payload = {
-      type: 'username'
-    }
     // __.$Toast('登录成功')
-    localStorage.setItem(USER_NAME, formState.username)
-    __.$Replace(route.query.redirect || '/home')
+    const redirect = route.query.redirect as string
+    const isSafeRedirect = redirect?.startsWith('/') && !redirect.startsWith('//')
+    __.$Replace(isSafeRedirect ? redirect : '/home')
   } catch (error) {
     console.log('error: ', error)
     // console.log('error: ', error)

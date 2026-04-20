@@ -45,8 +45,8 @@
               <img class="my-icon-arrow" src="~/assets/image/my/icon_right_grey_thin.png" />
             </div>
             <div class="user-withdraw-prompt">提现规则</div>
-            <div class="user-withdraw-prompt" v-html="info?.income?.rule?.replaceAll('\n', '<br/>')" />
-            <dx-button class="user-public-btn" @click="onWithdraw">确认提现</dx-button>
+            <div class="user-withdraw-prompt" v-html="DOMPurify.sanitize(info?.income?.rule?.replaceAll('\n', '<br/>') ?? '')" />
+            <dx-button class="user-public-btn" :disabled="withdrawing" @click="onWithdraw">确认提现</dx-button>
           </div>
         </scroll-list>
       </div>
@@ -56,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 import type { IncomeItem } from '@types'
 
 const props = defineProps<{
@@ -119,7 +120,9 @@ const { validate } = useValidator({
   }
 })
 
+const withdrawing = ref(false)
 const onWithdraw = async () => {
+  if (withdrawing.value) return
   const { number: withdraw_amount } = params
   const { account: withdraw_account, name: withdraw_name } = accoutInfo.value
   const withdraw_from = props.type || 3 // 收益类型{1: 币, 2: 推广收益, 3: mv收益 5社区收益}
@@ -129,6 +132,7 @@ const onWithdraw = async () => {
       withdraw_amount: Number(withdraw_amount),
       withdraw_account
     })
+    withdrawing.value = true
     await __.$Api.User.withdraw({
       withdraw_amount,
       withdraw_account,
@@ -138,7 +142,10 @@ const onWithdraw = async () => {
     })
 
     emit('success')
-  } catch (error) {}
+  } catch (error) {
+  } finally {
+    withdrawing.value = false
+  }
 }
 
 useDectivted(onClose)

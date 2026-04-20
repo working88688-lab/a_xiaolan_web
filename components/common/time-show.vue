@@ -10,12 +10,13 @@
     </p>
     <div v-else class="flex_row">
       <div class="fans_text" style="color: #c0bdcc">倒计时:</div>
-      <div class="flex_row countdown" v-html="timeStr"></div>
+      <div class="flex_row countdown" v-html="DOMPurify.sanitize(timeStr)"></div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 const props = defineProps<{
   starTime: number
   endTime: number

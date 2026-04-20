@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 import type { CommentItem, GameDetail, PayType } from '@types'
 import { useClipboard } from '@vueuse/core'
 
@@ -129,11 +130,11 @@ const { key } = useKeepAlive({
 
           <div v-if="!loading" class="mb-1 mt-0.5">
             <div class="mb-1 text-default font-medium">游戏简介：</div>
-            <div class="mb-2 whitespace-pre-line break-words" v-html="detail.detail?.desc" />
+            <div class="mb-2 whitespace-pre-line break-words" v-html="DOMPurify.sanitize(detail.detail?.desc ?? '')" />
 
             <template v-if="detail.detail?.play_intro">
               <div class="mb-1 text-default font-medium">游戏玩法：</div>
-              <div class="whitespace-pre-line" v-html="detail.detail.play_intro" />
+              <div class="whitespace-pre-line" v-html="DOMPurify.sanitize(detail.detail.play_intro ?? '')" />
             </template>
           </div>
 
@@ -220,13 +221,19 @@ const { key } = useKeepAlive({
               api="api/porngame/favorite"
               align="row"
               size="0.6rem"
-              icon="star-o"
-              active-icon="star"
               :likes="detail?.detail?.favorite_ct"
               :like="detail?.detail?.is_favorite === 1"
-              active-color="rgb(255, 169, 9)"
               :use-toast="false"
             >
+              <template #icon="{ isLike }">
+                <nuxt-icon
+                  name="my/star"
+                  filled
+                  class="btn_like--icon !block shrink-0"
+                  :class="{ 'opacity-40': !isLike }"
+                  :style="{ fontSize: '0.6rem' }"
+                />
+              </template>
               <template #default="{ likes }">
                 {{ $Utils.formatNumber(likes) }}
               </template>

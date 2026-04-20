@@ -2,15 +2,16 @@
   <div class="container">
     <div class="scroll-container">
       <scroll-list v-model:loading="loading">
-        <div class="publishRule whitespace-pre-line" v-html="data.rule_text"></div>
+        <div class="publishRule whitespace-pre-line" v-html="DOMPurify.sanitize(data.rule_text ?? '')"></div>
       </scroll-list>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 const { data, loading } = useMyFetch<any>({
-  api: '/api/mv/preUpload',
+  api: useNuxtApp().$Api.Video.preUpload,
   immediate: true
 })
 </script>

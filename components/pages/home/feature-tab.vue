@@ -7,7 +7,11 @@
     <dx-tabs v-model:active="activeTab" :duration="duration" class="dx-tabs primary-tabs first-no-padding">
       <van-tab v-for="(tab, index) in tabState.tabs" :key="index" :title="tab.name">
         <template v-if="Math.abs(activeTab - index) <= 5">
-          <discover-tab v-if="tab.type === 2" :tab="tab"></discover-tab>
+          <!-- 关注：强制走 feature-tab-item（里边有 mock 推荐逻辑） -->
+          <feature-tab-item v-if="tab.name === '关注'" :tab="tab" @share="openShareDialog"></feature-tab-item>
+
+          <!-- 其它 tab 按原规则分发 -->
+          <discover-tab v-else-if="tab.type === 2" :tab="tab"></discover-tab>
           <vip-tab-item v-else-if="tab.type === 1" :tab="tab" @share="openShareDialog"></vip-tab-item>
           <dx-webview v-else-if="tab.type === 3" :key="tab.h5_url" :url="tab.h5_url"></dx-webview>
           <video-hot-tab v-else-if="tab.type === 4"></video-hot-tab>
@@ -28,16 +32,40 @@ import type { TabItem } from '@types'
  * 当前实例
  */
 const __ = useNuxtApp()
+const route = useRoute()
+
+/** 从 /darkweb 点其它 tab 回首页时，同步 keep-alive 下首页实例的选中项（一次性） */
+const HOME_FEATURE_TAB_INDEX_KEY = 'xl_home_feature_tab_once'
 
 const { activeTab, duration, updateDuration, updateActiveTab } = useDefaultActiveTab({
   defaultActive: 1
 })
+
+const DARKWEB_TAB_NAME = '暗网'
 
 const shareData = ref()
 const shareDialogVisiable = ref(false)
 const tabState = reactive({
   tabs: [] as unknown as TabItem[]
 })
+
+const insertDarkwebTab = (tabs: TabItem[]): TabItem[] => {
+  if (!tabs?.length) return tabs
+
+  const hasDarkweb = tabs.some(tab => tab.name === DARKWEB_TAB_NAME)
+  if (hasDarkweb) return tabs
+
+  const index = tabs.findIndex(tab => tab.name === '独家')
+  if (index === -1) return tabs
+
+  const newTabs = [...tabs]
+  newTabs.splice(index + 1, 0, {
+    ...tabs[index],
+    name: DARKWEB_TAB_NAME
+  } as any)
+
+  return newTabs
+}
 
 const openShareDialog = (_data: any) => {
   shareDialogVisiable.value = true
@@ -47,10 +75,19 @@ const openShareDialog = (_data: any) => {
 // 数据tabs获取
 const getTabs = async () => {
   try {
-    const { data } = await __.$Api.Home.tab()
+    const { data } = await __.$Api.Home.tabIndex()
 
-    tabState.tabs = data
-    updateActiveTab(data)
+    tabState.tabs = insertDarkwebTab(data)
+    console.log(data)
+    // 暗网页不要按接口 current 改选中项，否则会误触「离开暗网」逻辑
+    if (route.path === '/darkweb') {
+      const idx = tabState.tabs.findIndex(t => t.name === DARKWEB_TAB_NAME)
+      if (idx >= 0) {
+        activeTab.value = idx
+      }
+    } else {
+      updateActiveTab(data)
+    }
   } catch (error) {
   } finally {
     updateDuration()
@@ -58,6 +95,48 @@ const getTabs = async () => {
 }
 
 onBeforeMount(getTabs)
+
+watch(activeTab, (value, oldValue) => {
+  const current = tabState.tabs[value]
+  if (current?.name === DARKWEB_TAB_NAME) {
+    if (route.path === '/darkweb') {
+      return
+    }
+    __.$Replace('/darkweb')
+    activeTab.value = oldValue ?? 1
+    return
+  }
+  if (route.path !== '/darkweb' || !tabState.tabs.length) {
+    return
+  }
+  const darkIdx = tabState.tabs.findIndex(t => t.name === DARKWEB_TAB_NAME)
+  if (darkIdx < 0 || value === darkIdx) {
+    return
+  }
+  sessionStorage.setItem(HOME_FEATURE_TAB_INDEX_KEY, String(value))
+  __.$Replace('/home')
+})
+
+onActivated(() => {
+  if (route.path === '/darkweb') {
+    const idx = tabState.tabs.findIndex(t => t.name === DARKWEB_TAB_NAME)
+    if (idx >= 0) {
+      activeTab.value = idx
+    }
+    return
+  }
+  const raw = sessionStorage.getItem(HOME_FEATURE_TAB_INDEX_KEY)
+  if (raw === null || raw === '') {
+    return
+  }
+  sessionStorage.removeItem(HOME_FEATURE_TAB_INDEX_KEY)
+  const n = Number(raw)
+  if (Number.isNaN(n) || !tabState.tabs.length || n < 0 || n >= tabState.tabs.length) {
+    return
+  }
+  activeTab.value = n
+  updateDuration()
+})
 </script>
 
 <style lang="postcss" scoped>
@@ -86,7 +165,7 @@ onBeforeMount(getTabs)
   height: 132px;
 }
 
-.primary-tabs> :deep(.van-tabs__nav--line) {
+.primary-tabs > :deep(.van-tabs__nav--line) {
   height: initial;
 }
 
@@ -98,7 +177,7 @@ onBeforeMount(getTabs)
   position: relative;
 }
 
-.primary-tabs.van-tabs> :deep(.van-tabs__wrap) {
+.primary-tabs.van-tabs > :deep(.van-tabs__wrap) {
   height: 22px;
   margin-bottom: 8px;
 

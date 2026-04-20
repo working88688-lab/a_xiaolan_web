@@ -1,18 +1,27 @@
 <template>
-  <div :style="{
-    width: `${size}rem`,
-    height: `${size}rem`
-  }" :class="[`featured-avItem-avatar ${props.boxClass}`]" @click.stop="toUserPage">
+  <div
+    :style="{
+      width: `${size}rem`,
+      height: `${size}rem`
+    }"
+    :class="[`featured-avItem-avatar ${props.boxClass}`]"
+    @click.stop="toUserPage"
+  >
     <slot>
       <div :class="[`avItem-avatar ${props.avatarClass}`]">
         <img :key="props.img" v-lazyLoad="props.img" :src="loading" />
       </div>
     </slot>
 
-    <img v-if="isCreater" :style="{
-      width: `${size * 0.4}rem`,
-      height: `${size * 0.4}rem`
-    }" :class="[`avItem-chuang ${props.iconClass}`]" src="~/assets/image/creator.png" />
+    <img
+      v-if="isCreater"
+      :style="{
+        width: `${size * 0.4}rem`,
+        height: `${size * 0.4}rem`
+      }"
+      :class="[`avItem-chuang ${props.iconClass}`]"
+      src="~/assets/image/creator.png"
+    />
 
     <slot name="badge"></slot>
   </div>

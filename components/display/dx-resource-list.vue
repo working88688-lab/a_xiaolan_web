@@ -141,7 +141,7 @@ onBeforeUnmount(() => {
       <dx-tabs
         v-if="tabs?.length"
         v-model:active="tab_state"
-        class="text-sm dx-tabs"
+        class="dx-tabs text-sm"
         static
         shrink
         theme="button"

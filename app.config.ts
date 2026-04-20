@@ -512,14 +512,23 @@ export default defineAppConfig({
       }
     },
     {
+      name: 'checkin',
+      path: '/checkin',
+      meta: {
+        keepalive: true,
+        theme: {
+          page: {
+            backgroundColor: 'transparent',
+            backgroundImage: 'none'
+          }
+        },
+        trackPageName: ''
+      }
+    },
+    {
       name: 'chat-room',
       path: '/chat/room',
       meta: {
-        theme: {
-          page: {
-            backgroundColor: '#f4f5f6'
-          }
-        },
         trackPageName: '聊天室'
       }
     },
@@ -530,6 +539,15 @@ export default defineAppConfig({
         keepalive: true,
         title: '直播',
         trackPageName: '直播'
+      }
+    },
+    {
+      name: 'male-beauty-category',
+      path: '/home/male-beauty-category',
+      meta: {
+        keepalive: true,
+        title: '男色',
+        trackPageName: '男色'
       }
     },
     {
@@ -616,15 +634,54 @@ export default defineAppConfig({
       meta: { keepalive: true, trackPageName: '搜索结果' }
     },
     {
+      name: 'ai-index',
+      path: '/ai/index',
+      meta: {
+        keepalive: true,
+        title: 'AI科技',
+        nav: {
+          rightTitle: '我的记录',
+          to: '/ai/record?_index=1'
+        },
+        trackPageName: 'AI科技'
+      }
+    },
+    {
       name: 'ai-face',
       path: '/ai/face',
       meta: {
         keepalive: true,
-        title: '图片换脸',
+        title: 'AI换脸',
         nav: {
           rightTitle: '我的记录',
           to: '/ai/record?_index=1'
         }
+      }
+    },
+    {
+      name: 'ai-undress',
+      path: '/ai/undress',
+      meta: {
+        keepalive: true,
+        title: 'AI去衣',
+        nav: {
+          rightTitle: '我的记录',
+          to: '/ai/record?_index=2'
+        },
+        trackPageName: 'AI去衣'
+      }
+    },
+    {
+      name: 'ai-magic',
+      path: '/ai/magic',
+      meta: {
+        keepalive: true,
+        title: 'AI魔法',
+        nav: {
+          rightTitle: '我的记录',
+          to: '/ai/record?_index=3'
+        },
+        trackPageName: 'AI魔法'
       }
     },
     {
@@ -633,7 +690,7 @@ export default defineAppConfig({
       meta: {
         title: '',
         keepalive: true,
-        trackPageName: '图片换脸',
+        trackPageName: 'AI换脸',
         nav: {
           rightTitle: '我的记录',
           to: '/ai/record?_index=1'
@@ -645,8 +702,8 @@ export default defineAppConfig({
       path: '/ai/record',
       meta: {
         keepalive: true,
-        title: '图片换脸',
-        trackPageName: '换脸记录'
+        title: '我的记录',
+        trackPageName: '我的记录'
       }
     },
     {
@@ -667,13 +724,13 @@ export default defineAppConfig({
     }
   ],
 
-  lines: ['https://api.cfwhkdv.cc/pwa.php'],
+  lines: ['https://api-xiaolan.iiwwdfn.cc/pwa.php'],
   // 接口配置
   api: {
-    baseURL: 'https://api.cfwhkdv.cc/pwa.php',
+    baseURL: 'https://api-xiaolan.iiwwdfn.cc/pwa.php',
     withCredentials: false,
     timeout: 50000,
-    version: '4.9.7',
+    version: '4.9.10',
     contentType: 'application/x-www-form-urlencoded'
   },
 
@@ -693,13 +750,6 @@ export default defineAppConfig({
         icon: '/images/tabbar/tiktok.png',
         iconselect: '/images/tabbar/tiktokActive.png',
         router: `/tiktok`
-      },
-      {
-        title: '暗网',
-        value: 'darkweb',
-        icon: '/images/tabbar/darkweb.png',
-        iconselect: '/images/tabbar/darkwebActive.png',
-        router: `/darkweb`
       },
       {
         title: '片库',

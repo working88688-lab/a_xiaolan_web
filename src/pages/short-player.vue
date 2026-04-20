@@ -5,7 +5,7 @@ const stackStore = useStackStore()
 
 const { api, index, stacks: items, params, fieldPath } = storeToRefs(stackStore)
 
-let loadMore = () => { }
+let loadMore = () => {}
 let isEnd = false
 let page = 1
 const { key } = useKeepAlive({
@@ -50,7 +50,7 @@ const { key } = useKeepAlive({
         }
       }
     } else {
-      loadMore = () => { }
+      loadMore = () => {}
     }
   }
 })
@@ -79,8 +79,12 @@ const playIndex = ref(0)
       <tiktok-player v-model:play-index="playIndex" :api :index :items active @load="loadMore" />
     </van-pull-refresh>
 
-    <nuxt-icon v-show="!hideTabs" class="!absolute left-0 top-0 z-10 p-1.5 text-4xl text-white" name="arrow-left"
-      @click="$router.back" />
+    <nuxt-icon
+      v-show="!hideTabs"
+      class="!absolute left-0 top-0 z-10 p-1.5 text-4xl text-white"
+      name="arrow-left"
+      @click="$router.back"
+    />
   </div>
 </template>
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 import type { PostItem, UserInfo, VideoItem } from '@types'
 import { useEventListener, useThrottleFn } from '@vueuse/core'
 
@@ -24,6 +25,20 @@ const {
 } = useMyFetch<UserInfo>({
   api: __.$Api.User.getOtherUserInfo
 })
+
+/** 开发环境：在浏览器控制台打印「用户信息」与「标签接口」便于对照 */
+const detailDebug = import.meta.env.DEV && import.meta.client
+watch(
+  userInfo,
+  v => {
+    if (!detailDebug) return
+    console.log('%c========== [userdetail] ① 用户信息 /api/users/getUserHome（useMyFetch.data）==========', 'font-weight:bold;color:#1677ff')
+    console.log('完整 userInfo 对象：', v)
+    console.log('字段 tags_ary（类型里预留的个人标签名，后端若返回会在这里）：', v?.tags_ary)
+  },
+  { deep: true, immediate: true }
+)
+
 const {
   listData: posts,
   loading: postLoading,
@@ -95,6 +110,71 @@ const {
   api: '/api/users/buys',
   startRefreshEmptyData: true
 })
+
+/** 他人主页标签：get_userhome_tags */
+const homeTagList = ref<{ id: number; name: string }[]>([])
+
+function normalizeUserhomeTagRows(payload: unknown): { id: number; name: string; status?: number | string }[] {
+  if (Array.isArray(payload)) return payload as { id: number; name: string; status?: number | string }[]
+  if (payload && typeof payload === 'object' && Array.isArray((payload as { list?: unknown }).list)) {
+    return (payload as { list: { id: number; name: string; status?: number | string }[] }).list
+  }
+  return []
+}
+
+/** 文档：1 已勾选、2 未选中；仅返回已选列表时可能不带 status */
+function shouldShowHomeTag(t: { status?: number | string }) {
+  if (t.status === undefined || t.status === null || t.status === '') return true
+  return Number(t.status) === 1
+}
+
+async function loadUserhomeTags() {
+  const raw = route.query.id
+  const id = Array.isArray(raw) ? raw[0] : raw
+  if (id == null || id === '') {
+    homeTagList.value = []
+    if (detailDebug) {
+      console.log('%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags（跳过：无 id）==========', 'font-weight:bold;color:#ee0a24')
+      console.log({ fullPath: route.fullPath, query: { ...route.query } })
+    }
+    return
+  }
+  try {
+    const res = await __.$Api.User.getUserhomeTags({ to_uid: String(id) })
+    const rows = normalizeUserhomeTagRows(res?.data)
+    let picked = rows.filter(shouldShowHomeTag).map(t => ({ id: Number(t.id), name: String(t.name ?? '') }))
+    if (picked.length === 0 && rows.length > 0) {
+      picked = rows.map(t => ({ id: Number(t.id), name: String(t.name ?? '') }))
+      if (detailDebug) {
+        console.warn('[userdetail] 按 status 过滤后为空，已回退展示接口返回的全部项', { rows })
+      }
+    }
+    homeTagList.value = picked.filter(t => t.name)
+
+    if (detailDebug) {
+      console.log('%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags ==========', 'font-weight:bold;color:#07c160')
+      console.log('请求参数 to_uid：', String(id))
+      console.log('整包响应 res（解密后，含 status/msg/data）：', res)
+      console.log('res.data（标签接口返回的原始 data，一般为数组）：', res?.data)
+      console.log('归一化后的 rows：', rows)
+      console.log('页面用于渲染的 homeTagList：', homeTagList.value)
+    }
+  } catch (err) {
+    homeTagList.value = []
+    if (detailDebug) {
+      console.log('%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags（请求失败）==========', 'font-weight:bold;color:#ee0a24')
+      console.warn(err)
+    }
+  }
+}
+
+watch(
+  () => route.fullPath,
+  () => {
+    loadUserhomeTags()
+  },
+  { immediate: true }
+)
 
 const fetchMap = {
   '2': () =>
@@ -212,6 +292,8 @@ onActivated(() => {
     })
     scroll_top.value = 0
   }
+  // keepalive 页面从「我的」点头像回来时 fullPath 可能不变，watch 不触发；此处必拉标签
+  loadUserhomeTags()
 })
 
 onDeactivated(() => {
@@ -236,8 +318,13 @@ const is_show_bg = computed(() => {
 </script>
 <template>
   <div v-if="uid" :key="uid" class="container">
-    <dx-navbar style="--van-nav-bar-z-index: 10" :title="is_show_bg ? userInfo?.nickname : ''"
-      class="transition-all duration-200" :class="is_show_bg ? '!bg-white' : 'transparent'" :border="false"></dx-navbar>
+    <dx-navbar
+      style="--van-nav-bar-z-index: 10"
+      :title="is_show_bg ? userInfo?.nickname : ''"
+      class="transition-all duration-200"
+      :class="is_show_bg ? '!bg-white' : 'transparent'"
+      :border="false"
+    ></dx-navbar>
 
     <scroll-list ref="list" :is-ready="!loading" class="mt-[-50px]">
       <div class="homepage-user-header">
@@ -245,11 +332,11 @@ const is_show_bg = computed(() => {
           <div class="user-info-detail">
             <div class="avatar"><img :key="userInfo?.avatar_url" v-lazyLoad="userInfo?.avatar_url" /></div>
             <div class="mt-0.5 flex-1">
-              <div class="nickname flex items-start">
-                <span class="w-[104px]">
+              <div class="nickname flex items-center">
+                <span class="max-w-[140px]">
                   {{ userInfo?.nickname }}
                 </span>
-                <div class="vip-info !ml-1">
+                <div class="vip-info ml-1">
                   <vip-icon :data="userInfo"></vip-icon>
                   <div v-if="userInfo?.auth_level >= 4" class="auth-level">
                     <img src="~/assets/image/creator.png" />
@@ -263,40 +350,90 @@ const is_show_bg = computed(() => {
           </div>
           <div v-if="userInfo?.person_signnatrue" class="rz_text">
             简介：
-            <div class="flex-1" v-html="userInfo.person_signnatrue.replaceAll('\n', '<br/>')"></div>
+            <div class="flex-1" v-html="DOMPurify.sanitize(userInfo.person_signnatrue.replaceAll('\n', '<br/>'))"></div>
           </div>
           <div class="number_info">
-            <div v-link="`/fans?uid=${userInfo?.uid}`" class="number_item cursor-pointer">
-              <div class="number">{{ $Utils.formatNumber(userInfo?.fans_count ?? 0, 'en') }}</div>
-              <div class="title">粉丝</div>
+            <div class="number-info-stats flex min-w-0 flex-1 items-center space-x-3 sm:space-x-[25px]">
+              <div v-link="`/fans?uid=${userInfo?.uid}`" class="number_item cursor-pointer">
+                <div class="number">{{ $Utils.formatNumber(userInfo?.fans_count ?? 0, 'en') }}</div>
+                <div class="title">粉丝</div>
+              </div>
+              <div class="number_item">
+                <div class="number">{{ userInfo.followed_count }}</div>
+                <div class="title">关注</div>
+              </div>
+              <div class="number_item">
+                <div class="number">{{ $Utils.formatNumber(userInfo?.fabulous_count ?? 0, 'en') }}</div>
+                <div class="title">点赞</div>
+              </div>
             </div>
-            <div class="number_item">
-              <div class="number">{{ userInfo.followed_count }}</div>
-              <div class="title">关注</div>
+
+            <div v-if="!isMyDetail && !loading" class="user-action-buttons flex shrink-0">
+              <btn-follow :key="userInfo.uid" :attention="follow ? 1 : 0" :uid="userInfo.uid" use-toast>
+                <template #default="{ text }">
+                  <dx-button color="linear-gradient(to right, #FF0000,  #FDA03D)">
+                    {{ text }}
+                  </dx-button>
+                </template>
+              </btn-follow>
+
+              <dx-button
+                v-if="userInfo?.uid"
+                color="linear-gradient(to right, #00D0FF,  #3D9DFD)"
+                :to="`/chat/room?uid=${userInfo.uid}&name=${userInfo.nickname}`"
+              >
+                聊天
+              </dx-button>
             </div>
-            <div class="number_item">
-              <div class="number">{{ $Utils.formatNumber(userInfo?.fabulous_count ?? 0, 'en') }}</div>
-              <div class="title">点赞</div>
+          </div>
+
+          <div v-if="!isMyDetail && homeTagList.length" class="user-tags">
+            <div v-for="tag in homeTagList" :key="tag.id" class="user-tag">
+              {{ tag.name }}
             </div>
           </div>
         </div>
         <div class="user_page_box">
-          <dx-tabs v-model:active="active" class="dx-tabs first-no-padding" line-width="20px" shrink sticky
-            @rendered="onRender">
+          <dx-tabs
+            v-model:active="active"
+            class="dx-tabs first-no-padding"
+            line-width="20px"
+            shrink
+            sticky
+            @rendered="onRender"
+          >
             <van-tab title="视频">
               <div class="container">
-                <van-search v-model="videoSearch" class="my-search" show-action shape="round" clear-trigger="always"
-                  placeholder="请输入标题查找作品" @search="onSearch('0')" @clear="onClear('0')">
+                <van-search
+                  v-model="videoSearch"
+                  class="my-search"
+                  show-action
+                  shape="round"
+                  clear-trigger="always"
+                  placeholder="请输入标题查找作品"
+                  @search="onSearch('0')"
+                  @clear="onClear('0')"
+                >
                   <template #action>
                     <div class="btn-search" @click="onSearch('0')">搜索</div>
                   </template>
                 </van-search>
                 <div class="scroll-container">
-                  <scroll-list v-model:loading="videoLoading" :pull-down-refresh="clearMap['0']" :is-end="videoEnd"
-                    :is-empty="videoEmpty" :pullup="fetchMap['0']">
+                  <scroll-list
+                    v-model:loading="videoLoading"
+                    :pull-down-refresh="clearMap['0']"
+                    :is-end="videoEnd"
+                    :is-empty="videoEmpty"
+                    :pullup="fetchMap['0']"
+                  >
                     <div class="grid grid-cols-2 gap-1 px-1">
-                      <video-card v-for="(item, index) in videos" :key="item.id" :list="videos" :index="index"
-                        :item="item"></video-card>
+                      <video-card
+                        v-for="(item, index) in videos"
+                        :key="item.id"
+                        :list="videos"
+                        :index="index"
+                        :item="item"
+                      ></video-card>
                     </div>
                   </scroll-list>
                 </div>
@@ -304,33 +441,63 @@ const is_show_bg = computed(() => {
             </van-tab>
             <van-tab title="短视频">
               <div class="container">
-                <scroll-list v-model:loading="shortsLoading" :pull-down-refresh="clearMap['1']" :is-end="shortsEnd"
-                  :is-empty="shortsEmpty" :pullup="fetchMap['1']">
+                <scroll-list
+                  v-model:loading="shortsLoading"
+                  :pull-down-refresh="clearMap['1']"
+                  :is-end="shortsEnd"
+                  :is-empty="shortsEmpty"
+                  :pullup="fetchMap['1']"
+                >
                   <div class="grid grid-cols-3 gap-1 px-1">
-                    <video-tiktok-item v-for="(item, index) in shorts" :key="item.id" :list="shorts" :index="index"
-                      :item="item" show-title api="api/users/videos" :params="{
+                    <video-tiktok-item
+                      v-for="(item, index) in shorts"
+                      :key="item.id"
+                      :list="shorts"
+                      :index="index"
+                      :item="item"
+                      show-title
+                      api="api/users/videos"
+                      :params="{
                         show_type: 1,
                         page: page.page,
                         uid: route.query.id
-                      }"></video-tiktok-item>
+                      }"
+                    ></video-tiktok-item>
                   </div>
                 </scroll-list>
               </div>
             </van-tab>
             <van-tab title="收藏">
               <div class="container">
-                <van-search v-model="likeSearch" class="my-search" show-action shape="round" placeholder="请输入标题查找作品"
-                  clear-trigger="always" @search="onSearch('2')" @clear="onClear('2')">
+                <van-search
+                  v-model="likeSearch"
+                  class="my-search"
+                  show-action
+                  shape="round"
+                  placeholder="请输入标题查找作品"
+                  clear-trigger="always"
+                  @search="onSearch('2')"
+                  @clear="onClear('2')"
+                >
                   <template #action>
                     <div class="btn-search" @click="onSearch('2')">搜索</div>
                   </template>
                 </van-search>
                 <div class="scroll-container">
-                  <scroll-list v-model:loading="likeLoading" :pull-down-refresh="clearMap['2']" :is-end="likeEnd"
-                    :is-empty="likeEmpty" :pullup="fetchMap['2']">
+                  <scroll-list
+                    v-model:loading="likeLoading"
+                    :pull-down-refresh="clearMap['2']"
+                    :is-end="likeEnd"
+                    :is-empty="likeEmpty"
+                    :pullup="fetchMap['2']"
+                  >
                     <div class="grid grid-cols-2 gap-1 px-1">
-                      <video-card v-for="(item, index) in likes" :key="item.id" :index="index"
-                        :item="item"></video-card>
+                      <video-card
+                        v-for="(item, index) in likes"
+                        :key="item.id"
+                        :index="index"
+                        :item="item"
+                      ></video-card>
                     </div>
                   </scroll-list>
                 </div>
@@ -338,15 +505,28 @@ const is_show_bg = computed(() => {
             </van-tab>
             <van-tab title="购买">
               <div class="container">
-                <van-search v-model="buySearch" class="my-search" show-action shape="round" placeholder="请输入标题查找作品"
-                  clear-trigger="always" @search="onSearch('3')" @clear="onClear('3')">
+                <van-search
+                  v-model="buySearch"
+                  class="my-search"
+                  show-action
+                  shape="round"
+                  placeholder="请输入标题查找作品"
+                  clear-trigger="always"
+                  @search="onSearch('3')"
+                  @clear="onClear('3')"
+                >
                   <template #action>
                     <div class="btn-search" @click="onSearch('3')">搜索</div>
                   </template>
                 </van-search>
                 <div class="scroll-container">
-                  <scroll-list v-model:loading="buyLoading" :pull-down-refresh="clearMap['3']" :is-end="buyEnd"
-                    :is-empty="buyEmpty" :pullup="fetchMap['3']">
+                  <scroll-list
+                    v-model:loading="buyLoading"
+                    :pull-down-refresh="clearMap['3']"
+                    :is-end="buyEnd"
+                    :is-empty="buyEmpty"
+                    :pullup="fetchMap['3']"
+                  >
                     <div class="grid grid-cols-2 gap-1 px-1">
                       <video-card v-for="(item, index) in buys" :key="item.id" :index="index" :item="item"></video-card>
                     </div>
@@ -357,15 +537,28 @@ const is_show_bg = computed(() => {
 
             <van-tab title="发帖">
               <div class="container">
-                <van-search v-model="postSearch" class="my-search" show-action shape="round" placeholder="请输入标题查找作品"
-                  clear-trigger="always" @search="onSearch('4')" @clear="onClear('4')">
+                <van-search
+                  v-model="postSearch"
+                  class="my-search"
+                  show-action
+                  shape="round"
+                  placeholder="请输入标题查找作品"
+                  clear-trigger="always"
+                  @search="onSearch('4')"
+                  @clear="onClear('4')"
+                >
                   <template #action>
                     <div class="btn-search" @click="onSearch('4')">搜索</div>
                   </template>
                 </van-search>
                 <div class="scroll-container">
-                  <scroll-list v-model:loading="postLoading" :is-end="postEnd" :pull-down-refresh="clearMap['4']"
-                    :is-empty="postEmpty" :pullup="fetchMap['4']">
+                  <scroll-list
+                    v-model:loading="postLoading"
+                    :is-end="postEnd"
+                    :pull-down-refresh="clearMap['4']"
+                    :is-empty="postEmpty"
+                    :pullup="fetchMap['4']"
+                  >
                     <div class="dx-list">
                       <post-item v-for="item in posts" :key="item.id" show-original :item="item"></post-item>
                     </div>
@@ -377,34 +570,6 @@ const is_show_bg = computed(() => {
         </div>
       </div>
     </scroll-list>
-
-    <div v-if="!isMyDetail && !loading" class="absolute bottom-3 left-0 right-0">
-      <div class="flex items-center justify-around">
-        <div class="border-item">
-          <btn-follow :key="userInfo.uid" class="w-full place-self-end" :attention="follow ? 1 : 0" :uid="userInfo.uid"
-            use-toast>
-            <template #default="{ text, follow: _follow }">
-              <dx-button color="linear-gradient(to right, #FF0000,  #FDA03D)" :round="false">
-                <div class="flex w-full items-center">
-                  <nuxt-icon class="mr-0.5 text-[0.5rem]" name="my/like"></nuxt-icon>
-                  {{ text }}
-                </div>
-              </dx-button>
-            </template>
-          </btn-follow>
-        </div>
-        <div class="border-item">
-          <dx-button color="linear-gradient(to right, #00D0FF,  #3D9DFD)"
-            :to="`/chat/room?uid=${userInfo.uid}&name=${userInfo.nickname}`" :round="false"
-            class="w-full place-self-start">
-            <div class="flex items-center">
-              <nuxt-icon class="mr-0.5 text-[0.5rem]" name="my/chat"></nuxt-icon>
-              聊天
-            </div>
-          </dx-button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -513,12 +678,18 @@ const is_show_bg = computed(() => {
     width: 100%;
     display: flex;
     flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     padding: 4px 12px 12px;
     position: relative;
     z-index: 1;
     background: #fff;
     justify-content: space-between;
+
+    .number-info-stats {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
 
     .number_item {
       display: flex;
@@ -527,16 +698,54 @@ const is_show_bg = computed(() => {
       align-items: center;
 
       .number {
-        font-size: 14px;
-        font-weight: bold;
-        color: #333;
+        font-size: 13px;
+        font-weight: 500;
+        color: #2c2c2c;
       }
 
       .title {
         color: #919191;
-        font-size: 12px;
+        font-size: 11px;
         // margin-top: 0.266rem;
       }
+    }
+
+    .user-action-buttons {
+      align-items: center;
+      gap: 10px;
+      /* baseline 在 iOS WebKit 上与同行 flex 搭配时容易整体上移/错位 */
+      :deep(.van-button) {
+        height: 24px;
+        padding: 3px 10px;
+        border-radius: 5px !important;
+        font-size: 12px;
+        line-height: 12px;
+      }
+    }
+  }
+
+  .user-tags {
+    width: 100%;
+    padding: 4px 12px 12px;
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    background: #fff;
+    position: relative;
+    z-index: 1;
+
+    .user-tag {
+      flex-shrink: 0;
+      padding: 3px 10px;
+      height: 24px;
+      line-height: 18px;
+      border-radius: 999px;
+      background: #e6f4ff;
+      font-size: 12px;
+      color: #3da7fd;
     }
   }
 }

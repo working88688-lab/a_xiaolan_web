@@ -1,128 +1,170 @@
 <template>
   <div class="container">
-    <dx-tabs v-model:active="activeTab" shrink :duration="duration" swipeable class="dx-tabs primary-tabs" lazy-render
-      line-width="30" animated>
-      <van-tab v-for="(item, _index) in data" :key="_index" :title="item.name">
-        <dx-hoc-list :api="item.api" :params="item.params">
-          <template #header="{ data }">
-            <div class="px-1.5">
-              <dx-ads :items="data?.ads ?? []" :ad-key="item.id" :ad-name="item.name"></dx-ads>
-            </div>
-            <div class="darkweb_middle">
-              <div v-for="(itemM, indexM) in data?.middle_data" :key="indexM" @click="navigateToDynamic(itemM)">
-                <dx-image class="darkweb_middle_img" :src="itemM?.cover_full" no-bg />
-              </div>
-            </div>
-          </template>
-          <template #item="{ item: _item, items, index }">
-            <feature-item :key="index" :index="index" :list="items" :stack-key="`dark-web_${index}`" :data="_item"
-              @share="openShareDialog"></feature-item>
-          </template>
-        </dx-hoc-list>
-      </van-tab>
-    </dx-tabs>
-    <div v-show="config.can_aw === 0" v-link="`/renewal`" class="darkweb-mask cursor-pointer">
-      <div class="darkweb-mask_tips" v-html="config.can_aw_tips"></div>
+    <!-- 顶部：搜索 + 导航tabs（和首页一致） -->
+    <search-bar show-publish-button />
+    <feature-tab />
+
+    <!-- 中间区域：暗网引导页（铺满、无圆角） -->
+    <div class="dw-hero" @click="goRenewal">
+      <div class="dw-bg" :style="{ backgroundImage: `url(${dwBg})` }" />
+
+      <div class="dw-content">
+        <img class="dw-title" :src="dwTitle" alt="" />
+
+        <div class="dw-desc">
+          <div class="dw-desc__main" v-html="safeDescHtml"></div>
+          <!-- <div v-if="tipsTitle" class="dw-desc__subTitle">{{ tipsTitle }}</div> -->
+          <!-- <div v-if="tipsVip" class="dw-desc__vip">{{ tipsVip }}</div> -->
+        </div>
+
+        <img class="dw-card" :src="dwTips" alt="" />
+        <img class="dw-btn" :src="dwBtn" alt="" />
+      </div>
     </div>
-    <!-- 分享弹框 -->
-    <share-dialog v-model:show="share_dialog" :data="shareData"></share-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { TabItem } from '@types'
+import DOMPurify from 'dompurify'
+import dwBg from '@/assets/image/darkweb/dw-bg.png'
+import dwBtn from '@/assets/image/darkweb/dw-btn.png'
+import dwTips from '@/assets/image/darkweb/dw-tips.png'
+import dwTitle from '@/assets/image/darkweb/dw-title.png'
 
-const { activeTab, duration, updateDuration, updateActiveTab } = useDefaultActiveTab()
-const __ = useNuxtApp()
 const { config } = storeToRefs(useGlobalStore())
-const { data } = useMyFetch<TabItem[]>({
-  api: __.$Api.Darkweb.index_aw,
-  immediate: true,
-  success() {
-    updateActiveTab(data.value)
-    updateDuration()
-  }
-})
-const shareData = ref()
-const share_dialog = ref(false)
-const openShareDialog = (_data: any) => {
-  share_dialog.value = true
-  shareData.value = _data
-}
+const __ = useNuxtApp()
 
-const navigateToDynamic = (item: TabItem) => {
-  __.$Store.dynamic.setTab(item)
-  __.$NavigateTo('/dark-card')
+const safeDescHtml = computed(() => {
+  const html = (config.value?.can_aw_tips ?? '') as string
+  return DOMPurify.sanitize(html)
+})
+
+const tipsTitle = computed(() => (config.value as any)?.new_can_aw_tips_title as string | undefined)
+const tipsVip = computed(() => (config.value as any)?.new_can_aw_tips_vip as string | undefined)
+
+const goRenewal = () => {
+  __.$NavigateTo('/renewal')
 }
 </script>
-<style lang="less">
-.darkweb-mask::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 10;
-}
 
-.darkweb-mask {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  background-color: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(5px);
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &_tips {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #fff;
-    font-size: 14px;
-
-    font {
-      margin-top: 0.5rem;
-      padding: 0.2rem 0.3rem;
-      font-size: 0.35rem;
-      background-color: #4b8af7;
-      color: #fff;
-      border-radius: 5px;
-    }
-  }
-}
-</style>
 <style lang="less" scoped>
 .container {
   position: relative;
-}
-
-.dx-tabs> :deep(.van-tabs__wrap .van-tabs__nav) {
-  justify-content: center;
-}
-
-.dx-tabs> :deep(.van-tabs__wrap .van-tabs__line) {
-  background: linear-gradient(to left, #6de6fb, #428af7);
-}
-
-.darkweb_middle {
-  margin-top: 4px;
   width: 100%;
+  /* 占满布局主区高度，避免 min-height:100vh 撑高后带着搜索/tab 整体滚 */
+  height: 100%;
+  min-height: 0;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-.darkweb_middle_img {
-  width: 110px !important;
-  height: 55px !important;
-  margin-left: 12px;
-  margin-bottom: 12px;
+/* 暗网页只需要顶部 tab 行，不需要 feature-tab 的内容区；同时避免高度塌陷导致“看不到 tabs” */
+.container :deep(.tab-container) {
+  flex: none;
+  overflow: visible;
+}
+
+.container :deep(.tab-container .van-tabs__content) {
+  display: none;
+}
+
+.container :deep(.tab-container .van-tabs__wrap) {
+  position: relative;
+  z-index: 5;
+}
+
+.dw-hero {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* 预留底部 tabbar 安全区 */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.dw-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.dw-content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 18px 14px 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.dw-title {
+  margin-top: 6px;
+  width: 92%;
+  max-width: 380px;
+  height: auto;
+  display: block;
+}
+
+.dw-desc {
+  margin-top: 14px;
+  width: 92%;
+  max-width: 380px;
+  padding: 0;
+  text-align: center;
+  color: #fff;
+
+  &__main {
+    font-size: 13px;
+    line-height: 1.65;
+    word-break: break-word;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+
+  &__subTitle {
+    margin-top: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  }
+
+  &__vip {
+    margin-top: 10px;
+    color: #ff3b30;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  }
+}
+
+.dw-card {
+  margin-top: 16px;
+  width: 92%;
+  max-width: 380px;
+  height: auto;
+  display: block;
+}
+
+.dw-btn {
+  margin-top: 18px;
+  width: 70%;
+  max-width: 260px;
+  height: auto;
+  display: block;
 }
 </style>

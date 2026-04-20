@@ -89,10 +89,21 @@ defineExpose({
 })
 </script>
 <template>
-  <div ref="wrapperRef" style="height: 100%; overflow: auto" class="scroller"
-    :class="{ 'is-loading': loading, 'is-empty': props.isEmpty && center }">
-    <van-pull-refresh v-model="refreshing" class="scroller-refresh" pulling-text="继续下拉可刷新页面" loosing-text="可以松手了"
-      loading-text="正在获取数据" :disabled="!props.pullDownRefresh || props.disabledRefresh" @refresh="_refresh">
+  <div
+    ref="wrapperRef"
+    style="height: 100%; overflow: auto"
+    class="scroller"
+    :class="{ 'is-loading': loading, 'is-empty': props.isEmpty && center }"
+  >
+    <van-pull-refresh
+      v-model="refreshing"
+      class="scroller-refresh"
+      pulling-text="继续下拉可刷新页面"
+      loosing-text="可以松手了"
+      loading-text="正在获取数据"
+      :disabled="!props.pullDownRefresh || props.disabledRefresh"
+      @refresh="_refresh"
+    >
       <template #pulling>
         <div class="pull-down flex-center text-primary">
           <nuxt-icon class="text-3xl" name="arrow-down"></nuxt-icon>
@@ -105,14 +116,25 @@ defineExpose({
           释放即可刷新
         </div>
       </template>
-      <div v-show="loading && !props.pullup && !refreshing" class="loading-container" data-loading="1" :class="{
-        'is-full': props.fullLoading
-      }">
+      <div
+        v-show="loading && !props.pullup && !refreshing"
+        class="loading-container"
+        data-loading="1"
+        :class="{
+          'is-full': props.fullLoading
+        }"
+      >
         <van-loading size="24px" class="loading-icon" type="spinner" />
         <span class="loading-text">{{ props.loadingTip }}</span>
       </div>
-      <van-list v-model:error="error" :loading="loading" :disabled="props.disabled || !props.pullup"
-        :immediate-check="false" :finished="props.isEnd" @load="_load">
+      <van-list
+        v-model:error="error"
+        :loading="loading"
+        :disabled="props.disabled || !props.pullup"
+        :immediate-check="false"
+        :finished="props.isEnd"
+        @load="_load"
+      >
         <slot></slot>
         <template #loading>
           <div v-show="!refreshing" class="loading-container">
@@ -127,8 +149,11 @@ defineExpose({
           </slot>
         </template>
 
-        <dx-empty v-if="props.isEmpty && !loading && !refreshing && showEmpty" :image-size="['8.6rem', '5rem']"
-          :description="error ? '' : props.emptyTip">
+        <dx-empty
+          v-if="props.isEmpty && !loading && !refreshing && showEmpty"
+          :image-size="['8.6rem', '5rem']"
+          :description="error ? '' : props.emptyTip"
+        >
           <template #empty>
             <slot name="empty"></slot>
           </template>

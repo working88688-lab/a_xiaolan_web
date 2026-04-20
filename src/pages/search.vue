@@ -96,5 +96,24 @@ onActivated(() => {
   :deep(.van-search__action) {
     font-weight: normal;
   }
+
+  /* 去掉“搜索”文字自身点击时的白色高亮块 */
+  :deep(.van-search__action:active),
+  :deep(.van-search__action:focus-visible) {
+    background-color: transparent !important;
+    box-shadow: none;
+    outline: none;
+  }
+
+  /* 去掉右侧搜索点击时的白色高亮块 */
+  :deep(.van-nav-bar__right) {
+    background-color: transparent !important;
+  }
+
+  :deep(.van-nav-bar__right:active),
+  :deep(.van-nav-bar__right:focus-visible) {
+    background-color: transparent !important;
+    box-shadow: none;
+  }
 }
 </style>

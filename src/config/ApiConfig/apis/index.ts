@@ -2,14 +2,19 @@
  * desc: 接口配置
  * date: 2023.03.20
  */
+import AI from './modules/AI'
+import Checkin from './modules/Checkin'
 import Comics from './modules/Comics'
 import Community from './modules/Community'
+import Creator from './modules/Creator'
 import Darkweb from './modules/Darkweb'
 import Discover from './modules/Discover'
+import Game from './modules/Game'
 import Home from './modules/Home'
 import Images from './modules/Images'
 import Search from './modules/Search'
 import Story from './modules/Story'
+import TaskLottery from './modules/TaskLottery'
 import User from './modules/User'
 import Video from './modules/Video'
 import collect from './modules/collect'
@@ -17,7 +22,11 @@ import original from './modules/original'
 
 export default {
   // 模块接口引用
+  AI,
+  Checkin,
+  Game,
   Home,
+  TaskLottery,
   User,
   Search,
   Video,
@@ -26,6 +35,7 @@ export default {
   Story,
   Images,
   Community,
+  Creator,
   Darkweb,
   original,
   collect,

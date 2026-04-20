@@ -10,8 +10,12 @@
     <div class="community_tab_container">
       <dx-tabs v-model:active="activeTab" shrink class="dx-tabs h-full" theme="button">
         <van-tab v-for="tab in post_tab" :key="tab.name" v-bind="tab">
-          <dx-hoc-list :list-props="{ disabledRefresh: scrollTop > 0 }" fields="post" api="api/community/listPost"
-            :params="{ sort: tab.name }">
+          <dx-hoc-list
+            :list-props="{ disabledRefresh: scrollTop > 0 }"
+            fields="post"
+            api="api/community/listPost"
+            :params="{ sort: tab.name }"
+          >
             <template #item="{ item }">
               <post-item :key="item.id" show-original :item="item"></post-item>
             </template>

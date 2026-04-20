@@ -15,8 +15,11 @@
         </div>
         <div class="center flex-row">
           <div class="new-qrcode-custom flex1">
-            <vue-qrcode :key="config.share_url" :value="config.share_url"
-              :options="{ width: 60, scale: 20, margin: 0 }" />
+            <vue-qrcode
+              :key="config.share_url"
+              :value="config.share_url"
+              :options="{ width: 60, scale: 20, margin: 0 }"
+            />
           </div>
           <div class="new-share-text">
             <p>扫描二维码</p>

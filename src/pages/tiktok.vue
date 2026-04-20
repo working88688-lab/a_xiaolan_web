@@ -18,8 +18,8 @@ const loading = ref(false)
 
 const followApi = hasFollow
   ? __.$Api.createApi({
-    url: hasFollow.api_list
-  })
+      url: hasFollow.api_list
+    })
   : undefined
 
 const params = ref({
@@ -115,10 +115,16 @@ const { isPageActive } = usePageActive()
 
 <template>
   <div :key="key" class="container">
-    <dx-tabs v-if="key" v-model:active="activeTab" :class="{
-      'is-fixed': activeTab === 1,
-      'is-hidden': hideTabs
-    }" class="tiktok-tabs" center>
+    <dx-tabs
+      v-if="key"
+      v-model:active="activeTab"
+      :class="{
+        'is-fixed': activeTab === 1,
+        'is-hidden': hideTabs
+      }"
+      class="tiktok-tabs"
+      center
+    >
       <template #right>
         <nuxt-link class="search-btn absolute right-2 top-1.5 pl-1.5" to="/search?_index=1">
           <div class="h-[20px] w-[20px]">
@@ -148,12 +154,20 @@ const { isPageActive } = usePageActive()
               </div>
 
               <div class="dx-grid-2 mt-1">
-                <video-tiktok-item v-for="(item, index) in follow_mvs_list" :key="item.id" :list="follow_mvs_list"
-                  :api="hasFollow?.api_list" :index="index" show-title field-path="data.follow_mvs" :item="item"
+                <video-tiktok-item
+                  v-for="(item, index) in follow_mvs_list"
+                  :key="item.id"
+                  :list="follow_mvs_list"
+                  :api="hasFollow?.api_list"
+                  :index="index"
+                  show-title
+                  field-path="data.follow_mvs"
+                  :item="item"
                   :params="{
                     page: params.page,
                     ...(hasFollow?.params_list ?? {})
-                  }" />
+                  }"
+                />
               </div>
             </template>
             <div v-else class="grid grid-cols-1 gap-1">
@@ -179,10 +193,18 @@ const { isPageActive } = usePageActive()
                 <div v-if="creator.person_signnatrue" class="m-0 truncate">简介：{{ creator.person_signnatrue }}</div>
 
                 <dx-scrollview-swiper v-if="creator.mv_list.length" class="mt-1">
-                  <SwiperSlide v-for="(video, index) in creator.mv_list" :key="video.id"
-                    class="mr-1 !w-[102px] last:mr-0">
-                    <video-tiktok-item :key="video.id" show-title :list="creator.mv_list" :item="video"
-                      :index="index" />
+                  <SwiperSlide
+                    v-for="(video, index) in creator.mv_list"
+                    :key="video.id"
+                    class="mr-1 !w-[102px] last:mr-0"
+                  >
+                    <video-tiktok-item
+                      :key="video.id"
+                      show-title
+                      :list="creator.mv_list"
+                      :item="video"
+                      :index="index"
+                    />
                   </SwiperSlide>
                 </dx-scrollview-swiper>
               </div>
@@ -190,23 +212,39 @@ const { isPageActive } = usePageActive()
           </scroll-list>
         </div>
 
-        <tiktok-tab v-else-if="tab.type === '2'" :api="tab.api_list" :params="tab.params_list"
-          :active="activeTab === 1 && isPageActive" />
+        <tiktok-tab
+          v-else-if="tab.type === '2'"
+          :api="tab.api_list"
+          :params="tab.params_list"
+          :active="activeTab === 1 && isPageActive"
+        />
 
         <div v-else class="h-full pt-[46px]">
           <dx-tabs v-model:active="findTab" line-width="0" line-height="0" class="first-no-padding h-full">
             <van-tab v-for="sortTab in mv_short_find_tab" :key="sortTab.name" v-bind="sortTab">
-              <dx-hoc-list class="dx-grid-3 text-sm" :api="tab.api_list" :params="{
-                ...tab.params_list,
-                sort: sortTab.name,
-                size: 12
-              }">
+              <dx-hoc-list
+                class="dx-grid-3 text-sm"
+                :api="tab.api_list"
+                :params="{
+                  ...tab.params_list,
+                  sort: sortTab.name,
+                  size: 12
+                }"
+              >
                 <template #item="{ item, items, index, page }">
-                  <video-tiktok-item :key="item.id" show-title :item="item" :list="items" :api="hasDiscover?.api_list"
-                    :index="index" field-path="data.list" :params="{
+                  <video-tiktok-item
+                    :key="item.id"
+                    show-title
+                    :item="item"
+                    :list="items"
+                    :api="hasDiscover?.api_list"
+                    :index="index"
+                    field-path="data.list"
+                    :params="{
                       page: page.page,
                       sort: sortTab.name
-                    }" />
+                    }"
+                  />
                 </template>
               </dx-hoc-list>
             </van-tab>
@@ -251,7 +289,7 @@ const { isPageActive } = usePageActive()
 }
 
 :deep(.tiktok-tabs) {
-  &>.van-tabs__wrap {
+  & > .van-tabs__wrap {
     --van-tabs-card-height: 62px;
     position: fixed;
 
@@ -263,7 +301,7 @@ const { isPageActive } = usePageActive()
 }
 
 .tiktok-tabs.is-fixed {
-  &> :deep(.van-tabs__wrap) {
+  & > :deep(.van-tabs__wrap) {
     --van-tab-text-color: rgba(255, 255, 255, 0.7);
 
     .van-tab--active {
@@ -277,7 +315,7 @@ const { isPageActive } = usePageActive()
 }
 
 .tiktok-tabs.is-hidden {
-  &> :deep(.van-tabs__wrap) {
+  & > :deep(.van-tabs__wrap) {
     opacity: 0;
   }
 }

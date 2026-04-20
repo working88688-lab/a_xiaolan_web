@@ -13,7 +13,7 @@ const { tip = '~~我也是有底线的~~' } = defineProps<{
 <style lang="postcss" scoped>
 .end-tip {
   text-align: center;
-  padding: 8px 0 ;
+  padding: 8px 0;
   color: #999;
 }
 </style>

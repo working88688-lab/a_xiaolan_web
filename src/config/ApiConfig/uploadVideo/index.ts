@@ -14,10 +14,44 @@ function generateSignKey(timestamp: string, key: string) {
   return CryptoJS.MD5(`${timestamp}${key}`).toString(CryptoJS.enc.Hex)
 }
 
-export default function upload(file: File, config: AxiosRequestConfig) {
+type UploadInfo = {
+  r2Key?: string
+  r2URL?: string
+  r2CompleteURL?: string
+}
+
+async function getUploadInfoBySize(fileSize: number): Promise<UploadInfo | null> {
+  const THRESHOLD = 500 * 1024 * 1024
+  const url = fileSize < THRESHOLD ? '/api/home/r2upload_info' : '/api/mv/upload'
+
+  try {
+    const __ = useNuxtApp()
+    const res: any = await __.$Http({
+      method: 'POST',
+      url,
+      data: {},
+      showError: false
+    })
+    const data = res?.data ?? res
+    if (!data) return null
+    return {
+      r2Key: data.r2Key ?? data.r2_key ?? data.key,
+      r2URL: data.r2URL ?? data.r2_url ?? data.r2url ?? data.uploadStartUrl,
+      r2CompleteURL: data.r2CompleteURL ?? data.r2_complete_url ?? data.r2CompleteUrl ?? data.uploadEndUrl
+    }
+  } catch {
+    return null
+  }
+}
+
+export default async function upload(file: File, config: AxiosRequestConfig) {
   const { config: global_config } = useGlobalStore()
 
-  const { r2Key: SIGN_KEY, r2URL: UPLOAD_START_URL, r2CompleteURL: UPLOAD_END_URL } = global_config
+  const info = await getUploadInfoBySize(file.size)
+  const SIGN_KEY = info?.r2Key || global_config.r2Key
+  const UPLOAD_START_URL = info?.r2URL || global_config.r2URL
+  const UPLOAD_END_URL = info?.r2CompleteURL || global_config.r2CompleteURL
+
   return new Promise((resolve, reject) => {
     createChunk(file).then(({ total, chunks }) => {
       console.log('total: ', total)

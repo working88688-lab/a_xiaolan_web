@@ -26,10 +26,13 @@ export interface AcountInfo {
 
 export interface UserInfo {
   uid: number
-  aff: number
+  // 部分接口返回中没有 aff 字段，所以改为可选，避免类型不匹配
+  aff?: number
   avatar_url: string
   nickname: string
   person_signnatrue: string
+  // 个人标签数组（客态视角用户主页用）
+  tags_ary?: string[]
   is_attention: 0 | 1
   is_vip: 0 | 1
   vip_level: number

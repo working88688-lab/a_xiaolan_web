@@ -156,14 +156,28 @@ defineExpose({
 })
 </script>
 <template>
-  <scroll-list ref="list" v-model:loading="loading" v-model:error="isError"
-    :pullup="props.pullup ? fetch_data : undefined" :pull-down-refresh="props.refresh ? refresh_data : undefined"
-    :is-end="isEnd" :show-end="showEnd" :is-empty="showEmpty && is_empty" v-bind="listProps">
+  <scroll-list
+    ref="list"
+    v-model:loading="loading"
+    v-model:error="isError"
+    :pullup="props.pullup ? fetch_data : undefined"
+    :pull-down-refresh="props.refresh ? refresh_data : undefined"
+    :is-end="isEnd"
+    :show-end="showEnd"
+    :is-empty="showEmpty && is_empty"
+    v-bind="listProps"
+  >
     <slot name="banner" :data="init_data"></slot>
     <div v-bind="$attrs">
       <slot name="header" :data="init_data"></slot>
-      <slot v-for="(item, index) in render_list" name="item" :items="render_list" :page="page" :index="index"
-        :item="item"></slot>
+      <slot
+        v-for="(item, index) in render_list"
+        name="item"
+        :items="render_list"
+        :page="page"
+        :index="index"
+        :item="item"
+      ></slot>
     </div>
     <slot name="list" :items="render_list" :page="page"></slot>
   </scroll-list>
