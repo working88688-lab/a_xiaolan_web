@@ -66,7 +66,11 @@
                 {{ $Utils.formatNumber(pageViews) }}
               </span>
             </div>
-            <div class="image-footer-item image-footer-item--star" @click.stop="onLike">
+            <div
+              class="image-footer-item image-footer-item--star"
+              :class="{ 'image-footer-item--liked': pageData?.is_like === 1 }"
+              @click.stop="onLike"
+            >
               <svg
                 class="image-footer-icon"
                 width="32"
@@ -79,7 +83,7 @@
                 <g clip-path="url(#clip0_80_4327_star)">
                   <path
                     d="M16.1447 2.41199C16.5339 1.76947 17.4661 1.76947 17.8553 2.41199L22.0676 9.36587C22.2069 9.59577 22.4328 9.75992 22.6945 9.82132L30.6097 11.6786C31.3411 11.8502 31.6291 12.7368 31.1383 13.3055L25.8265 19.4605C25.6509 19.664 25.5646 19.9296 25.587 20.1975L26.2666 28.2992C26.3294 29.0478 25.5752 29.5957 24.8827 29.3047L17.3874 26.1548C17.1396 26.0507 16.8604 26.0507 16.6126 26.1548L9.11735 29.3047C8.42481 29.5957 7.67063 29.0478 7.73342 28.2992L8.41297 20.1975C8.43544 19.9296 8.34914 19.664 8.17353 19.4605L2.86167 13.3055C2.37087 12.7368 2.65894 11.8502 3.39029 11.6786L11.3055 9.82132C11.5672 9.75992 11.7931 9.59577 11.9324 9.36587L16.1447 2.41199Z"
-                    fill="white"
+                    :fill="pageData?.is_like === 1 ? '#ffde00' : 'white'"
                   />
                 </g>
                 <defs>
@@ -604,7 +608,7 @@ onBeforeMount(async () => {
   init(Number(id))
 })
 
-watch(showPreview, (v) => {
+watch(showPreview, v => {
   if (!v) isPreviewClean.value = false
 })
 </script>
@@ -701,6 +705,13 @@ watch(showPreview, (v) => {
 .image-footer-item {
   display: flex;
   align-items: center;
+}
+
+.image-footer-item--liked {
+  .image-footer-label {
+    color: #ffde00;
+    opacity: 1;
+  }
 }
 
 .image-footer-icon {
