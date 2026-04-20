@@ -4,8 +4,48 @@
     <search-bar show-publish-button />
     <feature-tab />
 
-    <!-- 中间区域：暗网引导页（铺满、无圆角） -->
-    <div class="dw-hero" @click="goRenewal">
+    <!-- 已开通：展示暗网内容；未开通：展示引导页 -->
+    <div v-if="canEnterDarkweb" class="dw-body">
+      <dx-tabs
+        v-model:active="activeTab"
+        shrink
+        :duration="duration"
+        swipeable
+        class="dx-tabs primary-tabs"
+        lazy-render
+        line-width="30"
+        animated
+      >
+        <van-tab v-for="(item, _index) in tabs" :key="_index" :title="item.name">
+          <dx-hoc-list :api="item.api" :params="item.params">
+            <template #header="{ data }">
+              <div class="px-1.5">
+                <dx-ads :items="data?.ads ?? []" :ad-key="item.id" :ad-name="item.name"></dx-ads>
+              </div>
+              <div class="darkweb_middle">
+                <div v-for="(itemM, indexM) in data?.middle_data" :key="indexM" @click="navigateToDynamic(itemM)">
+                  <dx-image class="darkweb_middle_img" :src="itemM?.cover_full" no-bg />
+                </div>
+              </div>
+            </template>
+            <template #item="{ item: _item, items, index }">
+              <feature-item
+                :key="index"
+                :index="index"
+                :list="items"
+                :stack-key="`dark-web_${index}`"
+                :data="_item"
+                @share="openShareDialog"
+              ></feature-item>
+            </template>
+          </dx-hoc-list>
+        </van-tab>
+      </dx-tabs>
+
+      <share-dialog v-model:show="share_dialog" :data="shareData"></share-dialog>
+    </div>
+
+    <div v-else class="dw-hero" @click="goRenewal">
       <div class="dw-bg" :style="{ backgroundImage: `url(${dwBg})` }" />
 
       <div class="dw-content">
@@ -13,8 +53,6 @@
 
         <div class="dw-desc">
           <div class="dw-desc__main" v-html="safeDescHtml"></div>
-          <!-- <div v-if="tipsTitle" class="dw-desc__subTitle">{{ tipsTitle }}</div> -->
-          <!-- <div v-if="tipsVip" class="dw-desc__vip">{{ tipsVip }}</div> -->
         </div>
 
         <img class="dw-card" :src="dwTips" alt="" />
@@ -29,9 +67,13 @@ import dwBg from '@/assets/image/darkweb/dw-bg.png'
 import dwBtn from '@/assets/image/darkweb/dw-btn.png'
 import dwTips from '@/assets/image/darkweb/dw-tips.png'
 import dwTitle from '@/assets/image/darkweb/dw-title.png'
+import type { TabItem } from '@types'
 
 const { config } = storeToRefs(useGlobalStore())
+const globalStore = useGlobalStore()
 const __ = useNuxtApp()
+
+const canEnterDarkweb = computed(() => config.value?.can_aw === 1)
 
 const safeDescHtml = computed(() => {
   const html = (config.value?.can_aw_tips ?? '') as string
@@ -39,8 +81,57 @@ const safeDescHtml = computed(() => {
   return html
 })
 
-const tipsTitle = computed(() => (config.value as any)?.new_can_aw_tips_title as string | undefined)
-const tipsVip = computed(() => (config.value as any)?.new_can_aw_tips_vip as string | undefined)
+// iOS/外部支付场景：回到页面时，权益可能仍是旧缓存；这里做一次节流同步
+let lastSynchAt = 0
+const maybeSynch = async () => {
+  const now = Date.now()
+  if (now - lastSynchAt < 5000) return
+  lastSynchAt = now
+  try {
+    await globalStore.synch()
+  } catch {}
+}
+
+onMounted(() => {
+  maybeSynch()
+})
+onActivated(() => {
+  maybeSynch()
+})
+
+const { activeTab, duration, updateDuration, updateActiveTab } = useDefaultActiveTab()
+const { data, execute } = useMyFetch<TabItem[]>({
+  api: __.$Api.Darkweb.darkWebInfo,
+  immediate: false,
+  success() {
+    updateActiveTab(tabs.value)
+    updateDuration()
+  }
+})
+
+const tabs = computed(() => (Array.isArray(data.value) ? data.value : []))
+
+watch(
+  canEnterDarkweb,
+  val => {
+    if (val) {
+      execute()
+    }
+  },
+  { immediate: true }
+)
+
+const shareData = ref()
+const share_dialog = ref(false)
+const openShareDialog = (_data: any) => {
+  share_dialog.value = true
+  shareData.value = _data
+}
+
+const navigateToDynamic = (item: TabItem) => {
+  __.$Store.dynamic.setTab(item)
+  __.$NavigateTo('/dark-card')
+}
 
 const goRenewal = () => {
   __.$NavigateTo('/renewal')
@@ -166,5 +257,28 @@ const goRenewal = () => {
   max-width: 260px;
   height: auto;
   display: block;
+}
+
+.dw-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.darkweb_middle {
+  margin-top: 4px;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.darkweb_middle_img {
+  width: 110px !important;
+  height: 55px !important;
+  margin-left: 12px;
+  margin-bottom: 12px;
 }
 </style>
