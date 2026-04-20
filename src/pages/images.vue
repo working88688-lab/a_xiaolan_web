@@ -137,9 +137,7 @@
               <div class="dx-preview-pay-title">支付</div>
 
               <div v-if="pageData?.coins > 0" class="dx-preview-pay-coin">
-                <div v-if="isEnoughCoins" class="dx-preview-pay-coin-primary">
-                  {{ pageData.coins }}金币进行解锁
-                </div>
+                <div v-if="isEnoughCoins" class="dx-preview-pay-coin-primary">{{ pageData.coins }}金币进行解锁</div>
                 <div v-else class="dx-preview-pay-coin-warn">余额不足，去充值</div>
               </div>
 
@@ -164,7 +162,7 @@
 
     <teleport to="body">
       <div v-if="showPreview" class="custom-preview-footer">
-        <div class="custom-preview-index">{{ previewDisplayIndex }}/{{ previewTotalAll }}</div>
+        <div class="custom-preview-index">{{ previewFooterIndex }}/{{ previewFooterTotal }}</div>
         <span class="custom-preview-save" role="button" tabindex="0" @click.stop="onSaveClick">保存</span>
       </div>
     </teleport>
@@ -269,6 +267,19 @@ const previewDisplayIndex = computed(() => {
   return Math.min(currentIndex.value + 1, total)
 })
 
+// 预览底部 “x/y”：只显示当前权限可查看的张数
+// - 未解锁：固定 1/1（即使为了滑动体验保留了多张占位）
+// - 已解锁：展示真实 index/total（total 来自接口 total 兜底）
+const previewFooterTotal = computed(() => {
+  if (!showPreview.value) return 0
+  return isPreviewUnlocked.value ? previewTotalAll.value : 1
+})
+
+const previewFooterIndex = computed(() => {
+  if (!showPreview.value) return 0
+  return isPreviewUnlocked.value ? Math.min(previewDisplayIndex.value, previewFooterTotal.value) : 1
+})
+
 const pageViews = computed(() => {
   const raw: any = pageData.value || {}
   return raw.views ?? 0
@@ -345,7 +356,9 @@ const onImageClick = (index: number | string) => {
   const groups = globalObject._IMAGE_PREVIE_GROUPS?.get(pageData.value.id) || []
 
   // 优先使用已经解密的本地图片地址，若不存在则回退到原始地址
-  const images: string[] = series.map((item: any, idx: number): string => groups[idx] || item?.img_url_full || imgLoading)
+  const images: string[] = series.map(
+    (item: any, idx: number): string => groups[idx] || item?.img_url_full || imgLoading
+  )
 
   if (!images.length) return
 
