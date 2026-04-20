@@ -120,17 +120,42 @@
       :start-position="currentIndex"
       :show-index="false"
       :vertical="false"
-      closeable
+      :closeable="!isPreviewClean"
       close-icon-position="top-right"
       :close-on-click-image="false"
       :close-on-click-overlay="true"
       @change="onPreviewChange"
     >
       <template #image="{ src, onLoad, style }">
-        <div class="dx-preview-image-wrap">
-          <img class="dx-preview-image" :src="src" :style="style" alt="" @load="onLoad" />
+        <div
+          class="dx-preview-image-wrap"
+          @touchstart.passive="onPreviewTouchStart"
+          @touchmove.passive="onPreviewTouchMove"
+          @touchend="onPreviewTouchEnd"
+        >
+          <img
+            class="dx-preview-image"
+            :src="src"
+            :style="style"
+            alt=""
+            @load="onLoad"
+            @click="onPreviewImageTapFromClick"
+          />
+
+          <button
+            v-if="isPreviewClean"
+            class="dx-preview-clean-exit"
+            type="button"
+            aria-label="退出全屏"
+            @click.stop="exitPreviewClean"
+            @touchstart.stop="exitPreviewClean"
+            @mousedown.stop="exitPreviewClean"
+          >
+            ×
+          </button>
+
           <div
-            v-if="!isPreviewUnlocked && previewImages?.length > 1 && src !== previewImages?.[0]"
+            v-if="!isPreviewClean && !isPreviewUnlocked && previewImages?.length > 1 && src !== previewImages?.[0]"
             class="dx-preview-locked-overlay"
           >
             <div class="dx-preview-pay-card">
@@ -161,7 +186,7 @@
     </van-image-preview>
 
     <teleport to="body">
-      <div v-if="showPreview" class="custom-preview-footer">
+      <div v-if="showPreview && !isPreviewClean" class="custom-preview-footer">
         <div class="custom-preview-index">{{ previewFooterIndex }}/{{ previewFooterTotal }}</div>
         <span class="custom-preview-save" role="button" tabindex="0" @click.stop="onSaveClick">保存</span>
       </div>
@@ -192,6 +217,7 @@ const {
 const showPreview = ref(false)
 const previewImages = ref<string[]>([])
 const currentIndex = ref(0)
+const isPreviewClean = ref(false)
 
 const { u: user } = storeToRefs(useUserStore())
 const userCoins = computed(() => Number(user.value?.coins ?? 0))
@@ -381,6 +407,66 @@ const onPreviewChange = (index: number) => {
   currentIndex.value = Math.min(Math.max(index, 0), total - 1)
 }
 
+const previewTouch = reactive({
+  x: 0,
+  y: 0,
+  moved: false,
+  startAt: 0,
+  lastTapAt: 0
+})
+
+const TAP_MOVE_PX = 10
+const TAP_MAX_MS = 350
+
+const onPreviewTouchStart = (e: TouchEvent) => {
+  const t = e.touches?.[0]
+  if (!t) return
+  previewTouch.x = t.clientX
+  previewTouch.y = t.clientY
+  previewTouch.moved = false
+  previewTouch.startAt = Date.now()
+}
+
+const onPreviewTouchMove = (e: TouchEvent) => {
+  const t = e.touches?.[0]
+  if (!t) return
+  const dx = Math.abs(t.clientX - previewTouch.x)
+  const dy = Math.abs(t.clientY - previewTouch.y)
+  if (dx > TAP_MOVE_PX || dy > TAP_MOVE_PX) previewTouch.moved = true
+}
+
+const onPreviewTouchEnd = () => {
+  const cost = Date.now() - previewTouch.startAt
+  if (previewTouch.moved) return
+  if (cost > TAP_MAX_MS) return
+  previewTouch.lastTapAt = Date.now()
+  onPreviewImageTap()
+}
+
+const onPreviewImageTapFromClick = () => {
+  // 移动端：touchend 触发后浏览器还会补一个 click，这里做去重
+  if (Date.now() - previewTouch.lastTapAt < 400) return
+  onPreviewImageTap()
+}
+
+const exitPreviewClean = () => {
+  isPreviewClean.value = false
+}
+
+const onPreviewImageTap = () => {
+  // 清屏模式：点图片退出清屏
+  if (isPreviewClean.value) {
+    exitPreviewClean()
+    return
+  }
+
+  // 未解锁：仅第 1 张允许进入清屏（其它张会有支付遮罩）
+  if (!isPreviewUnlocked.value && currentIndex.value > 0) return
+
+  // 普通预览：点图片进入清屏
+  isPreviewClean.value = true
+}
+
 const safeFilename = (name: string) => name.replace(/[\\/:*?"<>|]/g, '_').slice(0, 120)
 
 const onSaveClick = async () => {
@@ -516,6 +602,10 @@ const init = async (id: number) => {
 onBeforeMount(async () => {
   const { id } = route.query
   init(Number(id))
+})
+
+watch(showPreview, (v) => {
+  if (!v) isPreviewClean.value = false
 })
 </script>
 
@@ -775,5 +865,24 @@ onBeforeMount(async () => {
 
 :deep(.dx-preview-pay-btn--warn) {
   background: #fa8e2b;
+}
+
+::deep(.dx-preview-clean-exit) {
+  position: absolute;
+  top: 0.28rem;
+  right: 0.28rem;
+  width: 0.76rem;
+  height: 0.76rem;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.58rem;
+  line-height: 0.76rem;
+  text-align: center;
+  padding: 0;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 </style>
