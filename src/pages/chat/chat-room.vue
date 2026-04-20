@@ -8,15 +8,10 @@ const __ = useNuxtApp()
 const rechargeCloseClipId = useId()
 
 interface TalkProductItem {
-  id: number
-  name: string
-  price: number
-  promo_price: number
-  duration: number
-  free_duration: number
-  icon_url: string
-  /** 条数（若后端有返回，用于「10条」主文案） */
-  msg_count: number
+  value: string
+  title: string
+  sub_title: string
+  key: string
 }
 
 const matchInfoLoading = ref(false)
@@ -24,15 +19,14 @@ const matchInfoLoading = ref(false)
 const peerAvatar = ref('')
 // 语音功能：对方语音展示/播放先注释
 
-/** /api/talk/talk_info */
-const talkInfoLoaded = ref(false)
-const leftTime = ref(0)
-const isTimeout = ref(0)
+/** 与消息中心一致：/api/message/product -> message_total */
+const quotaLoaded = ref(false)
+const messageTotal = ref(0)
 
 const showRecharge = ref(false)
 const products = ref<TalkProductItem[]>([])
 const productsLoading = ref(false)
-const selectedProductId = ref<number | null>(null)
+const selectedProductKey = ref<string | null>(null)
 const buying = ref(false)
 
 const title = computed(() => {
@@ -42,14 +36,13 @@ const title = computed(() => {
 })
 
 const leftTimeLabel = computed(() => {
-  if (!talkInfoLoaded.value) return '…'
-  return String(Math.max(0, Math.floor(Number(leftTime.value) || 0)))
+  if (!quotaLoaded.value) return '…'
+  return String(Math.max(0, Math.floor(Number(messageTotal.value) || 0)))
 })
 
 const showInsufficientTip = computed(() => {
-  if (!talkInfoLoaded.value) return false
-  if (Number(isTimeout.value) === 1) return true
-  return Number(leftTime.value) <= 0
+  if (!quotaLoaded.value) return false
+  return Number(messageTotal.value) <= 0
 })
 
 const showMore = ref(false)
@@ -101,16 +94,16 @@ async function sendTextMessage() {
   }
   if (!text || isSendingText.value) return
   if (showInsufficientTip.value) {
-    __.$Toast('聊天时长不足，请先充值')
+    __.$Toast('聊天次数不足，请先充值')
     return
   }
   isSendingText.value = true
   try {
     await __.$Api.User.chat({ uid, content: text })
     messageText.value = ''
-    void fetchTalkInfo()
+    void fetchChatQuota()
   } catch (e) {
-    __.$Toast(scircleErrMsg(e))
+    toastAndMaybeToLogin(e)
   } finally {
     isSendingText.value = false
   }
@@ -121,7 +114,7 @@ async function onPickedImage(e: Event) {
   const file = input?.files?.[0]
   if (!file) return
   if (showInsufficientTip.value) {
-    __.$Toast('聊天时长不足，请先充值')
+    __.$Toast('聊天次数不足，请先充值')
     return
   }
 
@@ -131,10 +124,10 @@ async function onPickedImage(e: Event) {
     const url = (await __.$Api.uploadImage({ file: compressed, useCompress: false })) as unknown as string
     if (!url) throw new Error('图片上传失败')
     __.$Toast('图片已发送')
-    void fetchTalkInfo()
+    void fetchChatQuota()
   } catch (err) {
     console.error('[chat-room] 图片上传失败', err)
-    __.$Toast(scircleErrMsg(err))
+    toastAndMaybeToLogin(err)
   } finally {
     isUploadingImage.value = false
     if (input) {
@@ -147,20 +140,9 @@ async function onPickedImage(e: Event) {
   }
 }
 
-function productPayCoins(p: TalkProductItem): number {
-  const promo = Number(p.promo_price)
-  const price = Number(p.price)
-  if (Number.isFinite(promo) && promo > 0 && (!Number.isFinite(price) || promo <= price)) return Math.round(promo)
-  return Number.isFinite(price) ? Math.round(price) : 0
-}
-
-/** 上区主文案：优先条数，其次从 name 里抽「N条」，否则用 name */
-function productQuantityLabel(p: TalkProductItem): string {
-  const n = Number(p.msg_count)
-  if (Number.isFinite(n) && n > 0) return `${Math.round(n)}条`
-  const m = String(p.name ?? '').match(/(\d+)\s*条/)
-  if (m) return `${m[1]}条`
-  return String(p.name || '套餐').trim() || '套餐'
+function productValue(p: TalkProductItem): number {
+  const v = Number(p.value)
+  return Number.isFinite(v) ? v : 0
 }
 
 // 语音功能：解析 voice url / duration 先注释
@@ -175,6 +157,25 @@ function scircleErrMsg(err: unknown): string {
   if (ax && typeof ax === 'object' && ax.msg != null && String(ax.msg).trim() !== '') return String(ax.msg)
   if (e instanceof Error && e.message) return e.message
   return '请求失败'
+}
+
+function isAuthInvalid(err: unknown): boolean {
+  if (!err) return false
+  const e = err as Record<string, any>
+  const status = Number(e?.status ?? e?.code ?? e?.response?.status ?? e?.response?.data?.status)
+  if (status === 420 || status === 401) return true
+  const msg = scircleErrMsg(err).toLowerCase()
+  return msg.includes('token') || msg.includes('未登录') || msg.includes('登录')
+}
+
+function toastAndMaybeToLogin(err: unknown) {
+  if (isAuthInvalid(err)) {
+    __.$Toast('登录已失效，请重新登录')
+    router.push('/login')
+    return true
+  }
+  __.$Toast(scircleErrMsg(err))
+  return false
 }
 
 async function fetchMatchPeerAvatar() {
@@ -208,7 +209,7 @@ async function fetchMatchPeerAvatar() {
     // 语音功能：对方语音字段先注释
   } catch (e) {
     console.error('[chat-room] get_match_info', e)
-    __.$Toast(scircleErrMsg(e))
+    toastAndMaybeToLogin(e)
   } finally {
     matchInfoLoading.value = false
   }
@@ -216,21 +217,7 @@ async function fetchMatchPeerAvatar() {
 
 // 语音功能：对方语音播放方法先注释
 
-async function fetchTalkInfo() {
-  try {
-    const res = await __.$Api.Community.talkInfo({})
-    const d = res?.data || {}
-    leftTime.value = Number(d?.left_time ?? 0)
-    isTimeout.value = Number(d?.is_timeout ?? 0)
-  } catch (e) {
-    console.error('[chat-room] talk_info', e)
-    __.$Toast(scircleErrMsg(e))
-  } finally {
-    talkInfoLoaded.value = true
-  }
-}
-
-async function loadProductList() {
+async function fetchChatQuota() {
   productsLoading.value = true
   try {
     const res = await __.$Api.User.chat_product({})
@@ -239,50 +226,43 @@ async function loadProductList() {
       console.log('[chat-room] /api/message/product data：', res?.data)
     }
     const raw: any = res?.data
-    const list = Array.isArray(raw) ? raw : Array.isArray(raw?.message_product) ? raw.message_product : []
+
+    messageTotal.value = Math.max(0, Math.floor(Number(raw?.message_total ?? 0) || 0))
+    const list = Array.isArray(raw?.message_product) ? raw.message_product : []
     products.value = list
       .map((it: any) => ({
-        id: Number(it?.key ?? it?.id),
-        name: String(it?.sub_title ?? it?.name ?? it?.title ?? '').trim(),
-        price: Number(it?.value ?? it?.price ?? 0),
-        promo_price: Number(it?.promo_price ?? 0),
-        duration: Number(it?.duration ?? 0),
-        free_duration: Number(it?.free_duration ?? 0),
-        icon_url: String(it?.icon ?? it?.icon_url ?? it?.image ?? it?.img ?? it?.cover ?? '').trim(),
-        msg_count: (() => {
-          const n = Number(it?.num ?? it?.msg_count ?? it?.count ?? it?.msg_num ?? 0)
-          return Number.isFinite(n) && n > 0 ? Math.round(n) : 0
-        })()
+        value: String(it?.value ?? '').trim(),
+        title: String(it?.title ?? '').trim(),
+        sub_title: String(it?.sub_title ?? '').trim(),
+        key: String(it?.key ?? '').trim()
       }))
-      .filter((p: TalkProductItem) => Number.isFinite(p.id) && p.id > 0)
+      .filter((p: TalkProductItem) => p.key !== '')
 
     if (import.meta.env.DEV && import.meta.client) {
       console.log(
         '[chat-room] /api/message/product 解析后 products：',
         products.value.map(p => ({
-          id: p.id,
-          name: p.name,
-          price: p.price,
-          promo_price: p.promo_price,
-          duration: p.duration,
-          free_duration: p.free_duration,
-          icon_url: p.icon_url,
-          msg_count: p.msg_count
+          value: p.value,
+          title: p.title,
+          sub_title: p.sub_title,
+          key: p.key
         }))
       )
     }
     if (products.value.length) {
-      const exists = products.value.some(p => p.id === selectedProductId.value)
-      if (!exists) selectedProductId.value = products.value[0].id
+      const exists = products.value.some(p => p.key === selectedProductKey.value)
+      if (!exists) selectedProductKey.value = products.value[0].key
     } else {
-      selectedProductId.value = null
+      selectedProductKey.value = null
     }
   } catch (e) {
     console.error('[chat-room] product_list', e)
-    __.$Toast(scircleErrMsg(e))
+    toastAndMaybeToLogin(e)
     products.value = []
+    messageTotal.value = 0
   } finally {
     productsLoading.value = false
+    quotaLoaded.value = true
   }
 }
 
@@ -290,7 +270,7 @@ async function openRecharge() {
   showMore.value = false
   showRecharge.value = true
   if (!products.value.length && !productsLoading.value) {
-    await loadProductList()
+    await fetchChatQuota()
   }
 }
 
@@ -305,42 +285,43 @@ function goBuyVip() {
 }
 
 async function onConfirmBuyTime() {
-  const id = selectedProductId.value
-  if (id == null || buying.value) return
+  const key = selectedProductKey.value
+  if (!key || buying.value) return
   buying.value = true
   try {
-    const product_id_num = Math.round(Number(id))
-    const product_id = String(product_id_num)
-    if (!Number.isFinite(product_id_num) || product_id_num <= 0) {
-      __.$Toast('产品ID无效')
+    const selected = products.value.find(p => p.key === key)
+    if (!selected) {
+      __.$Toast('请选择套餐')
       return
     }
-    const selected = products.value.find(p => Number(p.id) === product_id_num)
-    const coins = selected ? productPayCoins(selected) : 0
-    if (!Number.isFinite(Number(coins)) || Number(coins) <= 0) {
-      __.$Toast('金币参数无效')
+    const value = productValue(selected)
+    if (!Number.isFinite(Number(value)) || Number(value) <= 0) {
+      __.$Toast('购买参数无效')
       return
     }
     if (import.meta.env.DEV && import.meta.client) {
-      console.log('[chat-room] /api/message/buy payload：', { product_id, coins })
+      console.log('[chat-room] /api/message/buy payload：', { value })
     }
-    const res = await __.$Api.User.chat_buy({ product_id, coins })
+    const res: any = await __.$Api.User.chat_buy({ value })
     if (import.meta.env.DEV && import.meta.client) {
       console.log('%c[chat-room] POST /api/message/buy 原始返回', 'font-weight:bold;color:#1677ff', res)
       console.log('[chat-room] /api/message/buy data：', res?.data)
     }
     showRecharge.value = false
-    await fetchTalkInfo()
+    if (res?.status === 1 && res?.data?.tips) {
+      __.$Toast(String(res.data.tips))
+    }
+    await fetchChatQuota()
   } catch (e) {
     console.error('[chat-room] /api/message/buy', e)
-    __.$Toast(scircleErrMsg(e))
+    toastAndMaybeToLogin(e)
   } finally {
     buying.value = false
   }
 }
 
 onMounted(() => {
-  void Promise.all([fetchMatchPeerAvatar(), fetchTalkInfo()])
+  void Promise.all([fetchMatchPeerAvatar(), fetchChatQuota()])
 })
 
 // 语音功能：聊天录音发送先注释
@@ -364,7 +345,7 @@ function toggleMore() {
       </template>
       <template #right>
         <button class="chat-right-pill" type="button" @click="openRecharge">
-          <span class="chat-right-text">可发送消息数量：{{ leftTimeLabel }}</span>
+          <span class="chat-right-text">可以消息数量：{{ leftTimeLabel }}</span>
           <span class="chat-right-plus" aria-hidden="true">＋</span>
         </button>
       </template>
@@ -374,7 +355,7 @@ function toggleMore() {
 
     <div class="chat-body">
       <div v-if="showInsufficientTip" class="chat-insufficient">
-        <span class="chat-insufficient-text">您的聊天时长已不足，补充时间，</span>
+        <span class="chat-insufficient-text">您的聊天次数已不足，补充次数，</span>
         <button class="chat-insufficient-link" type="button" @click="openRecharge">充值金币</button>
       </div>
 
@@ -541,29 +522,21 @@ function toggleMore() {
           <div v-else class="chat-recharge-grid">
             <button
               v-for="p in products"
-              :key="p.id"
+              :key="p.key"
               type="button"
               class="chat-recharge-card"
-              :class="{ 'is-selected': selectedProductId === p.id }"
-              @click="selectedProductId = p.id"
+              :class="{ 'is-selected': selectedProductKey === p.key }"
+              @click="selectedProductKey = p.key"
             >
               <div class="chat-recharge-card-inner">
                 <div class="chat-recharge-card-top">
                   <div class="chat-recharge-card-icon-wrap">
-                    <img
-                      v-if="p.icon_url"
-                      :key="p.icon_url"
-                      v-lazyLoad="p.icon_url"
-                      class="chat-recharge-card-icon-img"
-                      src="~/assets/image/img_loading.png"
-                      alt=""
-                    />
-                    <span v-else class="chat-recharge-card-placeholder">套餐</span>
+                    <span class="chat-recharge-card-placeholder">套餐</span>
                   </div>
-                  <div class="chat-recharge-card-qty">{{ productQuantityLabel(p) }}</div>
+                  <div class="chat-recharge-card-qty">{{ p.title }}</div>
                 </div>
                 <div class="chat-recharge-card-bottom">
-                  <span class="chat-recharge-price-main">{{ productPayCoins(p) }}金币</span>
+                  <span class="chat-recharge-price-main">{{ p.sub_title }}</span>
                 </div>
               </div>
             </button>
@@ -583,7 +556,7 @@ function toggleMore() {
         <button
           class="chat-recharge-submit"
           type="button"
-          :disabled="buying || selectedProductId == null || !products.length"
+          :disabled="buying || selectedProductKey == null || !products.length"
           @click="onConfirmBuyTime"
         >
           {{ buying ? '支付中…' : '确认支付' }}
@@ -836,7 +809,8 @@ function toggleMore() {
   padding: 8px 10px;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 38px 1fr 38px;
+  /* 左侧语音模式按钮目前被注释，避免空出一列 */
+  grid-template-columns: 1fr 38px;
   gap: 10px;
   align-items: center;
 }
