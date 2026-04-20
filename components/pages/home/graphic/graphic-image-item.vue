@@ -147,27 +147,6 @@ onMounted(() => {
       <div v-if="card.show_style === 'H-1*N'" :key="index" class="graphic-layout-item">
         <div class="graphic-index-title">
           <div class="title">{{ card.tab_name }}</div>
-          <nuxt-link
-            :to="`/query?${format_url_params({
-              tab: card.tab_id,
-              title: card.tab_name,
-              _type: props.type,
-              _sort_key: 'order'
-            })}`"
-            class="more"
-          >
-            <span>查看更多</span>
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M7 4L13.0938 10.1451L7 16.4106"
-                stroke="#070710"
-                stroke-opacity="0.6"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </nuxt-link>
         </div>
         <div class="dx-list" @touchmove.stop>
           <scroll-x-view>
@@ -200,24 +179,6 @@ onMounted(() => {
               <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
             </div>
           </scroll-x-view>
-        </div>
-        <div class="graphic-layout-bottom">
-          <div class="graphic-layout-bottom-button" @click="onReplaceClick(card)">
-            <img class="icon" src="~/assets/image/home/icon_refresh.png" alt="" />
-            <div class="title">换一换</div>
-          </div>
-          <nuxt-link
-            :to="`/query?${format_url_params({
-              tab: card.tab_id,
-              title: card.tab_name,
-              _type: props.type,
-              _sort_key: 'order'
-            })}`"
-            class="graphic-layout-bottom-button"
-          >
-            <img class="icon" src="~/assets/image/home/icon_more2.png" alt="" />
-            <div class="title">查看更多</div>
-          </nuxt-link>
         </div>
       </div>
       <div v-else-if="card.show_style === 'V-3*N'" :key="index + 1" class="graphic-layout-item">
