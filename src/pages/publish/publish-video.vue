@@ -94,7 +94,7 @@ async function onSubmit() {
       title,
       coins,
       tags,
-      img_url: images[0].url,
+      img_url: (images[0] as any).remoteUrl || images[0].url,
       url: videos[0].url,
       thumb_width,
       thumb_height

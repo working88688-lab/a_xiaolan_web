@@ -12,6 +12,7 @@
         :after-read="onImageUpload"
         accept="image/*"
         :max-count="limit"
+        @click-preview="onClickPreview"
       >
         <template #preview-delete>
           <dx-icon-close class="dx-input-image-delete-icon" />
@@ -52,12 +53,12 @@
         </div>
       </van-uploader>
     </template>
-
   </van-field>
 </template>
 
 <script setup lang="ts">
 import type { UploaderFileListItem } from 'vant'
+import { showImagePreview } from 'vant'
 const props = withDefaults(
   defineProps<{
     limit?: number
@@ -77,21 +78,81 @@ const images = defineModel<UploaderFileListItem[]>({
   default: []
 })
 
+function revokeObjectUrl(url?: string) {
+  if (!url) return
+  if (!/^blob:/i.test(url)) return
+  try {
+    URL.revokeObjectURL(url)
+  } catch {}
+}
+
+function getOrigin(input: unknown) {
+  const raw = String(input ?? '')
+  if (!raw) return ''
+  try {
+    return new URL(raw).origin
+  } catch {
+    return raw
+  }
+}
+
+function normalizeImageUrl(input: unknown, base: unknown) {
+  const raw = String(input ?? '')
+  if (!raw) return ''
+  if (/^data:/i.test(raw)) return raw
+  if (/^blob:/i.test(raw)) return raw
+  if (/^https?:\/\//i.test(raw)) return raw
+  const origin = getOrigin(base)
+  if (!origin) return raw
+  return `${origin.replace(/\/$/, '')}/${raw.replace(/^\//, '')}`
+}
+
+const onClickPreview = async (item: UploaderFileListItem) => {
+  // 优先预览本地文件（blob），避免远程地址 404/跨域导致预览失败
+  const localUrl = (item as any)?.localUrl as string | undefined
+  const cfg = (await __.$G.getConfig()) as any
+  const base = cfg?.imgDomain || cfg?.imgUploadUrl || ''
+  const url = localUrl || normalizeImageUrl(item?.url || (item?.content as string), base)
+  if (!url) return
+  showImagePreview({
+    images: [url],
+    closeable: true,
+    showIndex: false,
+    loop: false
+  })
+}
+
 const onImageUpload = async (_file: any) => {
   try {
     _file.status = 'uploading'
     const file = await __.$ImageCompression.compressor(_file.file)
 
     const res = (await __.$Api.uploadImage({ file, useCompress: false })) as unknown as string
-    _file.url = res
-    // iOS 下预览大图时优先走 url 可能会裂，这里把 content 也补上兜底
-    _file.content = res
+    const cfg = (await __.$G.getConfig()) as any
+    const base = cfg?.imgDomain || cfg?.imgUploadUrl || ''
+    const url = normalizeImageUrl(res, base)
+    // 本地预览 URL：用于缩略图/预览，避免远程 404
+    if (_file.file instanceof File) {
+      revokeObjectUrl(_file.localUrl)
+      _file.localUrl = URL.createObjectURL(_file.file)
+      _file.url = _file.localUrl
+      _file.content = _file.localUrl
+    }
+
+    // 远程 URL：用于提交
+    _file.remoteUrl = url
     _file.status = 'done'
   } catch (error) {
     _file.status = 'failed'
     return Promise.reject(error)
   }
 }
+
+onBeforeUnmount(() => {
+  for (const item of images.value || []) {
+    revokeObjectUrl((item as any)?.localUrl)
+  }
+})
 </script>
 
 <style lang="postcss">
