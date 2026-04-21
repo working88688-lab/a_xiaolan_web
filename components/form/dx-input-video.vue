@@ -14,15 +14,17 @@
       </template>
       <template v-else-if="!loading && videoFileUrl" #input>
         <div key="2" class="my-uploader black">
-          <video
-            class="my-video"
-            muted
-            :autoplay="false"
-            :controls="false"
-            playsInline
-            :src="videoFileUrl"
-            @click="onPreviewVideo"
-          />
+          <div class="video-preview-hit" role="button" tabindex="0" @click="onPreviewVideo">
+            <video
+              class="my-video"
+              muted
+              :autoplay="false"
+              :controls="false"
+              playsinline
+              webkit-playsinline
+              :src="videoFileUrl"
+            />
+          </div>
           <div class="close" @click.capture="onDeleteVideo">
             <img class="icon-close" src="~/assets/image/comics/close.png" />
           </div>
@@ -79,7 +81,7 @@
       :close-on-click-overlay="true"
     >
       <div class="video-preview-wrapper">
-        <video v-if="videoFileUrl" class="video-preview" controls playsInline :src="videoFileUrl" />
+        <video v-if="videoFileUrl" class="video-preview" controls playsinline webkit-playsinline :src="videoFileUrl" />
       </div>
     </van-popup>
   </div>
@@ -195,5 +197,14 @@ const onPreviewVideo = () => {
     width: 35px;
     height: 30px;
   }
+}
+
+.video-preview-hit {
+  width: 100%;
+  height: 100%;
+}
+
+.my-video {
+  pointer-events: none;
 }
 </style>

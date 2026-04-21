@@ -18,12 +18,12 @@
       >
         <van-tab v-for="(item, _index) in tabs" :key="_index" :title="item.name">
           <dx-hoc-list :api="item.api" :params="item.params">
-            <template #header="{ data }">
+            <template #header="{ data: headerData }">
               <div class="px-1.5">
-                <dx-ads :items="data?.ads ?? []" :ad-key="item.id" :ad-name="item.name"></dx-ads>
+                <dx-ads :items="headerData?.ads ?? []" :ad-key="item.id" :ad-name="item.name"></dx-ads>
               </div>
               <div class="darkweb_middle">
-                <div v-for="(itemM, indexM) in data?.middle_data" :key="indexM" @click="navigateToDynamic(itemM)">
+                <div v-for="(itemM, indexM) in headerData?.middle_data" :key="indexM" @click="navigateToDynamic(itemM)">
                   <dx-image class="darkweb_middle_img" :src="itemM?.cover_full" no-bg />
                 </div>
               </div>
@@ -56,6 +56,9 @@
         </div>
 
         <img class="dw-card" :src="dwTips" alt="" />
+        <img class="dw-icon" :src="dwIcon" alt="" />
+
+        <div class="dw-desc__tip" v-html="new_can_aw_tips_vip"></div>
         <img class="dw-btn" :src="dwBtn" alt="" />
       </div>
     </div>
@@ -67,6 +70,7 @@ import dwBg from '@/assets/image/darkweb/dw-bg.png'
 import dwBtn from '@/assets/image/darkweb/dw-btn.png'
 import dwTips from '@/assets/image/darkweb/dw-tips.png'
 import dwTitle from '@/assets/image/darkweb/dw-title.png'
+import dwIcon from '@/assets/image/darkweb/dw-icon.png'
 import type { TabItem } from '@types'
 
 const { config } = storeToRefs(useGlobalStore())
@@ -76,7 +80,15 @@ const __ = useNuxtApp()
 const canEnterDarkweb = computed(() => config.value?.can_aw === 1)
 
 const safeDescHtml = computed(() => {
-  const html = (config.value?.can_aw_tips ?? '') as string
+  console.error('config.value: ', config.value)
+  const html = (config.value?.new_can_aw_tips_title ?? '') as string
+  // 这里沿用旧字段的富文本展示方式；若后端改为纯文本也能正常展示
+  return html
+})
+
+const new_can_aw_tips_vip = computed(() => {
+  console.error('config.value: ', config.value)
+  const html = (config.value?.new_can_aw_tips_vip ?? '') as string
   // 这里沿用旧字段的富文本展示方式；若后端改为纯文本也能正常展示
   return html
 })
@@ -101,7 +113,7 @@ onActivated(() => {
 
 const { activeTab, duration, updateDuration, updateActiveTab } = useDefaultActiveTab()
 const { data, execute } = useMyFetch<TabItem[]>({
-  api: __.$Api.Darkweb.darkWebInfo,
+  api: __.$Api.Darkweb.index_aw,
   immediate: false,
   success() {
     updateActiveTab(tabs.value)
@@ -266,6 +278,12 @@ const goRenewal = () => {
   overflow: hidden;
 }
 
+.dw-icon {
+  margin-top: 40px;
+  width: 135px;
+  height: auto;
+  display: block;
+}
 .darkweb_middle {
   margin-top: 4px;
   width: 100%;
@@ -280,5 +298,12 @@ const goRenewal = () => {
   height: 55px !important;
   margin-left: 12px;
   margin-bottom: 12px;
+}
+
+.dw-desc__tip {
+  margin-top: 10px;
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: 0.5px;
 }
 </style>

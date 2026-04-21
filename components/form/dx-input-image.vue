@@ -12,7 +12,6 @@
         :after-read="onImageUpload"
         accept="image/*"
         :max-count="limit"
-        @click-preview="onPreviewImage"
       >
         <template #preview-delete>
           <dx-icon-close class="dx-input-image-delete-icon" />
@@ -54,13 +53,6 @@
       </van-uploader>
     </template>
 
-    <van-image-preview
-      v-model:show="showPreview"
-      :images="previewImages"
-      :show-index="false"
-      closeable
-      close-icon-position="top-right"
-    />
   </van-field>
 </template>
 
@@ -85,9 +77,6 @@ const images = defineModel<UploaderFileListItem[]>({
   default: []
 })
 
-const showPreview = ref(false)
-const previewImages = ref<string[]>([])
-
 const onImageUpload = async (_file: any) => {
   try {
     _file.status = 'uploading'
@@ -95,18 +84,13 @@ const onImageUpload = async (_file: any) => {
 
     const res = (await __.$Api.uploadImage({ file, useCompress: false })) as unknown as string
     _file.url = res
+    // iOS 下预览大图时优先走 url 可能会裂，这里把 content 也补上兜底
+    _file.content = res
     _file.status = 'done'
   } catch (error) {
     _file.status = 'failed'
     return Promise.reject(error)
   }
-}
-
-const onPreviewImage = (item: UploaderFileListItem) => {
-  const url = (item.url || (item.content as string)) ?? ''
-  if (!url) return
-  previewImages.value = [url]
-  showPreview.value = true
 }
 </script>
 
