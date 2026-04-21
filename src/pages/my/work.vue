@@ -36,6 +36,7 @@
                       :width-px="150"
                       :views="item.rating"
                       :poster="resolveWorkCover(item)"
+                      @click="onPlayWork(item)"
                     />
                     <div class="work-info">
                       <div class="video-title">
@@ -122,6 +123,7 @@
                       :views="item.rating"
                       :poster="resolveWorkCover(item)"
                       :show-bottom-meta="false"
+                      @click="onPlayWork(item)"
                     />
                     <div class="work-info">
                       <div class="video-title">
@@ -134,7 +136,7 @@
                         </div>
                       </div>
                       <div class="work-footer work-footer--trailing">
-                        <button type="button" class="work-delete-btn" @click="onDeletePending(item)">
+                        <button type="button" class="work-delete-btn" @click.stop="onDeletePending(item)">
                           <svg
                             class="work-delete-btn__icon"
                             width="28"
@@ -169,6 +171,7 @@
                         :views="item.rating"
                         :poster="resolveWorkCover(item)"
                         :show-bottom-meta="false"
+                        @click="onPlayWork(item)"
                       />
                       <div class="work-info">
                         <div class="video-title">
@@ -181,7 +184,7 @@
                           </div>
                         </div>
                         <div class="work-footer work-footer--trailing">
-                          <button type="button" class="work-delete-btn" @click="onDeletePending(item)">
+                          <button type="button" class="work-delete-btn" @click.stop="onDeletePending(item)">
                             <svg
                               class="work-delete-btn__icon"
                               width="28"
@@ -220,6 +223,7 @@
                         :views="item.rating"
                         :poster="resolveWorkCover(item)"
                         :show-bottom-meta="false"
+                        @click="onPlayWork(item)"
                       />
                       <div class="work-info work-info--start">
                         <div class="video-title">
@@ -500,6 +504,17 @@ const onDownShelves = async (item: any) => {
   }
 }
 
+function onPlayWork(item: any) {
+  const id = item?.id || item?.mv_id
+  if (!id) return
+  router.push({
+    path: '/player',
+    query: {
+      id: String(id)
+    }
+  })
+}
+
 const init_active_tab = () => {
   return Number(route.query._index) || 0
 }
@@ -579,6 +594,7 @@ function onGoPublishVideo() {
 
 .work-cover {
   flex: 0 0 auto;
+  cursor: pointer;
 }
 
 .work-info {
