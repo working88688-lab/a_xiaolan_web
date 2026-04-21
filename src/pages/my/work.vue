@@ -202,7 +202,7 @@
                       </div>
                     </div>
                     <div class="work-reason work-reason-below">
-                      原因：{{ item.reason || item.reject_reason || item.remark || 'xxxxxxxx原因文案' }}
+                      原因：{{ item.refuse_reason || item.reject_reason || item.remark || 'xxxxxxxx原因文案' }}
                     </div>
                   </div>
                 </template>
