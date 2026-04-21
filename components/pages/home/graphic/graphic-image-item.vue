@@ -207,7 +207,7 @@ function buildSortFilterUrl(sortLabel: any) {
                     <dx-image :src="cardItem.thumb_full" />
                   </div>
 
-                  <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
+                  <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5 z-10" />
                   <div class="absolute bottom-0.5 left-0.5 right-0.5 z-10 flex justify-between text-white">
                     <div class="flex items-center gap-0.5">
                       <van-icon name="eye-o" size="0.32rem" />
@@ -247,7 +247,7 @@ function buildSortFilterUrl(sortLabel: any) {
           >
             <div class="thumb">
               <dx-image :src="cardItem.thumb_full" />
-              <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
+              <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5 z-10" />
               <div class="absolute bottom-0.5 left-0.5 right-0.5 z-10 flex justify-between text-[0.28rem] text-white">
                 <div class="flex items-center gap-0.5">
                   <van-icon name="eye-o" size="0.32rem" />
@@ -299,7 +299,7 @@ function buildSortFilterUrl(sortLabel: any) {
           >
             <div class="thumb">
               <dx-image :src="cardItem.thumb_full" />
-              <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5" />
+              <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5 z-10" />
               <div class="absolute bottom-0.5 left-0.5 right-0.5 z-10 flex justify-between text-[0.28rem] text-white">
                 <div class="flex items-center gap-0.5">
                   <van-icon name="eye-o" size="0.32rem" />

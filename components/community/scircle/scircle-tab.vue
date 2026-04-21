@@ -198,18 +198,6 @@
               <div class="scircle-settings-section-title">个人照片</div>
               <div class="scircle-settings-photo">
                 <button class="scircle-settings-photo-box" type="button" @click="onPickProfileImage">
-                  <span
-                    v-if="profileImg"
-                    class="scircle-settings-photo-delete"
-                    role="button"
-                    tabindex="0"
-                    aria-label="删除个人照片"
-                    @click.stop.prevent="onDeleteProfileImage"
-                    @keydown.enter.stop.prevent="onDeleteProfileImage"
-                    @keydown.space.stop.prevent="onDeleteProfileImage"
-                  >
-                    ×
-                  </span>
                   <dx-image
                     v-if="profileImg"
                     :key="profileImg"
@@ -217,6 +205,27 @@
                     :src="profileImg"
                     alt="个人照片"
                   />
+                  <div v-if="profileImg" class="scircle-settings-photo-mask" aria-hidden="true">
+                    <svg
+                      class="scircle-settings-photo-mask-icon"
+                      width="60"
+                      height="60"
+                      viewBox="0 0 60 60"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M30 14.7499C26.6275 14.7499 23.4305 15.8464 20.813 17.8264L24.4102 18.7899C24.6648 18.8571 24.9036 18.9739 25.1129 19.1335C25.3222 19.2932 25.4979 19.4927 25.6299 19.7204C25.762 19.9481 25.8478 20.1997 25.8824 20.4607C25.917 20.7216 25.8998 20.9869 25.8316 21.2412C25.7635 21.4954 25.6459 21.7338 25.4854 21.9425C25.325 22.1512 25.125 22.3262 24.8967 22.4574C24.6685 22.5887 24.4166 22.6736 24.1556 22.7072C23.8945 22.7409 23.6293 22.7227 23.3752 22.6536L14.6817 20.3244C14.1694 20.1871 13.7326 19.8518 13.4675 19.3925C13.2023 18.9331 13.1305 18.3872 13.2677 17.8749L15.597 9.1819C15.6642 8.92736 15.781 8.6886 15.9407 8.47929C16.1003 8.26999 16.2998 8.09428 16.5275 7.96222C16.7552 7.83016 17.0068 7.74437 17.2678 7.70975C17.5287 7.67513 17.794 7.69238 18.0483 7.7605C18.3025 7.82861 18.5409 7.94626 18.7496 8.1067C18.9583 8.26713 19.1333 8.46719 19.2645 8.69541C19.3958 8.92362 19.4807 9.1755 19.5143 9.43659C19.548 9.69768 19.5298 9.96285 19.4608 10.2169L18.454 13.9744C21.7763 11.5761 25.7873 10.2499 30 10.2499C40.9075 10.2499 49.75 19.0924 49.75 29.9999C49.75 40.9074 40.9075 49.7499 30 49.7499C19.0925 49.7499 10.25 40.9074 10.25 29.9999C10.25 29.4032 10.4871 28.8309 10.909 28.4089C11.331 27.9869 11.9033 27.7499 12.5 27.7499C13.0967 27.7499 13.669 27.9869 14.091 28.4089C14.5129 28.8309 14.75 29.4032 14.75 29.9999C14.75 38.4224 21.5775 45.2499 30 45.2499C38.4225 45.2499 45.25 38.4224 45.25 29.9999C45.25 21.5774 38.4225 14.7499 30 14.7499Z"
+                        fill="white"
+                        fill-opacity="0.8"
+                      />
+                    </svg>
+                    <div class="scircle-settings-photo-mask-text">
+                      重新上传
+                      <br />
+                      不大于2M
+                    </div>
+                  </div>
                   <svg
                     v-else
                     class="scircle-settings-photo-cloud"
@@ -235,7 +244,7 @@
                       fill="#9B9B9B"
                     />
                   </svg>
-                  <div class="scircle-settings-photo-text">
+                  <div v-if="!profileImg" class="scircle-settings-photo-text">
                     上传
                     <br />
                     不大于2M
@@ -1058,6 +1067,17 @@ function toggleExpectTag(id: number | string) {
   expectProfileSelected.value = toggleTag(expectProfileSelected.value, id)
 }
 
+function selectedCountInGroup(selected: string[], group: MatchTagItem[]) {
+  if (!Array.isArray(group) || !group.length) return 0
+  if (!Array.isArray(selected) || !selected.length) return 0
+  const set = new Set(selected.map(normalizeTagId))
+  let cnt = 0
+  for (const item of group) {
+    if (set.has(normalizeTagId(item?.id))) cnt += 1
+  }
+  return cnt
+}
+
 async function loadSettingsProfiles() {
   const [myProfileRes, expectProfileRes] = await Promise.all([
     __.$Api.Community.usersmatchMyprofile().catch(e => {
@@ -1303,9 +1323,17 @@ async function onStepOneNext() {
   // 语音功能：先注释
   // const voice = profileVoice.value?.trim()
 
-  // 未选择标签直接拦截（第一步/第二步规则一致）
-  if (!tagIds) {
+  // 3 类都必须至少选 1 个
+  if (selectedCountInGroup(myProfileSelected.value, myProfileTags1.value) <= 0) {
     __.$Toast('请至少选择一个个人标签')
+    return
+  }
+  if (selectedCountInGroup(myProfileSelected.value, myProfileTags2.value) <= 0) {
+    __.$Toast('请至少选择一个个人倾向')
+    return
+  }
+  if (selectedCountInGroup(myProfileSelected.value, myProfileTags3.value) <= 0) {
+    __.$Toast('请至少选择一个个人性癖好')
     return
   }
 
@@ -1330,8 +1358,17 @@ async function onStepOneNext() {
 async function onStepTwoDone() {
   if (isSavingStep2.value) return
   const tagIds = expectProfileSelected.value.join(',')
-  if (!tagIds) {
-    __.$Toast('请至少选择一个匹配标签')
+  // 3 类都必须至少选 1 个
+  if (selectedCountInGroup(expectProfileSelected.value, expectProfileTags1.value) <= 0) {
+    __.$Toast('请至少选择一个他的标签')
+    return
+  }
+  if (selectedCountInGroup(expectProfileSelected.value, expectProfileTags2.value) <= 0) {
+    __.$Toast('请至少选择一个他的倾向')
+    return
+  }
+  if (selectedCountInGroup(expectProfileSelected.value, expectProfileTags3.value) <= 0) {
+    __.$Toast('请至少选择一个他的性癖好')
     return
   }
   isSavingStep2.value = true
@@ -1680,6 +1717,8 @@ async function goChat() {
   font-size: 13px;
   color: #333333;
   margin: 0 0 10px;
+  position: relative;
+  z-index: 2;
 }
 
 .scircle-required {
@@ -1743,27 +1782,7 @@ async function goChat() {
   padding: 0;
   cursor: pointer;
   position: relative;
-}
-
-.scircle-settings-photo-delete {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 0;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  font-size: 20px;
-  line-height: 28px;
-  text-align: center;
-  padding: 0;
-  z-index: 2;
-}
-
-.scircle-settings-photo-delete:active {
-  transform: scale(0.96);
+  overflow: hidden;
 }
 
 .scircle-settings-photo-cloud {
@@ -1784,6 +1803,35 @@ async function goChat() {
   height: 100%;
   object-fit: cover;
   border-radius: 8px;
+  display: block;
+  z-index: 1;
+}
+
+.scircle-settings-photo-mask {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.92);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.scircle-settings-photo-mask-icon {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
+.scircle-settings-photo-mask-text {
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
 }
 
 .scircle-hidden-input {
