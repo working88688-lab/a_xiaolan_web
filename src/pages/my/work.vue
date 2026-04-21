@@ -22,21 +22,22 @@
         <van-tab title="视频">
           <dx-tabs v-model:active="video_tab" class="dx-tabs primary-tabs" animated swipeable>
             <van-tab title="上架中">
-              <dx-hoc-list
-                v-if="key"
-                ref="published_list_ref"
-                :filter="filter"
-                :api="publishedListApi"
-              >
+              <dx-hoc-list v-if="key" ref="published_list_ref" :filter="filter" :api="publishedListApi">
                 <template #item="{ item }">
-                  <div class="work-item">
+                  <div
+                    class="work-item work-item--clickable"
+                    role="button"
+                    tabindex="0"
+                    @click="onOpenVideoDetail(item)"
+                    @keydown.enter.prevent="onOpenVideoDetail(item)"
+                    @keydown.space.prevent="onOpenVideoDetail(item)"
+                  >
                     <video-item-cover
                       :key="item.id"
                       class="work-cover"
                       :width-px="150"
                       :views="item.rating"
                       :poster="resolveWorkCover(item)"
-                      @click="onPlayWork(item)"
                     />
                     <div class="work-info">
                       <div class="video-title">
@@ -123,7 +124,6 @@
                       :views="item.rating"
                       :poster="resolveWorkCover(item)"
                       :show-bottom-meta="false"
-                      @click="onPlayWork(item)"
                     />
                     <div class="work-info">
                       <div class="video-title">
@@ -136,7 +136,7 @@
                         </div>
                       </div>
                       <div class="work-footer work-footer--trailing">
-                        <button type="button" class="work-delete-btn" @click.stop="onDeletePending(item)">
+                        <button type="button" class="work-delete-btn" @click="onDeletePending(item)">
                           <svg
                             class="work-delete-btn__icon"
                             width="28"
@@ -171,7 +171,6 @@
                         :views="item.rating"
                         :poster="resolveWorkCover(item)"
                         :show-bottom-meta="false"
-                        @click="onPlayWork(item)"
                       />
                       <div class="work-info">
                         <div class="video-title">
@@ -184,7 +183,7 @@
                           </div>
                         </div>
                         <div class="work-footer work-footer--trailing">
-                          <button type="button" class="work-delete-btn" @click.stop="onDeletePending(item)">
+                          <button type="button" class="work-delete-btn" @click="onDeletePending(item)">
                             <svg
                               class="work-delete-btn__icon"
                               width="28"
@@ -223,7 +222,6 @@
                         :views="item.rating"
                         :poster="resolveWorkCover(item)"
                         :show-bottom-meta="false"
-                        @click="onPlayWork(item)"
                       />
                       <div class="work-info work-info--start">
                         <div class="video-title">
@@ -504,17 +502,6 @@ const onDownShelves = async (item: any) => {
   }
 }
 
-function onPlayWork(item: any) {
-  const id = item?.id || item?.mv_id
-  if (!id) return
-  router.push({
-    path: '/player',
-    query: {
-      id: String(id)
-    }
-  })
-}
-
 const init_active_tab = () => {
   return Number(route.query._index) || 0
 }
@@ -546,10 +533,18 @@ const onTips = async () => {
 function onGoPublishVideo() {
   router.push('/publish/video')
 }
+
+function onOpenVideoDetail(item: any) {
+  const id = item?.id || item?.mv_id
+  if (!id) return
+  router.push({
+    path: '/player',
+    query: { id }
+  })
+}
 </script>
 
 <style lang="postcss" scoped>
- 
 .main-tabs > :deep(.van-tabs__wrap) {
   .van-tabs__nav {
     align-items: center;
@@ -574,6 +569,7 @@ function onGoPublishVideo() {
   font-size: 14px;
   line-height: 1.4;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -592,9 +588,13 @@ function onGoPublishVideo() {
   box-shadow: 0px 0px 25.5px 0px #00000012;
 }
 
+.work-item--clickable {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
 .work-cover {
   flex: 0 0 auto;
-  cursor: pointer;
 }
 
 .work-info {

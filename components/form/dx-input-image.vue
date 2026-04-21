@@ -7,12 +7,16 @@
     <template #input>
       <van-uploader
         v-model="images"
+        class="dx-input-image-uploader"
         :preview-full-image="false"
         :after-read="onImageUpload"
         accept="image/*"
         :max-count="limit"
         @click-preview="onPreviewImage"
       >
+        <template #preview-delete>
+          <dx-icon-close class="dx-input-image-delete-icon" />
+        </template>
         <div v-if="images.length < limit" class="my-uploader">
           <div class="upload-inner">
             <svg
@@ -109,9 +113,23 @@ const onPreviewImage = (item: UploaderFileListItem) => {
 <style lang="postcss">
 @import '~/assets/styles/form-item.css';
 
-.van-uploader__preview-delete {
+.dx-input-image-uploader .van-uploader__preview {
+  overflow: visible;
+}
+
+.dx-input-image-uploader .van-uploader__preview-delete {
   background-color: #fff;
   border-radius: 50%;
+  top: 4px;
+  right: 4px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dx-input-image-delete-icon {
+  color: rgba(0, 0, 0, 0.75);
 }
 
 .my-uploader {
