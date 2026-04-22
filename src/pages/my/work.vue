@@ -116,7 +116,14 @@
             <van-tab title="待审核">
               <dx-hoc-list v-if="key" ref="pending_list_ref" :api="submitListApi">
                 <template #item="{ item }">
-                  <div class="work-item">
+                  <div
+                    class="work-item work-item--clickable"
+                    role="button"
+                    tabindex="0"
+                    @click="onOpenVideoDetail(item)"
+                    @keydown.enter.prevent="onOpenVideoDetail(item)"
+                    @keydown.space.prevent="onOpenVideoDetail(item)"
+                  >
                     <video-item-cover
                       :key="item.id"
                       class="work-cover"
@@ -136,7 +143,7 @@
                         </div>
                       </div>
                       <div class="work-footer work-footer--trailing">
-                        <button type="button" class="work-delete-btn" @click="onDeletePending(item)">
+                        <button type="button" class="work-delete-btn" @click.stop="onDeletePending(item)">
                           <svg
                             class="work-delete-btn__icon"
                             width="28"
@@ -163,7 +170,14 @@
               <dx-hoc-list v-if="key" ref="rejected_list_ref" :api="rejectListApi">
                 <template #item="{ item }">
                   <div class="work-item-block">
-                    <div class="work-item">
+                    <div
+                      class="work-item work-item--clickable"
+                      role="button"
+                      tabindex="0"
+                      @click="onOpenVideoDetail(item)"
+                      @keydown.enter.prevent="onOpenVideoDetail(item)"
+                      @keydown.space.prevent="onOpenVideoDetail(item)"
+                    >
                       <video-item-cover
                         :key="item.id"
                         class="work-cover"
@@ -183,7 +197,7 @@
                           </div>
                         </div>
                         <div class="work-footer work-footer--trailing">
-                          <button type="button" class="work-delete-btn" @click="onDeletePending(item)">
+                          <button type="button" class="work-delete-btn" @click.stop="onDeletePending(item)">
                             <svg
                               class="work-delete-btn__icon"
                               width="28"
