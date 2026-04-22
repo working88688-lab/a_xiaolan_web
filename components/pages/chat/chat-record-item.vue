@@ -55,9 +55,11 @@ const { u: user } = storeToRefs(useUserStore())
 <style lang="postcss" scoped>
 .customer-service-item {
   .title {
-    font-size: 0.32;
+    font-size: 12px;
     color: var(--dx-base3-color);
     text-align: center;
+    line-height: 16px;
+    margin: 10px 0;
   }
 
   .mine-box,

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { useId } from 'vue'
+import { nextTick, useId } from 'vue'
 
 const route = useRoute()
 const router = useRouter()
 const __ = useNuxtApp()
+const { u: user } = storeToRefs(useUserStore())
 
 const rechargeCloseClipId = useId()
 
@@ -55,6 +56,23 @@ const peerUid = computed(() => {
   return Number.isFinite(n) && n > 0 ? n : null
 })
 
+const listRef = ref<any>(null)
+const listParams = computed(() => ({ uid: route.query.uid }))
+function reFactoryItem(item: any) {
+  return item?.is_self
+    ? {
+        ...item,
+        reply_content: '',
+        createAt: item?.formate_date
+      }
+    : {
+        ...item,
+        content: '',
+        reply_content: item?.content,
+        replyAt: item?.formate_date
+      }
+}
+
 const messageText = ref('')
 const isSendingText = ref(false)
 
@@ -99,11 +117,13 @@ async function sendTextMessage() {
   }
   isSendingText.value = true
   try {
-    await __.$Api.User.chat({ uid, content: text })
+    await __.$Api.User.chat({ uid, content: text, chat_token: user.value?.chat_token })
     messageText.value = ''
     void fetchChatQuota()
+    await nextTick()
+    await listRef.value?.refresh_data?.()
   } catch (e) {
-    toastAndMaybeToLogin(e)
+    toastAndMaybeToLogin(e, { redirectToLogin: false })
   } finally {
     isSendingText.value = false
   }
@@ -127,7 +147,7 @@ async function onPickedImage(e: Event) {
     void fetchChatQuota()
   } catch (err) {
     console.error('[chat-room] 图片上传失败', err)
-    toastAndMaybeToLogin(err)
+    toastAndMaybeToLogin(err, { redirectToLogin: false })
   } finally {
     isUploadingImage.value = false
     if (input) {
@@ -168,10 +188,11 @@ function isAuthInvalid(err: unknown): boolean {
   return msg.includes('token') || msg.includes('未登录') || msg.includes('登录')
 }
 
-function toastAndMaybeToLogin(err: unknown) {
+function toastAndMaybeToLogin(err: unknown, opts?: { redirectToLogin?: boolean }) {
+  const redirectToLogin = opts?.redirectToLogin !== false
   if (isAuthInvalid(err)) {
     __.$Toast('登录已失效，请重新登录')
-    router.push('/login')
+    if (redirectToLogin) router.push('/login')
     return true
   }
   __.$Toast(scircleErrMsg(err))
@@ -294,15 +315,16 @@ async function onConfirmBuyTime() {
       __.$Toast('请选择套餐')
       return
     }
-    const value = productValue(selected)
-    if (!Number.isFinite(Number(value)) || Number(value) <= 0) {
+    const value = String(selected.value ?? '').trim()
+    if (!value) {
       __.$Toast('购买参数无效')
       return
     }
+    const payload: Record<string, any> = { value }
     if (import.meta.env.DEV && import.meta.client) {
-      console.log('[chat-room] /api/message/buy payload：', { value })
+      console.log('[chat-room] /api/message/buy payload：', payload)
     }
-    const res: any = await __.$Api.User.chat_buy({ value })
+    const res: any = await __.$Api.User.chat_buy(payload)
     if (import.meta.env.DEV && import.meta.client) {
       console.log('%c[chat-room] POST /api/message/buy 原始返回', 'font-weight:bold;color:#1677ff', res)
       console.log('[chat-room] /api/message/buy data：', res?.data)
@@ -360,6 +382,22 @@ function toggleMore() {
       </div>
 
       <div v-if="matchInfoLoading" class="chat-match-loading">加载中…</div>
+
+      <div class="chat-scroll">
+        <dx-hoc-list
+          ref="listRef"
+          :pullup="false"
+          :show-end="false"
+          :api="__.$Api.User.friendMessage"
+          :params="listParams"
+          :list-props="{ emptyTip: '暂无聊天记录' }"
+          :fetch-props="{ useShallowRef: true }"
+        >
+          <template #item="{ item }">
+            <chat-record-item :key="item.id" :item="reFactoryItem(item)" v-bind="reFactoryItem(item)" />
+          </template>
+        </dx-hoc-list>
+      </div>
 
       <!-- 语音功能：顶部对方语音展示先注释
       <div v-else-if="peerVoiceUrl" class="chat-msg">
@@ -682,6 +720,11 @@ function toggleMore() {
   box-sizing: border-box;
   overflow: auto;
   background: #ffffff;
+}
+
+.chat-scroll {
+  height: 100%;
+  min-height: 0;
 }
 
 .chat-match-loading {
