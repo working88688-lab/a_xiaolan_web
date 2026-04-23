@@ -56,7 +56,7 @@ const props = withDefaults(
 )
 
 defineSlots<{
-  list(props: { items: any[] }): any
+  list(props: { items: any[]; page: any }): any
   item(props: { item: any; index: number; items: any[]; page: any }): any
   header(props: { data: any }): any
   banner(props: { data: any }): any
@@ -152,7 +152,12 @@ if (props.useWatch) {
 
 defineExpose({
   refresh_data,
-  sort
+  sort,
+  // debug / advanced usage
+  listData,
+  result,
+  page,
+  isError
 })
 </script>
 <template>

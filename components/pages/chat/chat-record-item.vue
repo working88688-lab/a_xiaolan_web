@@ -7,11 +7,26 @@ const props = defineProps<{
 const __ = useNuxtApp()
 
 const { u: user } = storeToRefs(useUserStore())
+
+const imageUrl = computed(() => {
+  const it = props.item || {}
+  const v =
+    it.thumb_full ??
+    it.images ??
+    it.thumb ??
+    it.image ??
+    it.pic ??
+    it.pic_url ??
+    it.img ??
+    it.img_url ??
+    ''
+  return typeof v === 'string' ? v.trim() : ''
+})
 </script>
 
 <template>
   <div class="customer-service-item">
-    <template v-if="item.content || item.thumb_full">
+    <template v-if="item.content || imageUrl">
       <div class="title">{{ props?.createAt }}</div>
       <div class="mine-box">
         <div class="customer-service-avatar" />
@@ -22,7 +37,7 @@ const { u: user } = storeToRefs(useUserStore())
             </template>
 
             <div v-else class="img-box">
-              <img v-lazyLoad="item?.thumb_full" data-image-preview="true" object-fit="contain" />
+              <img v-lazyLoad="imageUrl" data-image-preview="true" object-fit="contain" />
             </div>
           </div>
         </div>

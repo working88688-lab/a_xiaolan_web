@@ -140,11 +140,49 @@ async function onPickedImage(e: Event) {
 
   isUploadingImage.value = true
   try {
+    const uid = peerUid.value
+    if (uid == null) {
+      __.$Toast('缺少聊天对象，请从匹配或私信列表重新进入')
+      return
+    }
     const compressed = (await __.$ImageCompression.compressor(file)) as File
     const url = (await __.$Api.uploadImage({ file: compressed, useCompress: false })) as unknown as string
     if (!url) throw new Error('图片上传失败')
+    // 发送图片消息：
+    // - 会话列表（最近消息）使用 chat_log（通常来自 content），所以这里同时带一个摘要文本
+    // - 明细列表字段可能是 images/thumb/thumb_full，做多字段兼容
+    const sendRes = await __.$Api.User.chat({
+      uid,
+      // 会话列表摘要依赖 content
+      content: '[图片]',
+      // 聊天明细图片字段（后端返回 images，用于渲染）
+      images: url,
+      chat_token: user.value?.chat_token
+    })
+    if (import.meta.env.DEV && import.meta.client) {
+      console.log('%c[chat-room] 图片消息 uploadImage url：', 'color:#1677ff;font-weight:bold', url)
+      console.log('%c[chat-room] POST /api/message/chat 返回：', 'color:#1677ff;font-weight:bold', sendRes)
+    }
     __.$Toast('图片已发送')
     void fetchChatQuota()
+    await nextTick()
+    const refreshRes = await listRef.value?.refresh_data?.()
+    if (import.meta.env.DEV && import.meta.client) {
+      console.log('%c[chat-room] friendMessage refresh_data 返回：', 'color:#1677ff;font-weight:bold', refreshRes)
+      const items = listRef.value?.listData?.value ?? listRef.value?.listData
+      if (Array.isArray(items)) {
+        const last = items[items.length - 1]
+        console.log(
+          '%c[chat-room] friendMessage 最新一条：',
+          'color:#1677ff;font-weight:bold',
+          last,
+          'keys:',
+          last ? Object.keys(last) : []
+        )
+      } else {
+        console.log('[chat-room] listRef.listData 不可用：', listRef.value?.listData)
+      }
+    }
   } catch (err) {
     console.error('[chat-room] 图片上传失败', err)
     toastAndMaybeToLogin(err, { redirectToLogin: false })
@@ -487,7 +525,8 @@ function toggleMore() {
           </div>
           <div class="chat-more-text">{{ isUploadingImage ? '上传中…' : '图片' }}</div>
         </button>
-        <button class="chat-more-item" type="button" :disabled="isUploadingImage" @click="pickFromCamera">
+        <!-- 暂时注释：发送相机入口 -->
+        <!-- <button class="chat-more-item" type="button" :disabled="isUploadingImage" @click="pickFromCamera">
           <div class="chat-more-icon">
             <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -505,19 +544,20 @@ function toggleMore() {
             </svg>
           </div>
           <div class="chat-more-text">相机</div>
-        </button>
+        </button> -->
       </div>
     </div>
 
     <input ref="albumInputRef" class="sr-only" type="file" accept="image/*" @change="onPickedImage" />
-    <input
+    <!-- 暂时注释：相机 input 入口 -->
+    <!-- <input
       ref="cameraInputRef"
       class="sr-only"
       type="file"
       accept="image/*"
       capture="environment"
       @change="onPickedImage"
-    />
+    /> -->
 
     <!-- 语音功能：录音遮罩（Teleport + 波形/取消/松开发送/底弧麦克风）先注释 -->
 
