@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, useId } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, useId } from 'vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -73,12 +73,47 @@ function reFactoryItem(item: any) {
       }
 }
 
+// 调试：打印消息列表原始数据（按 id 去重，避免刷屏）
+const __loggedMessageIds = new Set<string>()
+function debugLogMessageItem(raw: any) {
+  if (!import.meta.client) return
+  const id = raw?.id != null ? String(raw.id) : ''
+  if (!id) return
+  if (__loggedMessageIds.has(id)) return
+  __loggedMessageIds.add(id)
+  // eslint-disable-next-line no-console
+  console.log('[chat-room] message item', { id, raw })
+}
+
 const messageText = ref('')
 const isSendingText = ref(false)
 
 const isUploadingImage = ref(false)
 const albumInputRef = useTemplateRef<HTMLInputElement>('albumInputRef')
 const cameraInputRef = useTemplateRef<HTMLInputElement>('cameraInputRef')
+
+const chatScrollRef = ref<HTMLElement | null>(null)
+const isUserNearBottom = ref(true)
+let __chatScrollMutationObserver: MutationObserver | null = null
+let __chatScrollImageLoadHandler: ((evt: Event) => void) | null = null
+
+function calcIsNearBottom(el: HTMLElement, thresholdPx = 120) {
+  const remain = el.scrollHeight - el.scrollTop - el.clientHeight
+  return remain <= thresholdPx
+}
+
+function scrollToBottom(opts?: { force?: boolean }) {
+  const el = chatScrollRef.value
+  if (!el) return
+  if (!opts?.force && !isUserNearBottom.value) return
+  el.scrollTop = el.scrollHeight
+}
+
+function onChatScroll() {
+  const el = chatScrollRef.value
+  if (!el) return
+  isUserNearBottom.value = calcIsNearBottom(el)
+}
 
 function resetAndClickInput(el: HTMLInputElement | null | undefined) {
   if (!el) return
@@ -103,22 +138,6 @@ function pickFromCamera() {
   resetAndClickInput(cameraInputRef.value)
 }
 
-async function getImageSize(file: File): Promise<{ width: number; height: number }> {
-  return await new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file)
-    const img = new Image()
-    img.onload = () => {
-      URL.revokeObjectURL(url)
-      resolve({ width: img.naturalWidth || 0, height: img.naturalHeight || 0 })
-    }
-    img.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('读取图片尺寸失败'))
-    }
-    img.src = url
-  })
-}
-
 async function sendTextMessage() {
   const uid = peerUid.value
   const text = messageText.value.trim()
@@ -139,6 +158,8 @@ async function sendTextMessage() {
     void fetchChatQuota()
     await nextTick()
     await listRef.value?.refresh_data?.()
+    await nextTick()
+    scrollToBottom({ force: true })
   } catch (e) {
     toastAndMaybeToLogin(e, { redirectToLogin: false })
   } finally {
@@ -176,34 +197,13 @@ async function onPickedImage(e: Event) {
       url = url.replace(/\/{2,}/g, '/')
     }
     if (!url) throw new Error('图片上传失败')
-    // 兼容尝试：按后端说法先走一次 /api/mv/upload（Video.upload）登记封面信息
-    // 说明：此接口在项目里原本用于“发布视频”，这里仅用于验证后端是否依赖该步骤
-    try {
-      const { width: thumb_width, height: thumb_height } = await getImageSize(file)
-      const mvRes = await __.$Api.Video.upload({
-        title: '图片消息',
-        coins: 0,
-        tags: '聊天',
-        url: '',
-        img_url: url,
-        thumb_width,
-        thumb_height
-      })
-      void mvRes
-    } catch (mvErr) {
-      void mvErr
-    }
 
     // 发送图片消息：
     // - 现网 friendMessage 刷新后可能只返回 content，不返回 images/thumb 字段
     // - 为了确保消息列表能渲染图片，把 url 一并写进 content，前端渲染时解析
     const payload = {
       uid,
-      // 正常做法：图片 URL 放 images 等字段；content 只放摘要，避免污染文本内容
-      content: '[图片]',
-      images: url,
-      thumb_full: url,
-      thumb: url,
+      content: `[图片] ${url}`,
       chat_token: user.value?.chat_token
     }
     const sendRes = await __.$Api.User.chat(payload)
@@ -212,6 +212,8 @@ async function onPickedImage(e: Event) {
     void fetchChatQuota()
     await nextTick()
     await listRef.value?.refresh_data?.()
+    await nextTick()
+    scrollToBottom({ force: true })
   } catch (err) {
     toastAndMaybeToLogin(err, { redirectToLogin: false })
   } finally {
@@ -385,6 +387,48 @@ onMounted(() => {
   void Promise.all([fetchMatchPeerAvatar(), fetchChatQuota()])
 })
 
+onMounted(() => {
+  if (!import.meta.client) return
+  const el = chatScrollRef.value
+  if (!el) return
+
+  // 初始进入：等列表第一次渲染后贴底
+  void nextTick().then(() => scrollToBottom({ force: true }))
+
+  // DOM 变化（列表刷新/新消息渲染）后：若用户在底部附近则跟随到底
+  __chatScrollMutationObserver = new MutationObserver(() => {
+    void nextTick().then(() => scrollToBottom())
+  })
+  __chatScrollMutationObserver.observe(el, { childList: true, subtree: true })
+
+  // 图片懒加载/异步解码完成后：若用户在底部附近则继续贴底
+  __chatScrollImageLoadHandler = (evt: Event) => {
+    const t = evt.target as HTMLElement | null
+    if (!t) return
+    if (t.tagName !== 'IMG') return
+    void nextTick().then(() => scrollToBottom())
+  }
+  el.addEventListener('load', __chatScrollImageLoadHandler, true)
+})
+
+onBeforeUnmount(() => {
+  const el = chatScrollRef.value
+  if (el && __chatScrollImageLoadHandler) {
+    try {
+      el.removeEventListener('load', __chatScrollImageLoadHandler, true)
+    } catch {
+      /* ignore */
+    }
+  }
+  __chatScrollImageLoadHandler = null
+  try {
+    __chatScrollMutationObserver?.disconnect()
+  } catch {
+    /* ignore */
+  }
+  __chatScrollMutationObserver = null
+})
+
 // 语音功能：聊天录音发送先注释
 
 function onBack() {
@@ -422,7 +466,7 @@ function toggleMore() {
 
       <div v-if="matchInfoLoading" class="chat-match-loading">加载中…</div>
 
-      <div class="chat-scroll">
+      <div ref="chatScrollRef" class="chat-scroll" @scroll.passive="onChatScroll">
         <dx-hoc-list
           ref="listRef"
           :pullup="false"
@@ -433,6 +477,7 @@ function toggleMore() {
           :fetch-props="{ useShallowRef: true }"
         >
           <template #item="{ item }">
+            {{ debugLogMessageItem(item) }}
             <chat-record-item :key="item.id" :item="reFactoryItem(item)" v-bind="reFactoryItem(item)" />
           </template>
         </dx-hoc-list>

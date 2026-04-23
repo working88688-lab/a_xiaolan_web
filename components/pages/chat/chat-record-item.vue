@@ -8,44 +8,49 @@ const __ = useNuxtApp()
 
 const { u: user } = storeToRefs(useUserStore())
 
+const imgBaseOrigin = ref('')
+onMounted(async () => {
+  if (!import.meta.client) return
+  try {
+    const cfg = (await __.$G.getConfig()) as any
+    const base = String(cfg?.imgDomain || cfg?.imgUploadUrl || '').trim()
+    imgBaseOrigin.value = base ? new URL(base).origin : window.location.origin
+  } catch {
+    imgBaseOrigin.value = window.location.origin
+  }
+})
+
+function normalizeChatImageUrl(input: unknown): string {
+  const s = typeof input === 'string' ? input.trim() : ''
+  if (!s) return ''
+
+  // 不做任何“截断/补全”，返回啥就加载啥；只做最轻量的规范化
+  try {
+    const u = new URL(s)
+    u.pathname = u.pathname.replace(/\/{2,}/g, '/')
+    return u.toString()
+  } catch {
+    const cleaned = s.replace(/\/{2,}/g, '/')
+    // 相对路径时优先拼接图片域名，避免落到 localhost
+    if (imgBaseOrigin.value && /^\//.test(cleaned)) {
+      return `${imgBaseOrigin.value.replace(/\/$/, '')}${cleaned}`
+    }
+    return cleaned
+  }
+}
+
 const imageUrl = computed(() => {
   const it = props.item || {}
-  const v =
-    it.thumb_full ??
-    it.images ??
-    it.thumb ??
-    it.image ??
-    it.pic ??
-    it.pic_url ??
-    it.img ??
-    it.img_url ??
-    ''
-  const direct = typeof v === 'string' ? v.trim() : ''
-  if (direct) {
-    // 不拼接域名，只做 URL 规范化：把 path 中的重复 '/' 合并（保留协议里的 '://')
-    try {
-      const u = new URL(direct)
-      u.pathname = u.pathname.replace(/\/{2,}/g, '/')
-      return u.toString()
-    } catch {
-      // 可能是相对路径（如 /upload_01/...），交给浏览器按当前站点解析
-      return direct.replace(/\/{2,}/g, '/')
-    }
-  }
+  const v = it.thumb_full ?? it.images ?? it.thumb ?? it.image ?? it.pic ?? it.pic_url ?? it.img ?? it.img_url ?? ''
+  const direct = normalizeChatImageUrl(v)
+  if (direct) return direct
 
   // 兼容：如果后端只回传 content，但我们把图片 url 拼进了 content
   const content = typeof it.content === 'string' ? it.content.trim() : ''
   if (!content) return ''
-  const m = content.match(/^\[图片\]\s+(https?:\/\/\S+)$/u)
+  const m = content.match(/^\[图片\]\s+(\S+)$/u)
   if (m?.[1]) {
-    const s = String(m[1]).trim()
-    try {
-      const u = new URL(s)
-      u.pathname = u.pathname.replace(/\/{2,}/g, '/')
-      return u.toString()
-    } catch {
-      return s.replace(/\/{2,}/g, '/')
-    }
+    return normalizeChatImageUrl(m[1])
   }
   return ''
 })
@@ -88,10 +93,11 @@ const textContent = computed(() => {
 
             <div v-if="imageUrl" class="img-box" :class="{ 'is-failed': imageFailed }">
               <div v-if="imageFailed" class="img-fallback">图片加载失败</div>
-              <!-- 不能用 v-lazyLoad：它内部可能用 fetch/worker 预取，跨域会触发 CORS 报错 -->
               <img
                 v-else
                 :src="imageUrl"
+                loading="lazy"
+                decoding="async"
                 data-image-preview="true"
                 style="object-fit: contain"
                 @error="onImageError"
