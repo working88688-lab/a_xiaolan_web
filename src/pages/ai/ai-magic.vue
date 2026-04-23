@@ -294,31 +294,85 @@ async function submitMagic() {
     return __.$Toast('请选择魔法素材')
   }
   try {
-    const file = images.value[0]
-    // 获取图片尺寸
-    const img = new Image()
-    img.onload = async () => {
-      const res = await __.$Api.AI.magic({
-        thumb: file.content || file.url,
-        thumb_w: img.width,
-        thumb_h: img.height,
-        magic_id: activeItem.value?.id
-      })
-      const tip = pickTaskMsg(res)
-      if (tip) __.$Toast(tip)
-
-      showPayPopup.value = false
-      showPopup.value = false
-      await __.$Alert({
-        title: '提交成功',
-        message: '正在生成，稍后请前往 AI科技-我的\n记录中查看',
-        confirmButtonText: '朕知道了',
-        confirmButtonColor: '#2494ff',
-        className: 'ai-magic-success-dialog'
-      })
-      router.push('/ai/record?_index=3')
+    const entry = images.value[0] as any
+    const rawFile = entry?.file as File | undefined
+    if (!rawFile) {
+      return __.$Toast('图片读取失败，请重新上传')
     }
-    img.src = file.content || file.url
+
+    // 1) 取尺寸（用本地 File，避免 base64/域名拼接导致后端 getimagesize 异常）
+    const size = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const img = new Image()
+      const objectUrl = URL.createObjectURL(rawFile)
+      img.onload = () => {
+        try {
+          resolve({ width: img.width, height: img.height })
+        } finally {
+          try {
+            URL.revokeObjectURL(objectUrl)
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+      img.onerror = () => {
+        try {
+          URL.revokeObjectURL(objectUrl)
+        } catch {
+          /* ignore */
+        }
+        reject(new Error('获取图片尺寸失败'))
+      }
+      img.src = objectUrl
+    })
+
+    // 2) 先上传图片，拿到可访问 URL，再提交生成接口
+    const uploadRes = await __.$Api.uploadImage({ file: rawFile, useCompress: true })
+    let thumbUrl = String((uploadRes as any) ?? '').trim()
+    if (!thumbUrl) {
+      return __.$Toast('图片上传失败，请重试')
+    }
+    // 兜底清洗：避免出现空白/重复斜杠
+    thumbUrl = thumbUrl.replace(/\s+/g, '')
+    try {
+      const u = new URL(thumbUrl)
+      u.pathname = u.pathname.replace(/\/{2,}/g, '/')
+      thumbUrl = u.toString()
+    } catch {
+      thumbUrl = thumbUrl.replace(/\/{2,}/g, '/')
+    }
+
+    const payload = {
+      thumb: thumbUrl,
+      thumb_w: size.width,
+      thumb_h: size.height,
+      material_id: activeItem.value?.id
+    }
+    if (import.meta.client) {
+      // eslint-disable-next-line no-console
+      console.log('[AI魔法] generate_video payload', payload)
+    }
+
+    const res = await __.$Api.AI.magic(payload)
+    if (import.meta.client) {
+      // eslint-disable-next-line no-console
+      console.log('[AI魔法] generate_video 响应', res)
+      // eslint-disable-next-line no-console
+      console.log('[AI魔法] generate_video 响应.data', (res as any)?.data)
+    }
+    const tip = pickTaskMsg(res)
+    if (tip) __.$Toast(tip)
+
+    showPayPopup.value = false
+    showPopup.value = false
+    await __.$Alert({
+      title: '提交成功',
+      message: '正在生成，稍后请前往 AI科技-我的\n记录中查看',
+      confirmButtonText: '朕知道了',
+      confirmButtonColor: '#2494ff',
+      className: 'ai-magic-success-dialog'
+    })
+    router.push('/ai/record?_index=3')
   } catch (error: any) {
     const errorMsg = error?.message || '提交失败'
     __.$Toast(errorMsg)
@@ -378,6 +432,7 @@ async function confirmPay() {
                 reupload
                 :max-size="MAX_SIZE"
                 :preview-full-image="false"
+                preview-size="120px"
                 accept="image/*"
                 :max-count="1"
                 :after-read="afterRead"
@@ -392,7 +447,7 @@ async function confirmPay() {
                   </span>
                 </div>
                 <template #preview-delete>
-                  <nuxt-icon class="magic-uploader-delete-icon" name="minus" />
+                  <dx-icon-close class="magic-uploader-delete-icon" />
                 </template>
               </van-uploader>
             </template>
@@ -677,6 +732,17 @@ async function confirmPay() {
   height: 120px;
 }
 
+.magic-my-upload :deep(.van-uploader__preview-image),
+.magic-my-upload :deep(.van-image),
+.magic-my-upload :deep(.van-image__img) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.magic-my-upload :deep(.van-image__img) {
+  object-fit: cover;
+}
+
 .magic-uploader-empty {
   height: 120px;
   width: 100%;
@@ -701,12 +767,28 @@ async function confirmPay() {
 }
 
 .magic-uploader-delete-icon {
-  width: 36px;
-  height: 36px;
-  padding: 6px;
+  width: 16px;
+  height: 16px;
+  color: #ffffff;
+}
+
+.magic-my-upload :deep(.van-uploader__preview-delete) {
+  top: 8px;
+  right: 8px;
+  left: auto;
+  bottom: auto;
+  width: 28px;
+  height: 28px;
+  margin: 0;
   border-radius: 999px;
-  background: #ffffff;
-  color: var(--dx-primary-color, #2494ff);
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.magic-my-upload :deep(.van-uploader__preview-delete):active {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .magic-popup-tips {

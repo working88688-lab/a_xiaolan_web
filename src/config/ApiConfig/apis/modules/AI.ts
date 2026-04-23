@@ -8,7 +8,7 @@ export default {
   // AI魔法素材列表（旧接口）
   list: { method: 'post', url: '/api/aimagic/list' },
   // 提交AI魔法任务
-  magic: { method: 'post', url: '/api/aimagic/magic' },
+  magic: { method: 'post', url: '/api/aimagic/generate_video' },
   // 我的AI魔法记录列表（清单口径）
   myMagic: { method: 'post', url: '/api/aimagic/my_magic' },
   // 我的AI魔法记录列表（兼容旧口径）

@@ -10,7 +10,24 @@ export function resConfig(res, { $CryptoData, $Store, $Alert, $i18n, $NavigateTo
 
   const { showError = true, showSuccess = false, throwError = true, successCode = 1 } = config
   if (status === 200) {
-    const decryptData = $CryptoData.Decrypt(data.data)
+    // 兼容不同后端返回壳：
+    // 1) 常规：{ errcode, timestamp, data: '<HEX>' , sign }
+    // 2) 少数接口：{ data: { data: '<HEX>' } }
+    // 3) 直出明文：{ status, data, msg }（不需要解密）
+    const encryptedPayload = data?.data?.data ?? data?.data
+    const shouldDecrypt = typeof encryptedPayload === 'string' && encryptedPayload.length > 0
+
+    let decryptData
+    if (shouldDecrypt) {
+      decryptData = $CryptoData.Decrypt(encryptedPayload)
+    } else if (data && typeof data === 'object' && typeof data.status !== 'undefined') {
+      decryptData = data
+    } else {
+      // 兜底：不要在解密器里因为 undefined.length 直接炸
+      const fallback = { status: 0, msg: '接口返回格式异常', data: data }
+      if (showError) $Toast(fallback.msg)
+      return throwError ? Promise.reject(fallback) : Promise.resolve(fallback)
+    }
 
     if (import.meta.env.VITE_MODE === 'debug') {
       // @ts-ignore
