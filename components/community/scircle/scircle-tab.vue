@@ -703,6 +703,11 @@ function scircleErrMsg(err: unknown): string {
   return '请求失败'
 }
 
+function shouldOpenProfileSettingsFromErr(err: unknown): boolean {
+  const msg = scircleErrMsg(err)
+  return msg.includes('匹配资料')
+}
+
 /** 开发环境：进入同圈 tab 后打印首页相关接口返回，便于对照「可匹配次数」等字段 */
 const scircleDebug = import.meta.env.DEV && import.meta.client
 
@@ -1250,6 +1255,10 @@ async function onStartMatch() {
       res = await __.$Api.Community.usersmatchMatch({})
       apiName = 'usersmatchMatch'
     } catch (e) {
+      if (shouldOpenProfileSettingsFromErr(e)) {
+        await openSettings()
+        return
+      }
       __.$Toast(scircleErrMsg(e))
     }
     if (!res) {
@@ -1309,6 +1318,10 @@ async function onStartMatch() {
     void fetchTalkHome()
   } catch (error) {
     console.error('匹配失败:', error)
+    if (shouldOpenProfileSettingsFromErr(error)) {
+      await openSettings()
+      return
+    }
     __.$Toast(scircleErrMsg(error))
   } finally {
     isMatching.value = false
