@@ -20,7 +20,24 @@ const imageUrl = computed(() => {
     it.img ??
     it.img_url ??
     ''
-  return typeof v === 'string' ? v.trim() : ''
+  const direct = typeof v === 'string' ? v.trim() : ''
+  if (direct) return direct
+
+  // 兼容：如果后端只回传 content，但我们把图片 url 拼进了 content
+  const content = typeof it.content === 'string' ? it.content.trim() : ''
+  if (!content) return ''
+  const m = content.match(/^\[图片\]\s+(https?:\/\/\S+)$/u)
+  if (m?.[1]) return String(m[1]).trim()
+  return ''
+})
+
+const textContent = computed(() => {
+  const raw = props.item?.content
+  const s = typeof raw === 'string' ? raw.trim() : ''
+  if (!s) return ''
+  // 图片消息为了会话列表摘要可能会塞一个占位文案，这里在明细里不展示
+  if (imageUrl.value && (/^\[图片\]$/u.test(s) || /^\[图片\]\s+https?:\/\/\S+$/u.test(s))) return ''
+  return s
 })
 </script>
 
@@ -32,11 +49,11 @@ const imageUrl = computed(() => {
         <div class="customer-service-avatar" />
         <div class="content">
           <div class="inner-box">
-            <template v-if="item.content">
-              {{ item.content }}
+            <template v-if="textContent">
+              {{ textContent }}
             </template>
 
-            <div v-else class="img-box">
+            <div v-if="imageUrl" class="img-box">
               <img v-lazyLoad="imageUrl" data-image-preview="true" object-fit="contain" />
             </div>
           </div>

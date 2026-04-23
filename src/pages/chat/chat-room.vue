@@ -149,14 +149,15 @@ async function onPickedImage(e: Event) {
     const url = (await __.$Api.uploadImage({ file: compressed, useCompress: false })) as unknown as string
     if (!url) throw new Error('图片上传失败')
     // 发送图片消息：
-    // - 会话列表（最近消息）使用 chat_log（通常来自 content），所以这里同时带一个摘要文本
-    // - 明细列表字段可能是 images/thumb/thumb_full，做多字段兼容
+    // - 现网 friendMessage 刷新后可能只返回 content，不返回 images/thumb 字段
+    // - 为了确保消息列表能渲染图片，把 url 一并写进 content，前端渲染时解析
     const sendRes = await __.$Api.User.chat({
       uid,
-      // 会话列表摘要依赖 content
-      content: '[图片]',
-      // 聊天明细图片字段（后端返回 images，用于渲染）
+      content: `[图片] ${url}`,
+      // 兼容字段：如果后端确实存储/回传这些字段，chat-record-item 也能直接识别
       images: url,
+      thumb_full: url,
+      thumb: url,
       chat_token: user.value?.chat_token
     })
     if (import.meta.env.DEV && import.meta.client) {
@@ -475,12 +476,7 @@ function toggleMore() {
 
     <div class="chat-composer-wrap">
       <div class="chat-composer">
-        <!-- 语音功能：输入框模式切换按钮先注释 -->
-        <!-- <button class="chat-mode" type="button" @click="toggleMode">
-          <span class="chat-mode-icon">🔊</span>
-        </button> -->
-
-        <div class="chat-input-area">
+        <div class="chat-input-wrap">
           <input
             v-model="messageText"
             class="chat-input"
@@ -492,18 +488,21 @@ function toggleMore() {
             @focus="showMore = false"
             @keydown.enter.prevent="sendTextMessage"
           />
-          <button
-            class="chat-send"
-            type="button"
-            :disabled="isSendingText || !messageText.trim()"
-            @click="sendTextMessage"
-          >
-            {{ isSendingText ? '…' : '发送' }}
-          </button>
-          <!-- 语音功能：按住说话按钮先注释 -->
         </div>
 
-        <button class="chat-plus" type="button" @click="toggleMore">+</button>
+        <button class="chat-plus" type="button" aria-label="更多" @click="toggleMore">
+          <span aria-hidden="true">＋</span>
+        </button>
+
+        <button
+          class="chat-send-icon"
+          type="button"
+          aria-label="发送"
+          :disabled="isSendingText || !messageText.trim()"
+          @click="sendTextMessage"
+        >
+          <nuxt-icon name="send" class="chat-send-svg" />
+        </button>
       </div>
 
       <div v-if="showMore" class="chat-more">
@@ -656,10 +655,12 @@ function toggleMore() {
 }
 
 .chat-room {
+  height: 100dvh;
   min-height: 100vh;
   background: transparent;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .chat-title {
@@ -756,15 +757,20 @@ function toggleMore() {
 
 .chat-body {
   flex: 1;
+  min-height: 0;
   padding: 12px 12px 0;
   box-sizing: border-box;
-  overflow: auto;
+  overflow: hidden;
   background: #ffffff;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-scroll {
-  height: 100%;
   min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .chat-match-loading {
@@ -888,14 +894,58 @@ function toggleMore() {
 }
 
 .chat-composer {
-  height: 54px;
-  padding: 8px 10px;
-  box-sizing: border-box;
-  display: grid;
-  /* 左侧语音模式按钮目前被注释，避免空出一列 */
-  grid-template-columns: 1fr 38px;
-  gap: 10px;
+  padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+  display: flex;
   align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.chat-input-wrap {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  border-radius: 999px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+}
+
+.chat-input {
+  width: 100%;
+  height: 40px;
+  border: 0;
+  background: transparent;
+  padding: 0 14px;
+  font-size: 14px;
+  outline: none;
+}
+
+.chat-send-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0;
+  background: #2494ff;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 6px 14px rgba(36, 148, 255, 0.26);
+}
+
+.chat-send-icon:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+.chat-send-svg {
+  font-size: 20px;
+  line-height: 1;
 }
 
 .chat-mode {
@@ -1186,8 +1236,8 @@ function toggleMore() {
 }
 
 .chat-plus {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 0;
   background: #ffffff;
