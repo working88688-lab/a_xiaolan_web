@@ -133,8 +133,24 @@
 
     <van-popup v-model:show="showSettings" position="bottom" teleport="body" round closeable @closed="resetSettings">
       <div class="scircle-settings">
-        <div class="scircle-settings-title">
-          {{ settingsStep === 1 ? '第一步 我的资料' : '第二步-我想匹配' }}
+        <div class="scircle-settings-header">
+          <div class="scircle-settings-header-left">
+            <button
+              v-if="settingsStep === 2"
+              class="scircle-settings-back"
+              type="button"
+              aria-label="返回"
+              @click="backToSettingsStepOne"
+            >
+              <svg width="14" height="26" viewBox="0 0 14 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13 25L1 13L13 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+          <div class="scircle-settings-title">
+            {{ settingsStep === 1 ? '第一步 我的资料' : '第二步-我想匹配' }}
+          </div>
+          <div class="scircle-settings-header-right" />
         </div>
 
         <div v-if="settingsStep === 1" class="scircle-settings-body">
@@ -1318,6 +1334,11 @@ function resetSettings() {
   settingsStep.value = 1
 }
 
+function backToSettingsStepOne() {
+  if (settingsStep.value !== 2) return
+  settingsStep.value = 1
+}
+
 async function onStepOneNext() {
   if (isSavingStep1.value) return
   const tagIds = myProfileSelected.value.join(',')
@@ -1691,12 +1712,47 @@ async function goChat() {
   flex-direction: column;
 }
 
+.scircle-settings-header {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.scircle-settings-header-left,
+.scircle-settings-header-right {
+  height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.scircle-settings-header-right {
+  justify-content: flex-end;
+}
+
+.scircle-settings-back {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: #333;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.scircle-settings-back svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
 .scircle-settings-title {
   text-align: center;
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
   font-size: 16px;
-  margin-bottom: 12px;
 }
 
 .scircle-settings-body {
