@@ -23,6 +23,7 @@ const peerAvatar = ref('')
 /** 与消息中心一致：/api/message/product -> message_total */
 const quotaLoaded = ref(false)
 const messageTotal = ref(0)
+const isVip = ref(false)
 
 const showRecharge = ref(false)
 const products = ref<TalkProductItem[]>([])
@@ -43,6 +44,7 @@ const leftTimeLabel = computed(() => {
 
 const showInsufficientTip = computed(() => {
   if (!quotaLoaded.value) return false
+  if (isVip.value) return false
   return Number(messageTotal.value) <= 0
 })
 
@@ -307,8 +309,15 @@ async function fetchChatQuota() {
   productsLoading.value = true
   try {
     const res = await __.$Api.User.chat_product({})
+    if (import.meta.client) {
+      // eslint-disable-next-line no-console
+      console.log('[chat-room] chat_product res', res)
+      // eslint-disable-next-line no-console
+      console.log('[chat-room] chat_product res.data', (res as any)?.data)
+    }
     const raw: any = res?.data
 
+    isVip.value = Number(raw?.is_vip ?? raw?.isVip ?? 0) === 1
     messageTotal.value = Math.max(0, Math.floor(Number(raw?.message_total ?? 0) || 0))
     const list = Array.isArray(raw?.message_product) ? raw.message_product : []
     products.value = list
@@ -330,6 +339,7 @@ async function fetchChatQuota() {
     toastAndMaybeToLogin(e)
     products.value = []
     messageTotal.value = 0
+    isVip.value = false
   } finally {
     productsLoading.value = false
     quotaLoaded.value = true
