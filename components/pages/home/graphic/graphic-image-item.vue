@@ -139,12 +139,14 @@ function buildSortFilterUrl(sortLabel: any) {
     <template #header="{ data }">
       {{ __setHeaderData(data) }}
       {{ __logHeaderDataOnce(data) }}
-      <dx-resource-ads
+      <dx-ads
         class="px-1.5"
         :ad-key="props.type"
         :ad-name="props.title"
         :items="data?.ads ?? []"
-      ></dx-resource-ads>
+        :cols="6"
+        :rows="4"
+      ></dx-ads>
       <div class="graphic-filter-state" :class="props.type === 'comics' ? 'icon-type-two' : 'icon-type-one'">
         <div class="graphic-filter-state-scroll" @touchmove.stop>
           <scroll-x-view ref="iconScrollRef">
