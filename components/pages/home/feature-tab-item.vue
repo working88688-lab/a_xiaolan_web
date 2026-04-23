@@ -2,8 +2,6 @@
 import type { AdItem, TabItem } from '@types'
 import { SwiperSlide } from 'swiper/vue'
 import { ROUTE_PARAMS } from '@utils/constants/route'
-import qiandaoIcon from '~/assets/image/qiandao.png'
-import tongquanIcon from '~/assets/image/tongquan.png'
 
 /***
  *  bot_style_one ： 今日热点
@@ -30,21 +28,22 @@ const banners = ref<AdItem[]>([])
 
 const mid_style_category = ref<any[]>([])
 const mid_style_recommend = ref<any[]>([])
-/** 接口无签到/同圈入口时补本地图标，避免漏入口 */
-const mid_style_recommend_with_static = computed(() => {
-  const list = mid_style_recommend.value ?? []
-  const hasQiandao = list.some(i => i?.type === 14)
-  const hasTongquan = list.some(i => i?.type === 10)
-  const staticItems = [
-    ...(hasQiandao
-      ? []
-      : [{ id: -14, type: 14, icon_new: qiandaoIcon }]),
-    ...(hasTongquan
-      ? []
-      : [{ id: -10, type: 10, icon_new: tongquanIcon }])
-  ]
-  return [...staticItems, ...list]
-})
+const is_role_tab = props.tab.name === '角色'
+
+function resolveMidRecommendIcon(it: any) {
+  return it?.icon_new || it?.cover || it?.icon || it?.img || it?.img_url || ''
+}
+
+function classifyIconSrc(src: string) {
+  if (!src) return 'EMPTY'
+  if (src.startsWith('data:')) return 'DATA_URL(本地内联)'
+  if (src.startsWith('blob:')) return 'BLOB_URL(本地运行时)'
+  if (src.includes('/_nuxt/')) return 'NUXT_ASSET(本地构建产物)'
+  if (/\.svg(\?|#|$)/i.test(src)) return 'SVG(可能本地/远程)'
+  if (/^https?:\/\//i.test(src)) return 'HTTP_URL(接口返回远程)'
+  if (src.startsWith('/')) return 'ABS_PATH(多半本地/同域)'
+  return 'OTHER'
+}
 
 /** 推荐 + 发现精彩：下方双列应为 bot_style_two，不能与 bot_style_one 的区块列表混用 */
 const bot_style_two_list = ref<any[]>([])
@@ -117,6 +116,48 @@ const { listData, execute, loading, refresh, isEmpty, isEnd, result, isError, is
     }
     : undefined
 })
+
+watch(
+  mid_style_recommend,
+  list => {
+    if (!import.meta.client) return
+    if (!is_role_tab) return
+    if (!Array.isArray(list) || !list.length) return
+
+    const view = list.map((it, idx) => {
+      const src = resolveMidRecommendIcon(it)
+      return {
+        idx,
+        id: it?.id,
+        type: it?.type,
+        title: it?.title,
+        name: it?.name,
+        icon_new: it?.icon_new,
+        icon: it?.icon,
+        cover: it?.cover,
+        resolvedSrc: src,
+        srcType: classifyIconSrc(String(src || ''))
+      }
+    })
+
+    // eslint-disable-next-line no-console
+    console.log(
+      '%c[首页-角色Tab] 金刚区(mid_style_recommend) 原始数据/图片来源判定',
+      'background:#ff4d4f;color:#fff;font-weight:700;padding:2px 6px;border-radius:4px;'
+    )
+    // eslint-disable-next-line no-console
+    console.log('[raw]', list)
+    // eslint-disable-next-line no-console
+    console.table(view)
+
+    const bad = view.filter(i => !i.resolvedSrc || i.srcType === 'EMPTY')
+    if (bad.length) {
+      // eslint-disable-next-line no-console
+      console.warn('[首页-角色Tab] 金刚区存在空图片字段:', bad)
+    }
+  },
+  { immediate: true }
+)
 
 if (props.tab.type === 1) {
   useSyncCacheData(cacheData => {
@@ -269,9 +310,9 @@ const gridIsEmpty = computed(() => {
       </div>
 
       <!-- mid_style_recommend -->
-      <div v-if="mid_style_recommend_with_static.length" class="mb-1 px-1.5">
+      <div v-if="mid_style_recommend.length" class="mb-1 px-1.5">
         <dx-scrollview-swiper>
-          <SwiperSlide v-for="item in mid_style_recommend_with_static" :key="item.id" class="recommend-item">
+          <SwiperSlide v-for="item in mid_style_recommend" :key="item.id" class="recommend-item">
             <nuxt-link class="flex-col-center h-full" :to="navigate(item.type)">
               <div class="mb-0.5 h-full w-full">
                 <dx-image :src="item.icon_new"></dx-image>

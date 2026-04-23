@@ -21,15 +21,48 @@ const imageUrl = computed(() => {
     it.img_url ??
     ''
   const direct = typeof v === 'string' ? v.trim() : ''
-  if (direct) return direct
+  if (direct) {
+    // 不拼接域名，只做 URL 规范化：把 path 中的重复 '/' 合并（保留协议里的 '://')
+    try {
+      const u = new URL(direct)
+      u.pathname = u.pathname.replace(/\/{2,}/g, '/')
+      return u.toString()
+    } catch {
+      // 可能是相对路径（如 /upload_01/...），交给浏览器按当前站点解析
+      return direct.replace(/\/{2,}/g, '/')
+    }
+  }
 
   // 兼容：如果后端只回传 content，但我们把图片 url 拼进了 content
   const content = typeof it.content === 'string' ? it.content.trim() : ''
   if (!content) return ''
   const m = content.match(/^\[图片\]\s+(https?:\/\/\S+)$/u)
-  if (m?.[1]) return String(m[1]).trim()
+  if (m?.[1]) {
+    const s = String(m[1]).trim()
+    try {
+      const u = new URL(s)
+      u.pathname = u.pathname.replace(/\/{2,}/g, '/')
+      return u.toString()
+    } catch {
+      return s.replace(/\/{2,}/g, '/')
+    }
+  }
   return ''
 })
+
+const imageFailed = ref(false)
+watch(
+  imageUrl,
+  () => {
+    imageFailed.value = false
+  },
+  { immediate: true }
+)
+
+function onImageError(e: Event) {
+  imageFailed.value = true
+  void e
+}
 
 const textContent = computed(() => {
   const raw = props.item?.content
@@ -53,8 +86,16 @@ const textContent = computed(() => {
               {{ textContent }}
             </template>
 
-            <div v-if="imageUrl" class="img-box">
-              <img v-lazyLoad="imageUrl" data-image-preview="true" object-fit="contain" />
+            <div v-if="imageUrl" class="img-box" :class="{ 'is-failed': imageFailed }">
+              <div v-if="imageFailed" class="img-fallback">图片加载失败</div>
+              <!-- 不能用 v-lazyLoad：它内部可能用 fetch/worker 预取，跨域会触发 CORS 报错 -->
+              <img
+                v-else
+                :src="imageUrl"
+                data-image-preview="true"
+                style="object-fit: contain"
+                @error="onImageError"
+              />
             </div>
           </div>
         </div>
@@ -102,14 +143,18 @@ const textContent = computed(() => {
 
     .content {
       flex: 1;
+      min-width: 0;
       display: flex;
 
       .inner-box {
+        max-width: min(5.2rem, 70vw);
         padding: 0.25rem;
         font-size: 0.375rem;
         background: #fff;
         border-radius: 0.2rem;
         position: relative;
+        overflow-wrap: anywhere;
+        word-break: break-word;
 
         &::after {
           content: '';
@@ -148,11 +193,41 @@ const textContent = computed(() => {
     }
   }
 }
+
+.img-box {
+  width: min(4.6rem, 62vw);
+  height: min(4.6rem, 62vw);
+  margin-top: 0.18rem;
+  border-radius: 0.2rem;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.img-box img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.img-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 0.32rem;
+  background: rgba(0, 0, 0, 0.05);
+}
 .customer-service-avatar {
   width: 1rem;
   height: 1rem;
   overflow: hidden;
   margin: 0 0.3rem;
+  flex: 0 0 auto;
 
   img {
     width: 100%;

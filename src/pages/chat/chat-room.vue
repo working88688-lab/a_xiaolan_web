@@ -103,6 +103,22 @@ function pickFromCamera() {
   resetAndClickInput(cameraInputRef.value)
 }
 
+async function getImageSize(file: File): Promise<{ width: number; height: number }> {
+  return await new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      resolve({ width: img.naturalWidth || 0, height: img.naturalHeight || 0 })
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('读取图片尺寸失败'))
+    }
+    img.src = url
+  })
+}
+
 async function sendTextMessage() {
   const uid = peerUid.value
   const text = messageText.value.trim()
@@ -117,7 +133,8 @@ async function sendTextMessage() {
   }
   isSendingText.value = true
   try {
-    await __.$Api.User.chat({ uid, content: text, chat_token: user.value?.chat_token })
+    const payload = { uid, content: text, chat_token: user.value?.chat_token }
+    await __.$Api.User.chat(payload)
     messageText.value = ''
     void fetchChatQuota()
     await nextTick()
@@ -145,47 +162,57 @@ async function onPickedImage(e: Event) {
       __.$Toast('缺少聊天对象，请从匹配或私信列表重新进入')
       return
     }
-    const compressed = (await __.$ImageCompression.compressor(file)) as File
-    const url = (await __.$Api.uploadImage({ file: compressed, useCompress: false })) as unknown as string
+    // 上传改回项目里通用的“上传图片”链路：让 uploadImage 自己处理压缩/上传
+    const uploadRes = await __.$Api.uploadImage({ file, useCompress: true })
+    let url = (uploadRes as unknown as string) || ''
+    // 兜底清洗：后端偶发返回带空白/重复斜杠的路径，避免加载异常
+    url = String(url).trim().replace(/\s+/g, '')
+    try {
+      const u = new URL(url)
+      u.pathname = u.pathname.replace(/\/{2,}/g, '/')
+      url = u.toString()
+    } catch {
+      // ignore (可能是相对路径)
+      url = url.replace(/\/{2,}/g, '/')
+    }
     if (!url) throw new Error('图片上传失败')
+    // 兼容尝试：按后端说法先走一次 /api/mv/upload（Video.upload）登记封面信息
+    // 说明：此接口在项目里原本用于“发布视频”，这里仅用于验证后端是否依赖该步骤
+    try {
+      const { width: thumb_width, height: thumb_height } = await getImageSize(file)
+      const mvRes = await __.$Api.Video.upload({
+        title: '图片消息',
+        coins: 0,
+        tags: '聊天',
+        url: '',
+        img_url: url,
+        thumb_width,
+        thumb_height
+      })
+      void mvRes
+    } catch (mvErr) {
+      void mvErr
+    }
+
     // 发送图片消息：
     // - 现网 friendMessage 刷新后可能只返回 content，不返回 images/thumb 字段
     // - 为了确保消息列表能渲染图片，把 url 一并写进 content，前端渲染时解析
-    const sendRes = await __.$Api.User.chat({
+    const payload = {
       uid,
-      content: `[图片] ${url}`,
-      // 兼容字段：如果后端确实存储/回传这些字段，chat-record-item 也能直接识别
+      // 正常做法：图片 URL 放 images 等字段；content 只放摘要，避免污染文本内容
+      content: '[图片]',
       images: url,
       thumb_full: url,
       thumb: url,
       chat_token: user.value?.chat_token
-    })
-    if (import.meta.env.DEV && import.meta.client) {
-      console.log('%c[chat-room] 图片消息 uploadImage url：', 'color:#1677ff;font-weight:bold', url)
-      console.log('%c[chat-room] POST /api/message/chat 返回：', 'color:#1677ff;font-weight:bold', sendRes)
     }
+    const sendRes = await __.$Api.User.chat(payload)
+    void sendRes
     __.$Toast('图片已发送')
     void fetchChatQuota()
     await nextTick()
-    const refreshRes = await listRef.value?.refresh_data?.()
-    if (import.meta.env.DEV && import.meta.client) {
-      console.log('%c[chat-room] friendMessage refresh_data 返回：', 'color:#1677ff;font-weight:bold', refreshRes)
-      const items = listRef.value?.listData?.value ?? listRef.value?.listData
-      if (Array.isArray(items)) {
-        const last = items[items.length - 1]
-        console.log(
-          '%c[chat-room] friendMessage 最新一条：',
-          'color:#1677ff;font-weight:bold',
-          last,
-          'keys:',
-          last ? Object.keys(last) : []
-        )
-      } else {
-        console.log('[chat-room] listRef.listData 不可用：', listRef.value?.listData)
-      }
-    }
+    await listRef.value?.refresh_data?.()
   } catch (err) {
-    console.error('[chat-room] 图片上传失败', err)
     toastAndMaybeToLogin(err, { redirectToLogin: false })
   } finally {
     isUploadingImage.value = false
@@ -256,8 +283,6 @@ async function fetchMatchPeerAvatar() {
       uid: uidNum,
       score: Math.round(Number.isFinite(scoreNum) ? scoreNum : 0)
     })
-    console.log('%c[chat-room] POST /api/usersmatch/get_match_info 结果', 'font-weight:bold;color:#1677ff', res)
-    console.log('[chat-room] get_match_info data 字段：', res?.data)
     const detail = res?.data || {}
     peerAvatar.value = String(detail?.thumb ?? detail?.avatar_url ?? detail?.avatar ?? '').trim()
     if (!peerAvatar.value) {
@@ -268,7 +293,6 @@ async function fetchMatchPeerAvatar() {
     }
     // 语音功能：对方语音字段先注释
   } catch (e) {
-    console.error('[chat-room] get_match_info', e)
     toastAndMaybeToLogin(e)
   } finally {
     matchInfoLoading.value = false
@@ -281,10 +305,6 @@ async function fetchChatQuota() {
   productsLoading.value = true
   try {
     const res = await __.$Api.User.chat_product({})
-    if (import.meta.env.DEV && import.meta.client) {
-      console.log('%c[chat-room] POST /api/message/product 原始返回', 'font-weight:bold;color:#1677ff', res)
-      console.log('[chat-room] /api/message/product data：', res?.data)
-    }
     const raw: any = res?.data
 
     messageTotal.value = Math.max(0, Math.floor(Number(raw?.message_total ?? 0) || 0))
@@ -298,17 +318,6 @@ async function fetchChatQuota() {
       }))
       .filter((p: TalkProductItem) => p.key !== '')
 
-    if (import.meta.env.DEV && import.meta.client) {
-      console.log(
-        '[chat-room] /api/message/product 解析后 products：',
-        products.value.map(p => ({
-          value: p.value,
-          title: p.title,
-          sub_title: p.sub_title,
-          key: p.key
-        }))
-      )
-    }
     if (products.value.length) {
       const exists = products.value.some(p => p.key === selectedProductKey.value)
       if (!exists) selectedProductKey.value = products.value[0].key
@@ -316,7 +325,6 @@ async function fetchChatQuota() {
       selectedProductKey.value = null
     }
   } catch (e) {
-    console.error('[chat-room] product_list', e)
     toastAndMaybeToLogin(e)
     products.value = []
     messageTotal.value = 0
@@ -360,21 +368,13 @@ async function onConfirmBuyTime() {
       return
     }
     const payload: Record<string, any> = { value }
-    if (import.meta.env.DEV && import.meta.client) {
-      console.log('[chat-room] /api/message/buy payload：', payload)
-    }
     const res: any = await __.$Api.User.chat_buy(payload)
-    if (import.meta.env.DEV && import.meta.client) {
-      console.log('%c[chat-room] POST /api/message/buy 原始返回', 'font-weight:bold;color:#1677ff', res)
-      console.log('[chat-room] /api/message/buy data：', res?.data)
-    }
     showRecharge.value = false
     if (res?.status === 1 && res?.data?.tips) {
       __.$Toast(String(res.data.tips))
     }
     await fetchChatQuota()
   } catch (e) {
-    console.error('[chat-room] /api/message/buy', e)
     toastAndMaybeToLogin(e)
   } finally {
     buying.value = false
