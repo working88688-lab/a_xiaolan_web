@@ -78,6 +78,7 @@ const showPayPopup = ref(false)
 /** /api/aimagic/pre_magic */
 interface PreMagicData {
   free_num: number
+  /** 当前金币余额（后端可能返回 coin / coins） */
   coin: number
   cost_coin: number
   tips: string
@@ -115,15 +116,19 @@ async function fetchPreMagic() {
     }
     const d = res?.data as Partial<PreMagicData> | undefined
     if (d) {
+      const anyD = d as any
       magicData.value = {
         free_num: Number(d.free_num ?? 0),
-        coin: Number(d.coin ?? 0),
-        cost_coin: Number(d.cost_coin ?? 0),
-        tips: d.tips ?? '',
-        exp_correct_img: (d as any).exp_correct_img,
-        exp_error1_img: (d as any).exp_error1_img,
-        exp_error2_img: (d as any).exp_error2_img,
-        exp_error3_img: (d as any).exp_error3_img
+        // 余额字段：兼容 coin / coins
+        coin: Number(anyD.coins ?? d.coin ?? 0),
+        // 单价字段：兼容 cost_coin / ai_magic_coins（后端常见命名）
+        cost_coin: Number(d.cost_coin ?? anyD.ai_magic_coins ?? 0),
+        // 提示字段：兼容 tips / ai_magic_tips
+        tips: (d.tips ?? anyD.ai_magic_tips ?? '') as string,
+        exp_correct_img: anyD.exp_correct_img,
+        exp_error1_img: anyD.exp_error1_img,
+        exp_error2_img: anyD.exp_error2_img,
+        exp_error3_img: anyD.exp_error3_img
       }
     }
   } catch (error) {
@@ -253,7 +258,7 @@ async function onPreviewClick() {
 
 function onOversize() {
   __.$Toast({
-    message: '超过2M，吐司提示：图片过大，请重新上传',
+    message: '图片过大，请重新上传',
     position: 'bottom'
   })
 }

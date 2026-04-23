@@ -190,6 +190,7 @@ async function confirmPay(payType: number) {
                   reupload
                   :max-size="MAX_SIZE"
                   :preview-full-image="false"
+                  preview-size="160px"
                   accept="image/*"
                   :max-count="1"
                   :after-read="afterRead"
@@ -204,7 +205,7 @@ async function confirmPay(payType: number) {
                     </span>
                   </div>
                   <template #preview-delete>
-                    <nuxt-icon class="uploader-delete-icon" name="minus" />
+                    <dx-icon-close class="uploader-delete-icon" />
                   </template>
                 </van-uploader>
               </template>
@@ -372,6 +373,17 @@ async function confirmPay(payType: number) {
   height: 160px;
 }
 
+.my-upload :deep(.van-uploader__preview-image),
+.my-upload :deep(.van-image),
+.my-upload :deep(.van-image__img) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.my-upload :deep(.van-image__img) {
+  object-fit: cover;
+}
+
 .uploader-empty {
   height: 160px;
   width: 100%;
@@ -396,12 +408,28 @@ async function confirmPay(payType: number) {
 }
 
 .uploader-delete-icon {
-  width: 36px;
-  height: 36px;
-  padding: 6px;
+  width: 16px;
+  height: 16px;
+  color: #ffffff;
+}
+
+.my-upload :deep(.van-uploader__preview-delete) {
+  top: 8px;
+  right: 8px;
+  left: auto;
+  bottom: auto;
+  width: 28px;
+  height: 28px;
+  margin: 0;
   border-radius: 999px;
-  background: #ffffff;
-  color: var(--dx-primary-color, #2494ff);
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.my-upload :deep(.van-uploader__preview-delete):active {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .example-section {

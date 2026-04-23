@@ -65,7 +65,14 @@ onMounted(async () => {
           <div class="ai-index-ads">
             <dx-hoc-list api="/api/image/index" fields="data" :pullup="false">
               <template #header="{ data }">
-                <dx-resource-ads class="px-1.5" ad-key="images" ad-name="男色" :items="data?.ads ?? []" />
+                <dx-ads
+                  class="px-1.5"
+                  :items="data?.ads ?? data?.rank_list ?? []"
+                  ad-key="images"
+                  ad-name="男色"
+                  :cols="6"
+                  :rows="4"
+                />
               </template>
             </dx-hoc-list>
           </div>
