@@ -119,7 +119,7 @@ function getComicTrackBase() {
     comic_tag_key: props.data?.comic_tag_key ?? '',
     comic_tag_name: props.data?.comic_tag_name ?? '',
     page_no: props.sid ?? 0,
-    read_progress: 0,
+    read_progress: 0
   }
 }
 
@@ -127,7 +127,7 @@ const onClose = () => {
   __.$Tracker.trackComicEvent({
     ...getComicTrackBase(),
     comic_behavior_key: 'comic_close',
-    comic_behavior_name: '关闭',
+    comic_behavior_name: '关闭'
   })
   emit('update:show', false)
 }
@@ -152,7 +152,7 @@ const onRead = async () => {
       __.$Tracker.trackComicEvent({
         ...getComicTrackBase(),
         comic_behavior_key: 'comic_view',
-        comic_behavior_name: '阅读',
+        comic_behavior_name: '阅读'
       })
     }
   } catch (error) {

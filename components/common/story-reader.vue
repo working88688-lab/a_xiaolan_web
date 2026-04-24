@@ -158,7 +158,7 @@ function getNovelTrackBase() {
     novel_tag_key: props.data?.novel_tag_key ?? '',
     novel_tag_name: props.data?.novel_tag_name ?? '',
     page_no: props.sid ?? 0,
-    read_progress: 0,
+    read_progress: 0
   }
 }
 
@@ -166,7 +166,7 @@ const onClose = () => {
   __.$Tracker.trackNovelEvent({
     ...getNovelTrackBase(),
     novel_behavior_key: 'novel_close',
-    novel_behavior_name: '关闭',
+    novel_behavior_name: '关闭'
   })
   emit('update:show', false)
   showSetting.value = false
@@ -196,7 +196,7 @@ const onRead = async () => {
       __.$Tracker.trackNovelEvent({
         ...getNovelTrackBase(),
         novel_behavior_key: 'novel_view',
-        novel_behavior_name: '阅读',
+        novel_behavior_name: '阅读'
       })
     }
   } catch (error) {

@@ -9,7 +9,12 @@
     ></dx-navbar>
     <div class="scroll-container">
       <scroll-list v-model:loading="loading" :is-ready="!loading">
-        <div v-for="(item, index) in displaySeries" :key="index" class="image-item" @click="onImageClick(index)">
+        <div
+          v-for="(item, index) in displaySeries"
+          :key="`${renderTick}-${index}`"
+          class="image-item"
+          @click="onImageClick(index)"
+        >
           <img
             v-lazyLoad:[Number(pageData?.id)]="item.img_url_full"
             :data-index="index"
@@ -139,6 +144,7 @@
         >
           <img
             v-if="shouldUseDirectSrc(src)"
+            :key="`direct-${renderTick}-${String(src)}`"
             class="dx-preview-image"
             :src="src"
             :style="style"
@@ -148,6 +154,7 @@
           />
           <img
             v-else
+            :key="`lazy-${renderTick}-${String(src)}`"
             v-lazyLoad:[Number(pageData?.id)]="src"
             class="dx-preview-image"
             :src="imgLoading"
@@ -234,6 +241,10 @@ const showPreview = ref(false)
 const previewImages = ref<string[]>([])
 const currentIndex = ref(0)
 const isPreviewClean = ref(false)
+const renderTick = ref(0)
+const bumpRender = () => {
+  renderTick.value += 1
+}
 
 const { u: user } = storeToRefs(useUserStore())
 const userCoins = computed(() => Number(user.value?.coins ?? 0))
@@ -364,6 +375,16 @@ const onShare = () => {
   __.$NavigateTo('/myinvite')
 }
 
+const syncPreviewImages = () => {
+  if (!pageData.value) return
+
+  const series = listSeries.value || []
+  const globalObject: any = (__ as any).$GlobalObject || {}
+  const groups = globalObject._IMAGE_PREVIE_GROUPS?.get(pageData.value.id) || []
+
+  previewImages.value = series.map((item: any, idx: number) => groups[idx] || item?.img_url_full || imgLoading)
+}
+
 const isImageLocked = (index: number | string) => {
   const i = Number(index)
   if (!pageData.value) return false
@@ -417,18 +438,9 @@ const onImageClick = (index: number | string) => {
     return
   }
 
-  const series = listSeries.value || []
-  const globalObject: any = (__ as any).$GlobalObject || {}
-  const groups = globalObject._IMAGE_PREVIE_GROUPS?.get(pageData.value.id) || []
+  syncPreviewImages()
+  if (!previewImages.value.length) return
 
-  // 优先使用已经解密的本地图片地址，若不存在则回退到原始地址
-  const images: string[] = series.map(
-    (item: any, idx: number): string => groups[idx] || item?.img_url_full || imgLoading
-  )
-
-  if (!images.length) return
-
-  previewImages.value = images
   currentIndex.value = i
   showPreview.value = true
 }
@@ -600,7 +612,8 @@ const handleBuyAction = async () => {
         ]
       )
   })
-  const { id } = route.query
+
+  const id = Number(route.query.id)
   const { data } = await __.$Api.Images.buy({
     id
   })
@@ -608,9 +621,13 @@ const handleBuyAction = async () => {
   if (data.status) {
     __.$Toast(data.msg)
     pageData.value!.is_pay = 1
-    execute({
+    await execute({
       id
     })
+    // 支付成功后：强制重建 DOM，避免 v-lazyLoad 缓存导致图片不重新加载
+    bumpRender()
+    // 预览层如果正在打开，同步用最新 series 重建图片数组
+    if (showPreview.value) syncPreviewImages()
   } else {
     await __.$Alert({
       title: '金币不足',
@@ -629,6 +646,7 @@ const init = async (id: number) => {
   const res = await execute({
     id
   })
+  bumpRender()
   if (import.meta.env.DEV && import.meta.client) {
     console.log('[images] detail api response:', res)
     console.log('[images] detail pageData:', pageData.value)

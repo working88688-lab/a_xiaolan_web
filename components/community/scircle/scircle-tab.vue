@@ -2435,6 +2435,7 @@ async function goChat() {
   padding: 0 10px;
   box-sizing: border-box;
   color: #fff;
+  background-color: rgba(0, 0, 0, 0.45);
 }
 
 .tq-detail-top-left {
@@ -2480,6 +2481,10 @@ async function goChat() {
   text-align: center;
   font-size: 14px;
   font-weight: 500;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .tq-detail-body {
@@ -2490,8 +2495,9 @@ async function goChat() {
   bottom: 90px;
   bottom: calc(90px + env(safe-area-inset-bottom));
   z-index: 3;
-  padding: 0 14px;
+  padding: 10px 14px;
   box-sizing: border-box;
+  background-color: rgba(0, 0, 0, 0.45);
 }
 
 .tq-detail-match {
@@ -2502,7 +2508,7 @@ async function goChat() {
 
 .tq-detail-tags {
   overflow: hidden;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
 }
 
 .tq-detail-tags-scroll {

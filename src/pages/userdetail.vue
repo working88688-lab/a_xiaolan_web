@@ -389,8 +389,11 @@ const is_show_bg = computed(() => {
                 </template>
               </btn-follow>
               <div class="btn_chat">
-                <dx-button v-if="userInfo?.uid" color="linear-gradient(to right, #00D0FF,  #3D9DFD)"
-                  :to="`/chat/room?uid=${userInfo.uid}&name=${userInfo.nickname}`">
+                <dx-button
+                  v-if="userInfo?.uid"
+                  color="linear-gradient(to right, #00D0FF,  #3D9DFD)"
+                  :to="`/chat/room?uid=${userInfo.uid}&name=${userInfo.nickname}`"
+                >
                   聊天
                 </dx-button>
               </div>
@@ -599,8 +602,8 @@ const is_show_bg = computed(() => {
 .transparent {
   color: #fff;
 }
-.btn_chat{
-  padding-top:1px
+.btn_chat {
+  padding-top: 1px;
 }
 
 .homepage-user-header {
@@ -647,7 +650,7 @@ const is_show_bg = computed(() => {
 
       .nickname {
         font-size: 0.4rem;
-        gap:14px
+        gap: 14px;
       }
 
       .uid {
