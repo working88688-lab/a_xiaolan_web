@@ -29,7 +29,7 @@
         </van-cell-group>
       </van-radio-group>
 
-      <div class="user-recharge-layer-btn" @click="onSubmit">立即充值</div>
+      <div class="user-recharge-layer-btn" :class="{ 'opacity-50 pointer-events-none': submitting }" @click="onSubmit">立即充值</div>
     </div>
   </van-action-sheet>
 </template>
@@ -82,10 +82,13 @@ const onSelect = (item: PayItem) => {
   selectItem.value = { ...item }
   checked.value = item.type
 }
+const submitting = ref(false)
 const onSubmit = async () => {
   if (!checked.value) {
     return __.$Toast('请选择支付方式')
   }
+  if (submitting.value) return
+  submitting.value = true
   const origin = `${window.location.origin}/`
 
   const winRef = window.open(`${origin}waiting.html`, '_blank')
@@ -144,6 +147,8 @@ const onSubmit = async () => {
     if (winRef) {
       winRef.location = `${origin}error.html`
     }
+  } finally {
+    submitting.value = false
   }
 }
 

@@ -96,6 +96,7 @@ export default defineNuxtConfig({
     { src: '@config/ApiConfig/http/index' },
     { src: '@config/ApiConfig' },
     { src: '@plugins/report-plugin', mode: 'client' },
+    { src: '@plugins/web-sdk-plugin', mode: 'client' },
     { src: '@config/ApiConfig/global' },
 
     // 工具配置
@@ -147,16 +148,12 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
         // { rel: 'sitemap', type: 'application/xml', href: 'https://haij.cc/sitemap.xml' }
+      ],
+      script: [
+        { src: '/js/web-sdk-v1.0.9.js', defer: true }
+        // { src: 'https://cdn.jsdelivr.net/npm/eruda' },
+        // { innerHTML: `eruda.init()`, type: 'text/javascript' }
       ]
-      // script: [
-      //   {
-      //     src: 'https://cdn.jsdelivr.net/npm/eruda'
-      //   },
-      //   {
-      //     innerHTML: `eruda.init()`,
-      //     type: 'text/javascript'
-      //   }
-      // ]
     }
   },
 
@@ -223,5 +220,15 @@ export default defineNuxtConfig({
     // prerender: {
     //   routes: ['/home', '/original']
     // }
+  },
+  routeRules: {
+    '/**': {
+      headers: {
+        'X-Frame-Options': 'DENY',
+        'X-Content-Type-Options': 'nosniff',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+      }
+    }
   }
 })

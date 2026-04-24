@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 import { millisecondsToTime } from '@utils/date'
 import { useDebounceFn, useIntervalFn } from '@vueuse/core'
 import dayjs from 'dayjs'
@@ -156,7 +157,7 @@ useNoticeWithoutReg()
       <!-- 权益 -->
       <scroll-list ref="list">
         <div class="mt-1.5">
-          <div class="text-base13 mt-1 whitespace-pre-line text-center" v-html="selectItem?.description"></div>
+          <div class="text-base13 mt-1 whitespace-pre-line text-center" v-html="DOMPurify.sanitize(selectItem?.description ?? '')"></div>
           <div class="flex-center my-2 text-[#fbd8cc]">
             <img class="mr-0.5 !h-[28px] !w-[14px]" src="@assets/image/my/vip/left.png" alt="" />
 

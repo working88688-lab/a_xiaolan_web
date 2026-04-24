@@ -36,7 +36,7 @@
       </van-tab>
     </dx-tabs>
     <div v-show="config.can_aw === 0" v-link="`/renewal`" class="darkweb-mask cursor-pointer">
-      <div class="darkweb-mask_tips" v-html="config.can_aw_tips"></div>
+      <div class="darkweb-mask_tips" v-html="DOMPurify.sanitize(config.can_aw_tips ?? '')"></div>
     </div>
     <!-- 分享弹框 -->
     <share-dialog v-model:show="share_dialog" :data="shareData"></share-dialog>
@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 import type { TabItem } from '@types'
 
 const { activeTab, duration, updateDuration, updateActiveTab } = useDefaultActiveTab()

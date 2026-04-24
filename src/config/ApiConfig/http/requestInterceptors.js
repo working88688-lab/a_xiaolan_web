@@ -23,8 +23,6 @@ export function reqConfig(config, { $CryptoData, $Oauth }) {
     // @ts-ignore
     config.__dev__log__data__ = config.data
   }
-  console.log('config.data: ', config.data)
-
   config.data = $CryptoData.Encrypt(config.data)
   const { baseURL = '' } = useAppConfig().api
   config.baseURL = baseURL
