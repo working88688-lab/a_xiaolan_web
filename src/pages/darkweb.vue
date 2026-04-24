@@ -66,6 +66,7 @@
 </template>
 
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 import dwBg from '@/assets/image/darkweb/dw-bg.png'
 import dwBtn from '@/assets/image/darkweb/dw-btn.png'
 import dwTips from '@/assets/image/darkweb/dw-tips.png'
@@ -80,10 +81,15 @@ const __ = useNuxtApp()
 const canEnterDarkweb = computed(() => config.value?.can_aw === 1)
 
 const safeDescHtml = computed(() => {
+<<<<<<< HEAD
   console.error('config.value: ', config.value)
   const html = (config.value?.new_can_aw_tips_title ?? '') as string
   // 这里沿用旧字段的富文本展示方式；若后端改为纯文本也能正常展示
   return html
+=======
+  const html = (config.value?.can_aw_tips ?? '') as string
+  return DOMPurify.sanitize(html)
+>>>>>>> feature/sdk-in
 })
 
 const new_can_aw_tips_vip = computed(() => {

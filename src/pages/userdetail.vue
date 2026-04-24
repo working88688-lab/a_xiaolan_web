@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 import type { PostItem, UserInfo, VideoItem } from '@types'
 import { useEventListener, useThrottleFn } from '@vueuse/core'
 
@@ -349,7 +350,7 @@ const is_show_bg = computed(() => {
           </div>
           <div v-if="userInfo?.person_signnatrue" class="rz_text">
             简介：
-            <div class="flex-1" v-html="userInfo.person_signnatrue.replaceAll('\n', '<br/>')"></div>
+            <div class="flex-1" v-html="DOMPurify.sanitize(userInfo.person_signnatrue.replaceAll('\n', '<br/>'))"></div>
           </div>
           <div class="number_info">
             <div class="number-info-stats flex min-w-0 flex-1 items-center space-x-3 sm:space-x-[25px]">

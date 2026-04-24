@@ -14,8 +14,7 @@
   >
     <div class="scroller">
       <scroll-list>
-        <!-- eslint-disable-next-line -->
-        <div v-html="offcialContent"></div>
+        <div v-html="DOMPurify.sanitize(offcialContent ?? '')"></div>
       </scroll-list>
     </div>
 
@@ -49,6 +48,7 @@
 </template>
 
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 import { computed } from 'vue'
 
 const props = defineProps<{

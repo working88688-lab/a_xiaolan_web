@@ -42,6 +42,7 @@ export default {
 
   // 公用接口区域
   globalConfig: { method: 'post', url: '/api/home/getConfig', mapping: {} },
+  webSdkConfig: { method: 'post', url: '/api/clientsdkreport/event', mapping: {} },
   uploadImage: { method: 'uploadImage', url: `/imgUpload.php`, mapping: {} },
   uploadVideo: { method: 'uploadvideo', url: '/', mapping: {} }
 }

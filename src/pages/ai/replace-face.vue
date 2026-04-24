@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 const __ = useNuxtApp()
 
 const tpl_images = ref([])
@@ -256,7 +257,7 @@ watch(is_custom_tpl, val => {
       </div>
       <div>
         <div class="mb-1 mt-2 px-1">脸部注意事项：</div>
-        <div class="mb-2.5 mt-2 whitespace-pre-line px-1 text-mgray" v-html="data.ai_ht_tips" />
+        <div class="mb-2.5 mt-2 whitespace-pre-line px-1 text-mgray" v-html="DOMPurify.sanitize(data.ai_ht_tips ?? '')" />
 
         <div class="dx-grid-3">
           <div class="flex-col-center">

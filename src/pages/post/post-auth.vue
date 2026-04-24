@@ -23,7 +23,7 @@
           </div>
           <div class="my-2">
             <h6 class="mb-0.5 font-semibold">入驻说明</h6>
-            <div class="text-sm" v-html="data.tips?.replaceAll('\n', '<br/>')"></div>
+            <div class="text-sm" v-html="DOMPurify.sanitize(data.tips?.replaceAll('\n', '<br/>') ?? '')"></div>
           </div>
           <van-button v-if="data.status === 1" block color="#1c1c1c">审核中</van-button>
 
@@ -38,6 +38,7 @@
 </template>
 
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 const __ = useNuxtApp()
 
 const {
