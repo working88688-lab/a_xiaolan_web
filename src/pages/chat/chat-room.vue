@@ -603,15 +603,14 @@ function toggleMore() {
     </div>
 
     <input ref="albumInputRef" class="sr-only" type="file" accept="image/*" @change="onPickedImage" />
-    <!-- 暂时注释：相机 input 入口 -->
-    <!-- <input
+    <input
       ref="cameraInputRef"
       class="sr-only"
       type="file"
       accept="image/*"
       capture="environment"
       @change="onPickedImage"
-    /> -->
+    />
 
     <!-- 语音功能：录音遮罩（Teleport + 波形/取消/松开发送/底弧麦克风）先注释 -->
 
