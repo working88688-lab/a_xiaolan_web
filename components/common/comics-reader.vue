@@ -107,7 +107,28 @@ const current = computed(() => {
 })
 
 const isEmpty = ref(false)
+
+function getComicTrackBase() {
+  return {
+    media_id: props.data?.media_id ?? '',
+    comic_id: String(props.data?.id ?? ''),
+    comic_title: props.data?.title ?? '',
+    comic_type_id: props.data?.comic_type_id ?? '',
+    comic_type_name: props.data?.comic_type_name ?? '',
+    recommend_trace_id: props.data?.recommend_trace_id ?? '',
+    comic_tag_key: props.data?.comic_tag_key ?? '',
+    comic_tag_name: props.data?.comic_tag_name ?? '',
+    page_no: props.sid ?? 0,
+    read_progress: 0,
+  }
+}
+
 const onClose = () => {
+  __.$Tracker.trackComicEvent({
+    ...getComicTrackBase(),
+    comic_behavior_key: 'comic_close',
+    comic_behavior_name: '关闭',
+  })
   emit('update:show', false)
 }
 const loading = ref(false)
@@ -128,6 +149,11 @@ const onRead = async () => {
     } else {
       onSaveHistory(params)
       emit('update:history')
+      __.$Tracker.trackComicEvent({
+        ...getComicTrackBase(),
+        comic_behavior_key: 'comic_view',
+        comic_behavior_name: '阅读',
+      })
     }
   } catch (error) {
   } finally {

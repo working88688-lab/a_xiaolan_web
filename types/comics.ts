@@ -18,6 +18,12 @@ export interface ComicData extends BaseCard {
   is_finish: 0 | 1
   sub_tips: string
   newest_series: string
+  media_id?: string
+  comic_type_id?: string
+  comic_type_name?: string
+  comic_tag_key?: string
+  comic_tag_name?: string
+  recommend_trace_id?: string
 }
 
 export type StoryItem = {
@@ -41,6 +47,12 @@ export interface StoryData extends BaseCard {
   is_finish: 0 | 1
   update_time: string
   now_total: string
+  media_id?: string
+  novel_type_id?: string
+  novel_type_name?: string
+  novel_tag_key?: string
+  novel_tag_name?: string
+  recommend_trace_id?: string
 }
 export type ImageItem = {
   id: number

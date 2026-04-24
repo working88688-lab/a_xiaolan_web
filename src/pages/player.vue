@@ -25,7 +25,8 @@
             video_tag_key: data.detail?.video_tag_key || '',
             video_title: data.detail?.title,
             video_tag_name: data.detail?.tags,
-            duration: data.detail?.duration
+            duration: data.detail?.duration,
+            video_content_type: 'long'
           }"
           @preview-ended="onVideoEnd"
         ></xg-player>

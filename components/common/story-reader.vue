@@ -146,7 +146,28 @@ const theme = [
 ]
 const fontList = [{ fontSize: '0.4rem' }, { fontSize: '0.45rem' }, { fontSize: '0.5rem' }, { fontSize: '0.6rem' }]
 const isEmpty = ref(false)
+
+function getNovelTrackBase() {
+  return {
+    media_id: props.data?.media_id ?? '',
+    novel_id: String(props.data?.id ?? ''),
+    novel_title: props.data?.title ?? '',
+    novel_type_id: props.data?.novel_type_id ?? '',
+    novel_type_name: props.data?.novel_type_name ?? '',
+    recommend_trace_id: props.data?.recommend_trace_id ?? '',
+    novel_tag_key: props.data?.novel_tag_key ?? '',
+    novel_tag_name: props.data?.novel_tag_name ?? '',
+    page_no: props.sid ?? 0,
+    read_progress: 0,
+  }
+}
+
 const onClose = () => {
+  __.$Tracker.trackNovelEvent({
+    ...getNovelTrackBase(),
+    novel_behavior_key: 'novel_close',
+    novel_behavior_name: '关闭',
+  })
   emit('update:show', false)
   showSetting.value = false
 }
@@ -172,6 +193,11 @@ const onRead = async () => {
     } else {
       onSaveHistory(params, 'story')
       emit('update:history')
+      __.$Tracker.trackNovelEvent({
+        ...getNovelTrackBase(),
+        novel_behavior_key: 'novel_view',
+        novel_behavior_name: '阅读',
+      })
     }
   } catch (error) {
   } finally {
