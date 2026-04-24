@@ -352,6 +352,8 @@ export default defineNuxtPlugin((nuxtApp) => {
       payload,
     }
 
+    console.log('[Tracker]', event, payload)
+
     return limitedFetch(data).catch((e) => {
       console.log('e: ', e)
     })

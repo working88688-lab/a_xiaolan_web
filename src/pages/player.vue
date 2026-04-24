@@ -191,6 +191,7 @@ const {
 } = useMyFetch<VideoData>({
   api: __.$Api.Video.detail,
   success() {
+    console.log('[VideoDetail]', data.value.detail)
     if (data.value.topic_info?.id) {
       get_collects({
         topic_id: data.value.topic_info.id
