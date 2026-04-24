@@ -27,7 +27,10 @@
           <dx-ads class="mb-1" :items="detailsData?.ads ?? []"></dx-ads>
           <p>{{ detailsData?.data?.title }}</p>
           <span>{{ detailsData?.data?.created_at }}</span>
-          <div class="content-layout_txt" v-html="DOMPurify.sanitize(detailsData?.data?.content?.replaceAll?.('\n', '<br/>') ?? '')"></div>
+          <div
+            class="content-layout_txt"
+            v-html="DOMPurify.sanitize(detailsData?.data?.content?.replaceAll?.('\n', '<br/>') ?? '')"
+          ></div>
 
           <div class="banner">
             <div

@@ -84,7 +84,7 @@ export default defineNuxtPlugin(async () => {
 
   try {
     const { data: webSdkData } = await app.$Api.webSdkConfig()
-app.$WebSDK.init({
+    app.$WebSDK.init({
       appId: globalStore.config?.bury_point?.click_app_id ?? '',
       uid: String(userStore.u.uid ?? ''),
       channel: userStore.u.build_id ?? '',

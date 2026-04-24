@@ -16,7 +16,10 @@
       </div>
       <div class="collection-desp-container">
         <span class="collection-desp">合集详情：</span>
-        <span class="collection-desp" v-html="DOMPurify.sanitize(data.info?.desp?.replaceAll('\n', '<br/>') ?? '')"></span>
+        <span
+          class="collection-desp"
+          v-html="DOMPurify.sanitize(data.info?.desp?.replaceAll('\n', '<br/>') ?? '')"
+        ></span>
       </div>
       <div class="flex gap-1">
         <dx-button

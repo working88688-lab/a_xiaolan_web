@@ -178,8 +178,7 @@ async function fetchCalendarData() {
     const data = res.data as CalendarResponse
 
     if (import.meta.dev) {
-      const styleTitle =
-        'background:#111827;color:#FDE68A;padding:2px 8px;border-radius:6px;font-weight:800;'
+      const styleTitle = 'background:#111827;color:#FDE68A;padding:2px 8px;border-radius:6px;font-weight:800;'
       const styleKey = 'color:#60A5FA;font-weight:700;'
       const styleWarn = 'color:#F97316;font-weight:800;'
       console.groupCollapsed('%c[Checkin.calendar] 原始返回(关键字段)', styleTitle)
@@ -223,10 +222,10 @@ async function fetchCalendarData() {
     }
 
     // 转换日历数据（接口按连续签到循环返回 calendar 列表，非自然月）
-    const mapped: CheckinDay[] = data.calendar.map((item) => {
+    const mapped: CheckinDay[] = data.calendar.map(item => {
       const rewardTypeMap: Record<number, RewardType> = {
         1: 'tx', // 金币
-        2: 'cj'  // 匹配卡
+        2: 'cj' // 匹配卡
       }
       const rewardType = rewardTypeMap[item.reward_key] || 'jf'
 
@@ -247,11 +246,11 @@ async function fetchCalendarData() {
     state.calendarData = mapped
 
     // 计算明日奖励文本
-    const tomorrowDay = state.calendarData.find((d) => d.status === 'today')
+    const tomorrowDay = state.calendarData.find(d => d.status === 'today')
     if (tomorrowDay) {
       state.tomorrowRewardText = tomorrowDay.rewardText
     } else {
-      const nextDay = state.calendarData.find((d) => d.status === 'future')
+      const nextDay = state.calendarData.find(d => d.status === 'future')
       if (nextDay) {
         state.tomorrowRewardText = nextDay.rewardText
       }
@@ -354,9 +353,7 @@ async function handleLottery(type: 'chance' | 'points') {
   if (type === 'points' && !canDrawByPoints.value) return
   try {
     const res =
-      type === 'points'
-        ? await __.$Api.TaskLottery.drawByPoints({})
-        : await __.$Api.TaskLottery.drawByChance({})
+      type === 'points' ? await __.$Api.TaskLottery.drawByPoints({}) : await __.$Api.TaskLottery.drawByChance({})
 
     // 只负责触发接口并展示奖品弹框；展示逻辑目前仍用随机奖品
     prizeKey.value = pickRandomPrize()
@@ -435,11 +432,13 @@ function closeCheckinPopup() {
   void refreshCheckinPageData()
 }
 
-const signRecords = ref<Array<{
-  id: string | number
-  time: string
-  text: string
-}>>([])
+const signRecords = ref<
+  Array<{
+    id: string | number
+    time: string
+    text: string
+  }>
+>([])
 
 // 获取签到记录
 async function fetchSignRecords() {
@@ -460,12 +459,14 @@ async function fetchSignRecords() {
   }
 }
 
-const lotteryRecords = ref<Array<{
-  id: string | number
-  time: string
-  consume: string
-  prize: string
-}>>([])
+const lotteryRecords = ref<
+  Array<{
+    id: string | number
+    time: string
+    consume: string
+    prize: string
+  }>
+>([])
 
 // 获取抽奖记录（任务抽奖 /api/tasklottery/logs，非 Game.drawList）
 async function fetchLotteryRecords() {
@@ -492,11 +493,11 @@ async function fetchLotteryRecords() {
  * - **有签到记录**：按正常顺序展示（不再强行把今天挪到第一位），并且展示已签到的天
  */
 const days = computed<CheckinDay[]>(() => {
-  const hasAnySigned = state.signedDays > 0 || state.calendarData.some((d) => d.signed)
+  const hasAnySigned = state.signedDays > 0 || state.calendarData.some(d => d.signed)
   if (hasAnySigned) return state.calendarData
 
   // 新用户（未签到过）才旋转：把 today 放到第一个
-  const todayIdx = state.calendarData.findIndex((d) => d.status === 'today')
+  const todayIdx = state.calendarData.findIndex(d => d.status === 'today')
   if (todayIdx <= 0) return state.calendarData
   return [...state.calendarData.slice(todayIdx), ...state.calendarData.slice(0, todayIdx)]
 })
@@ -540,7 +541,7 @@ function isPrizeIconWorkerUrl(url: string) {
 }
 
 /** 日历上标为「今天」的可签格（与 can_sign && !signed 一致） */
-const todaySignSlots = computed(() => state.calendarData.filter((d) => d.status === 'today'))
+const todaySignSlots = computed(() => state.calendarData.filter(d => d.status === 'today'))
 
 /**
  * 仅允许「恰好一个」可签入口：若接口误给多天 can_sign，客户端不再放行，避免连签多天
@@ -549,7 +550,7 @@ const calendarAllowsOneSignAction = computed(() => {
   const marked = todaySignSlots.value
   if (marked.length === 1) return true
   if (marked.length > 1) return false
-  const byCanSign = state.calendarData.filter((d) => d.canSign)
+  const byCanSign = state.calendarData.filter(d => d.canSign)
   return byCanSign.length === 1
 })
 
@@ -596,17 +597,22 @@ function getDayIcon(day: CheckinDay) {
           <div class="checkin-panel-line">明日签到可得：{{ state.tomorrowRewardText }}</div>
           <div class="checkin-panel-sub">
             <span>已连续签到：{{ state.signedDays }}天</span>
-            <button class="checkin-panel-link" type="button"
-              @click="() => { showSignRecord = true; fetchSignRecords() }">签到记录</button>
+            <button
+              class="checkin-panel-link"
+              type="button"
+              @click="
+                () => {
+                  showSignRecord = true
+                  fetchSignRecords()
+                }
+              "
+            >
+              签到记录
+            </button>
           </div>
         </div>
 
-        <button
-          class="checkin-panel-btn"
-          type="button"
-          :disabled="!signActionEnabled"
-          @click="onSignClick"
-        >
+        <button class="checkin-panel-btn" type="button" :disabled="!signActionEnabled" @click="onSignClick">
           {{ signPanelButtonLabel }}
         </button>
       </div>
@@ -640,8 +646,18 @@ function getDayIcon(day: CheckinDay) {
         <div class="lottery-content-top">
           <div class="lottery-head">
             <div class="lottery-title">抽奖得好礼</div>
-            <button class="lottery-link" type="button"
-              @click="() => { showLotteryRecord = true; fetchLotteryRecords() }">抽奖记录</button>
+            <button
+              class="lottery-link"
+              type="button"
+              @click="
+                () => {
+                  showLotteryRecord = true
+                  fetchLotteryRecords()
+                }
+              "
+            >
+              抽奖记录
+            </button>
           </div>
           <div class="lottery-meta">
             <div class="lottery-meta-item">我的抽奖机会：{{ state.drawChances }}</div>
@@ -652,10 +668,14 @@ function getDayIcon(day: CheckinDay) {
         <div class="wheel">
           <div class="wheel-stack">
             <div class="wheel-prizes">
-              <div v-for="prize in prizePositions" :key="prize.id" class="wheel-prize-item" :style="{
-                transform: `rotate(${prize.angle + 90}deg)`
-              }">
-
+              <div
+                v-for="prize in prizePositions"
+                :key="prize.id"
+                class="wheel-prize-item"
+                :style="{
+                  transform: `rotate(${prize.angle + 90}deg)`
+                }"
+              >
                 <div class="wheel-prize-title">{{ prize.title }}</div>
                 <div class="wheel-prize-icon">
                   <img
@@ -680,10 +700,22 @@ function getDayIcon(day: CheckinDay) {
       </div>
     </div>
     <div class="lottery-actions">
-      <button class="lottery-btn lottery-btn-yellow" type="button" :disabled="!canDrawByChance"
-        @click="onLotteryClick('chance')">抽奖机会</button>
-      <button class="lottery-btn lottery-btn-blue" type="button" :disabled="!canDrawByPoints"
-        @click="onLotteryClick('points')">{{ state.drawPointsPerDraw }}积分抽奖</button>
+      <button
+        class="lottery-btn lottery-btn-yellow"
+        type="button"
+        :disabled="!canDrawByChance"
+        @click="onLotteryClick('chance')"
+      >
+        抽奖机会
+      </button>
+      <button
+        class="lottery-btn lottery-btn-blue"
+        type="button"
+        :disabled="!canDrawByPoints"
+        @click="onLotteryClick('points')"
+      >
+        {{ state.drawPointsPerDraw }}积分抽奖
+      </button>
     </div>
   </div>
 

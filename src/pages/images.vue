@@ -138,8 +138,18 @@
           @touchend="onPreviewTouchEnd"
         >
           <img
+            v-if="shouldUseDirectSrc(src)"
             class="dx-preview-image"
+            :src="src"
+            :style="style"
+            alt=""
+            @load="onLoad"
+            @click="onPreviewImageTapFromClick"
+          />
+          <img
+            v-else
             v-lazyLoad:[Number(pageData?.id)]="src"
+            class="dx-preview-image"
             :src="imgLoading"
             :style="style"
             alt=""
@@ -232,6 +242,17 @@ const isEnoughCoins = computed(() => {
   if (needCoins.value <= 0) return true
   return userCoins.value >= needCoins.value
 })
+
+const shouldUseDirectSrc = (src: unknown) => {
+  if (!src || typeof src !== 'string') return true
+  // 已经是本地/可直接展示的资源：不要再走 worker 解密
+  if (src.startsWith('blob:')) return true
+  if (src.startsWith('data:')) return true
+  if (src.startsWith('file:')) return true
+  // 本地静态资源（占位图等）
+  if (src.startsWith('/') || src.startsWith('assets:')) return true
+  return false
+}
 
 const getDecryptedUrl = (url: string) => {
   const globalObject: any = (__ as any).$GlobalObject || {}

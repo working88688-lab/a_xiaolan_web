@@ -56,11 +56,7 @@ export default defineNuxtModule({
       const app_dir = _join(app_name)
 
       if (!source_dir) {
-        log(
-          chalk.yellow(
-            '⚠️ 未找到 dist 或 .output/public，跳过发布压缩（prepare / 未完整 generate 时属正常）'
-          )
-        )
+        log(chalk.yellow('⚠️ 未找到 dist 或 .output/public，跳过发布压缩（prepare / 未完整 generate 时属正常）'))
         return
       }
 

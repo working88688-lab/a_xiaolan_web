@@ -5,9 +5,9 @@
     <div v-for="user in list" :key="user.uid" class="recommend-card">
       <div class="recommend-card-header">
         <div
+          v-link="user.uid ? `/userdetail?id=${user.uid}` : ''"
           class="user-info"
           :class="{ 'cursor-pointer': user.uid }"
-          v-link="user.uid ? `/userdetail?id=${user.uid}` : ''"
         >
           <dx-image
             class="avatar"
@@ -16,11 +16,7 @@
           ></dx-image>
           <span class="nickname">{{ user.nickname }}</span>
         </div>
-        <btn-follow
-          :uid="user.uid"
-          :attention="user.is_followed ?? user.is_attention"
-          :use-default-style="true"
-        />
+        <btn-follow :uid="user.uid" :attention="user.is_followed ?? user.is_attention" :use-default-style="true" />
       </div>
 
       <div class="stats-row">
@@ -60,16 +56,10 @@
             >
               <dx-image
                 class="video-cover"
-                :src="
-                  resolveMediaUrl(
-                    video.cover_thumb || video.cover_thumb_url || video.cover || video.thumb
-                  )
-                "
+                :src="resolveMediaUrl(video.cover_thumb || video.cover_thumb_url || video.cover || video.thumb)"
               ></dx-image>
               <div class="video-info-overlay">
-                <span class="play-count">
-                  ▶ {{ formatNumber(video.play_num || video.play_count || video.plays) }}
-                </span>
+                <span class="play-count">▶ {{ formatNumber(video.play_num || video.play_count || video.plays) }}</span>
                 <span class="duration">
                   {{ formatDuration(video.duration || video.duration_sec) }}
                 </span>

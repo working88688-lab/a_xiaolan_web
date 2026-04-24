@@ -143,7 +143,13 @@
               @click="backToSettingsStepOne"
             >
               <svg width="14" height="26" viewBox="0 0 14 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M13 25L1 13L13 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path
+                  d="M13 25L1 13L13 1"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </button>
           </div>
@@ -157,7 +163,8 @@
           <div class="scircle-settings-scroll">
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                个人标签（可多选）<span class="scircle-required">*</span>
+                个人标签（可多选）
+                <span class="scircle-required">*</span>
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -176,7 +183,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                个人倾向（可多选）<span class="scircle-required">*</span>
+                个人倾向（可多选）
+                <span class="scircle-required">*</span>
               </div>
               <div class="scircle-settings-tags scircle-settings-tags--small">
                 <button
@@ -195,7 +203,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                个人性癖好（可多选）<span class="scircle-required">*</span>
+                个人性癖好（可多选）
+                <span class="scircle-required">*</span>
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -396,7 +405,8 @@
           <div class="scircle-settings-scroll">
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                他的标签（可多选）<span class="scircle-required">*</span>
+                他的标签（可多选）
+                <span class="scircle-required">*</span>
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -414,7 +424,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                他的倾向（可多选）<span class="scircle-required">*</span>
+                他的倾向（可多选）
+                <span class="scircle-required">*</span>
               </div>
               <div class="scircle-settings-tags scircle-settings-tags--small">
                 <button
@@ -432,7 +443,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                他的性癖好（可多选）<span class="scircle-required">*</span>
+                他的性癖好（可多选）
+                <span class="scircle-required">*</span>
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -550,7 +562,13 @@
                 <div class="tq-detail-top-left">
                   <button class="tq-detail-back" type="button" aria-label="返回" @click="backToMatchGrid">
                     <svg width="14" height="26" viewBox="0 0 14 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M13 25L1 13L13 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <path
+                        d="M13 25L1 13L13 1"
+                        stroke="white"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
                     </svg>
                   </button>
 
@@ -588,7 +606,9 @@
 
                 <div class="tq-detail-tags">
                   <div class="tq-detail-tags-scroll">
-                    <span v-for="(tag, i) in activeMatchItem.tags" :key="`${tag}-${i}`" class="tq-pill">#{{ tag }}</span>
+                    <span v-for="(tag, i) in activeMatchItem.tags" :key="`${tag}-${i}`" class="tq-pill">
+                      #{{ tag }}
+                    </span>
                   </div>
                 </div>
 
@@ -1055,11 +1075,7 @@ function parseProfileGroups(data: any) {
       2: normalizeTagGroup(data?.['2'] || []),
       3: normalizeTagGroup(data?.['3'] || [])
     },
-    selected: [
-      ...(data?.['1'] || []),
-      ...(data?.['2'] || []),
-      ...(data?.['3'] || [])
-    ]
+    selected: [...(data?.['1'] || []), ...(data?.['2'] || []), ...(data?.['3'] || [])]
       .filter((item: any) => Number(item?.status ?? 0) === 1)
       .map((item: any) => normalizeTagId(item?.id)),
     img: String(data?.img ?? ''),
@@ -1225,17 +1241,19 @@ const matchItems = ref<MatchItem[]>([])
 // 语音功能：匹配详情语音播放先注释
 
 const activeMatchItem = computed<MatchItem>(() => {
-  return matchItems.value[selectedMatchIndex.value] || {
-    uid: '0',
-    nickname: '',
-    avatar: '',
-    cover: tqItemUrl,
-    match_percent: 0,
-    match_line_text: '',
-    tags: [],
-    voice_url: '',
-    voice_duration: '0"'
-  }
+  return (
+    matchItems.value[selectedMatchIndex.value] || {
+      uid: '0',
+      nickname: '',
+      avatar: '',
+      cover: tqItemUrl,
+      match_percent: 0,
+      match_line_text: '',
+      tags: [],
+      voice_url: '',
+      voice_duration: '0"'
+    }
+  )
 })
 const activeDetailBg = computed(() => activeMatchItem.value.cover || tqItemUrl)
 
@@ -1315,8 +1333,7 @@ async function onStartMatch() {
     if (scircleDebug) {
       const styleTitle =
         'background:#111827;color:#fff;padding:4px 8px;border-radius:6px;font-weight:800;font-size:12px'
-      const styleWarn =
-        'background:#b91c1c;color:#fff;padding:2px 6px;border-radius:6px;font-weight:800'
+      const styleWarn = 'background:#b91c1c;color:#fff;padding:2px 6px;border-radius:6px;font-weight:800'
       const raw = res?.data
       const rawCount = Array.isArray(raw) ? raw.length : Array.isArray(raw?.list) ? raw.list.length : undefined
       console.groupCollapsed(
@@ -1327,7 +1344,11 @@ async function onStartMatch() {
       console.log('%c[scircle][match] 接口整包 res =', 'font-weight:800;color:#111827', res)
       console.log('%c[scircle][match] res.data =', 'font-weight:800;color:#111827', raw)
       console.log('%c[scircle][match] res.data(推测原始条数) =', 'font-weight:800;color:#111827', rawCount)
-      console.log('%c[scircle][match] normalizeMatchItems(res.data) 长度 =', 'font-weight:800;color:#111827', rows.length)
+      console.log(
+        '%c[scircle][match] normalizeMatchItems(res.data) 长度 =',
+        'font-weight:800;color:#111827',
+        rows.length
+      )
       console.table(
         rows.map((it, i) => ({
           i,
@@ -1496,8 +1517,7 @@ async function fetchMatchDetail() {
     const list = Array.isArray(detail?.tags_list) ? detail.tags_list : []
     /** 文档：score 常为整句「匹配度xx%，你俩超级搭哟!」，勿 Number()；数值匹配度沿用列表项 match_percent */
     const scoreRaw = detail?.score
-    const matchLineText =
-      typeof scoreRaw === 'string' && scoreRaw.trim() !== '' ? scoreRaw.trim() : ''
+    const matchLineText = typeof scoreRaw === 'string' && scoreRaw.trim() !== '' ? scoreRaw.trim() : ''
     // 语音功能：先注释（详情接口的语音字段解析）
     const nextItem: MatchItem = {
       ...current,
@@ -1518,7 +1538,6 @@ async function fetchMatchDetail() {
     __.$Toast(scircleErrMsg(error))
   }
 }
- 
 
 async function goChat() {
   const current = activeMatchItem.value
@@ -1823,7 +1842,7 @@ async function goChat() {
 .scircle-settings-scroll {
   flex: 1;
   min-height: 0;
-  overflow: auto; 
+  overflow: auto;
 }
 
 .scircle-settings-section + .scircle-settings-section {
@@ -2434,7 +2453,7 @@ async function goChat() {
   line-height: 34px;
   text-align: left;
 }
-.tq-detail-back svg{
+.tq-detail-back svg {
   width: 14px;
   height: 14px;
 }

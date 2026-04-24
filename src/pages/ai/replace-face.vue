@@ -183,9 +183,7 @@ watch(is_custom_tpl, val => {
 
 <template>
   <div v-if="key" :key="key" class="container">
-    <scroll-list
-      :loading="spining"
-    >
+    <scroll-list :loading="spining">
       <div class="dx-grid-2">
         <div>
           <div v-if="is_custom_tpl" class="h-[230px] rounded-sm bg-mgray">
@@ -257,7 +255,10 @@ watch(is_custom_tpl, val => {
       </div>
       <div>
         <div class="mb-1 mt-2 px-1">脸部注意事项：</div>
-        <div class="mb-2.5 mt-2 whitespace-pre-line px-1 text-mgray" v-html="DOMPurify.sanitize(data.ai_ht_tips ?? '')" />
+        <div
+          class="mb-2.5 mt-2 whitespace-pre-line px-1 text-mgray"
+          v-html="DOMPurify.sanitize(data.ai_ht_tips ?? '')"
+        />
 
         <div class="dx-grid-3">
           <div class="flex-col-center">

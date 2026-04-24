@@ -29,7 +29,9 @@
         </van-cell-group>
       </van-radio-group>
 
-      <div class="user-recharge-layer-btn" :class="{ 'opacity-50 pointer-events-none': submitting }" @click="onSubmit">立即充值</div>
+      <div class="user-recharge-layer-btn" :class="{ 'pointer-events-none opacity-50': submitting }" @click="onSubmit">
+        立即充值
+      </div>
     </div>
   </van-action-sheet>
 </template>

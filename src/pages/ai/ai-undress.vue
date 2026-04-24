@@ -59,14 +59,33 @@ async function fetchPreStrip() {
     const res = await __.$Api.AI.preStrip({})
     console.log(
       '%c[AI-UNDRESS] 进入页面接口返回：/api/ai/pre_strip',
-      'color:#fff;background:#ff3b30;padding:4px 10px;border-radius:6px;font-weight:800;',
+      'color:#fff;background:#ff3b30;padding:4px 10px;border-radius:6px;font-weight:800;'
     )
-    console.log('%c[AI-UNDRESS] res.data（醒目重点）','color:#000;background:#ffd60a;padding:3px 8px;border-radius:6px;font-weight:800;', res?.data)
-    console.log('%c[AI-UNDRESS] res（完整）','color:#fff;background:#333;padding:3px 8px;border-radius:6px;font-weight:800;', res)
+    console.log(
+      '%c[AI-UNDRESS] res.data（醒目重点）',
+      'color:#000;background:#ffd60a;padding:3px 8px;border-radius:6px;font-weight:800;',
+      res?.data
+    )
+    console.log(
+      '%c[AI-UNDRESS] res（完整）',
+      'color:#fff;background:#333;padding:3px 8px;border-radius:6px;font-weight:800;',
+      res
+    )
     const d = (res?.data ?? {}) as Record<string, unknown>
     stripData.value = {
       // free_num / 次数：兼容后端不同命名
-      free_num: pickNumericField(d, ['free_num', 'freeNum', 'free_times', 'free_time', 'free_count', 'free', 'num', 'left_free_num', 'remain_free_num', 'ai_ty_free_num']),
+      free_num: pickNumericField(d, [
+        'free_num',
+        'freeNum',
+        'free_times',
+        'free_time',
+        'free_count',
+        'free',
+        'num',
+        'left_free_num',
+        'remain_free_num',
+        'ai_ty_free_num'
+      ]),
       // coin / 余额：兼容你截图里的 ai_ty_coins
       coin: pickNumericField(d, ['coin', 'coins', 'balance', 'ai_type_coins', 'ai_ty_coin', 'ai_type_coin']),
       // cost_coin / 价格：兼容 cost_coin、need_coin、price 以及 ai_ty_price/ai_strip_price 之类
@@ -97,7 +116,7 @@ async function fetchPreStrip() {
 onMounted(() => {
   console.log(
     '%c[AI-UNDRESS] onMounted 触发 fetchPreStrip（即将请求 /api/ai/pre_strip）',
-    'color:#fff;background:#0b84ff;padding:4px 10px;border-radius:6px;font-weight:800;',
+    'color:#fff;background:#0b84ff;padding:4px 10px;border-radius:6px;font-weight:800;'
   )
   fetchPreStrip()
 })
@@ -278,12 +297,7 @@ async function confirmPay(payType: number) {
           <div class="pay-popup-label">实际支付</div>
           <div class="pay-popup-value pay-popup-value-strong">{{ stripData.cost_coin }}</div>
         </div>
-        <button
-          class="pay-popup-btn"
-          type="button"
-          :disabled="!images.length || !canPayCoin"
-          @click="confirmPay(0)"
-        >
+        <button class="pay-popup-btn" type="button" :disabled="!images.length || !canPayCoin" @click="confirmPay(0)">
           立即支付
         </button>
       </div>

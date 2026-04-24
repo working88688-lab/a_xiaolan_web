@@ -123,19 +123,10 @@ function resolvePoster(item: Record<string, any>) {
       </button>
     </div>
 
-    <dx-hoc-list
-      :key="activeApi"
-      class="ai-record-grid"
-      :api="activeApi"
-      :params="listParams"
-    >
+    <dx-hoc-list :key="activeApi" class="ai-record-grid" :api="activeApi" :params="listParams">
       <template #item="{ item }">
         <div class="ai-record-item">
-          <dx-cover
-            class="ai-record-cover"
-            :poster="resolvePoster(item)"
-            @click="onPreview(item, aiType)"
-          >
+          <dx-cover class="ai-record-cover" :poster="resolvePoster(item)" @click="onPreview(item, aiType)">
             <div v-if="statusTab === 'processing'" class="ai-record-cover-mask">
               <van-loading class="ai-record-cover-loading" type="spinner" />
             </div>

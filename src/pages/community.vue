@@ -17,7 +17,13 @@
         <recomment-tab :loading="loading" :data="data" :topics="data.topic" @swipe="onSwipe"></recomment-tab>
       </van-tab>
       <van-tab title="同圈" name="scircle">
-        <scircle-tab ref="scircleTabRef" :loading="loading" :data="data" :topics="data.topic" @swipe="onSwipe"></scircle-tab>
+        <scircle-tab
+          ref="scircleTabRef"
+          :loading="loading"
+          :data="data"
+          :topics="data.topic"
+          @swipe="onSwipe"
+        ></scircle-tab>
       </van-tab>
 
       <van-tab title="求片" name="film">
@@ -174,7 +180,7 @@ watch(
 .scircle-interstitial-popup {
   background: transparent;
 }
- 
+
 :deep(.van-popup.scircle-interstitial-popup) {
   width: 100vw !important;
   height: 100vh !important;

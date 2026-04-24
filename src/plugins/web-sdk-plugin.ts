@@ -12,7 +12,7 @@ export default defineNuxtPlugin(() => {
     },
     setContext(ctx: { uid?: string; channel?: string }) {
       window.WebSDK?.setContext(ctx)
-    },
+    }
   }
   return { provide: { WebSDK: sdk } }
 })

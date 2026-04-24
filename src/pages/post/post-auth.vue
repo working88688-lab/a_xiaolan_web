@@ -1,7 +1,12 @@
 <template>
   <div class="container">
-    <dx-navbar class="my-nav-bar !text-white" :border="false" title="原创博主认证" left-arrow
-      @click-left="__.$Back"></dx-navbar>
+    <dx-navbar
+      class="my-nav-bar !text-white"
+      :border="false"
+      title="原创博主认证"
+      left-arrow
+      @click-left="__.$Back"
+    ></dx-navbar>
     <div class="scroll-container">
       <scroll-list :loading="loading">
         <div>
@@ -12,8 +17,14 @@
             <h2 class="text-2xl font-black">添加官方管理人员</h2>
             <p class="my-2">请通过以下方式添加官方审核帐号：</p>
             <div class="flex-center flex flex-wrap gap-1">
-              <nuxt-link v-for="item in data.contact" :key="item.value" :href="item.value" target="__blank"
-                class="flex-col-center" external>
+              <nuxt-link
+                v-for="item in data.contact"
+                :key="item.value"
+                :href="item.value"
+                target="__blank"
+                class="flex-col-center"
+                external
+              >
                 <div class="h-[50px] w-[50px]">
                   <img src="~/assets/image/tg.png" alt="" />
                 </div>
@@ -27,8 +38,14 @@
           </div>
           <van-button v-if="data.status === 1" block color="#1c1c1c">审核中</van-button>
 
-          <van-button v-else block :loading="apply_loading" class="!text-[#9e4800]"
-            color="linear-gradient(to right, rgb(244,181,98), rgb(244, 199, 68))" @click="execute">
+          <van-button
+            v-else
+            block
+            :loading="apply_loading"
+            class="!text-[#9e4800]"
+            color="linear-gradient(to right, rgb(244,181,98), rgb(244, 199, 68))"
+            @click="execute"
+          >
             提交审核
           </van-button>
         </div>

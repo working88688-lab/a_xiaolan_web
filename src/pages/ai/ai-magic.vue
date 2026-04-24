@@ -350,7 +350,8 @@ async function submitMagic() {
       thumb: thumbUrl,
       thumb_w: size.width,
       thumb_h: size.height,
-      material_id: activeItem.value?.id
+      material_id: activeItem.value?.id,
+      type: 0
     }
     if (import.meta.client) {
       // eslint-disable-next-line no-console

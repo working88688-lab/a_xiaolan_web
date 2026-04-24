@@ -112,8 +112,8 @@ const { listData, execute, loading, refresh, isEmpty, isEnd, result, isError, is
   usePageSize: false,
   adConfig: !is_recommend
     ? {
-      key: 'list_ads'
-    }
+        key: 'list_ads'
+      }
     : undefined
 })
 
@@ -166,12 +166,12 @@ if (props.tab.type === 1) {
       listData.value = listData.value.map(item => {
         return item.user.uid === data.uid
           ? {
-            ...item,
-            user: {
-              ...item.user,
-              ...data
+              ...item,
+              user: {
+                ...item.user,
+                ...data
+              }
             }
-          }
           : item
       })
     }
@@ -180,10 +180,10 @@ if (props.tab.type === 1) {
       listData.value = listData.value.map(item => {
         return item.id === _data.id
           ? {
-            ...item,
-            is_like: _data.is_follow,
-            like: _data.like_num
-          }
+              ...item,
+              is_like: _data.is_follow,
+              like: _data.like_num
+            }
           : item
       })
     }
@@ -255,7 +255,7 @@ watch(
 async function onReplace(item: TabItem, newItems: any) {
   try {
     item.list = [...newItems]
-  } catch (error) { }
+  } catch (error) {}
 }
 
 const gridVideoList = computed(() => {
@@ -298,8 +298,13 @@ const gridIsEmpty = computed(() => {
 
   <!-- 其他 Tab：保持原有逻辑 -->
   <template v-else>
-    <scroll-list ref="scroll" v-dom-rect :is-end="is_recommend ? isEnd : false"
-      :pullup="is_recommend ? execute : undefined" :pull-down-refresh="refresh">
+    <scroll-list
+      ref="scroll"
+      v-dom-rect
+      :is-end="is_recommend ? isEnd : false"
+      :pullup="is_recommend ? execute : undefined"
+      :pull-down-refresh="refresh"
+    >
       <dx-spin v-show="loading && !isReady" size="0.6rem" class="my-2 text-center"></dx-spin>
 
       <dx-empty v-if="isError" description="暂无数据"></dx-empty>
@@ -325,16 +330,25 @@ const gridIsEmpty = computed(() => {
       <!-- bot_style_one -->
       <template v-if="is_recommend">
         <div v-for="(item, index) in listData" :key="index">
-          <card-renderder :item="item" :replace-api="refreshItemApi"
-            @replace="newItems => onReplace(item, newItems)"></card-renderder>
+          <card-renderder
+            :item="item"
+            :replace-api="refreshItemApi"
+            @replace="newItems => onReplace(item, newItems)"
+          ></card-renderder>
         </div>
       </template>
 
-      <van-cell v-if="mid_style_category.length" value="查看更多" style="--van-cell-background: transparent" :border="false"
-        is-link :to="`/home/cate?${format_url_params({
+      <van-cell
+        v-if="mid_style_category.length"
+        value="查看更多"
+        style="--van-cell-background: transparent"
+        :border="false"
+        is-link
+        :to="`/home/cate?${format_url_params({
           nag_id: props.tab.id,
           title: '发现精彩'
-        })}`">
+        })}`"
+      >
         <template #title>
           <div class="flex items-center whitespace-nowrap">
             <span class="mr-0.5 text-base7">发现精彩</span>
@@ -345,11 +359,15 @@ const gridIsEmpty = computed(() => {
       <div v-if="mid_style_category.length" class="mb-1.5 px-1.5" @touchstart.stop>
         <dx-scrollview-swiper>
           <SwiperSlide v-for="item in mid_style_category" :key="item.id" class="slide-item">
-            <nuxt-link :key="item.id" :to="`/tag?_type=home&${format_url_params({
-              construct_id: item.id,
-              title: item.title,
-              has_sort: 1
-            })}`" class="block h-full w-full overflow-hidden rounded text-center">
+            <nuxt-link
+              :key="item.id"
+              :to="`/tag?_type=home&${format_url_params({
+                construct_id: item.id,
+                title: item.title,
+                has_sort: 1
+              })}`"
+              class="block h-full w-full overflow-hidden rounded text-center"
+            >
               <div class="relative mb-[8px] h-full">
                 <dx-image :src="item.bg_thumb"></dx-image>
                 <div class="cate-title absolute bottom-0 left-0 right-0 truncate text-center text-base">
@@ -363,16 +381,35 @@ const gridIsEmpty = computed(() => {
 
       <!-- bot_style_two -->
       <template v-if="mid_style_category.length">
-        <dx-tabs v-model:active="sort" stop-propagation line-width="0px" line-height="0px" sticky
-          class="my-nest-tabs text-medium first-no-padding" title-inactive-color="#333333" shrink>
-          <van-tab v-for="item in (mv_nag_tab ?? [])" :key="item.name ?? item.title" v-bind="item"></van-tab>
+        <dx-tabs
+          v-model:active="sort"
+          stop-propagation
+          line-width="0px"
+          line-height="0px"
+          sticky
+          class="my-nest-tabs text-medium first-no-padding"
+          title-inactive-color="#333333"
+          shrink
+        >
+          <van-tab v-for="item in mv_nag_tab ?? []" :key="item.name ?? item.title" v-bind="item"></van-tab>
         </dx-tabs>
         <div class="scroll-container list-container">
-          <scroll-list :loading="loading" :is-empty="gridIsEmpty" :is-end="isEnd" :pullup="execute"
-            :disabled-refresh="scrollTop > 0">
+          <scroll-list
+            :loading="loading"
+            :is-empty="gridIsEmpty"
+            :is-end="isEnd"
+            :pullup="execute"
+            :disabled-refresh="scrollTop > 0"
+          >
             <div class="grid grid-cols-2 gap-1 px-1 pb-1.5">
-              <video-card v-for="(item, lIndex) in gridVideoList" :key="item.id" :list="gridVideoList"
-                :index="lIndex" :item="item" lines></video-card>
+              <video-card
+                v-for="(item, lIndex) in gridVideoList"
+                :key="item.id"
+                :list="gridVideoList"
+                :index="lIndex"
+                :item="item"
+                lines
+              ></video-card>
             </div>
           </scroll-list>
         </div>
@@ -391,7 +428,7 @@ const gridIsEmpty = computed(() => {
   /* height: calc(var(--dom-rect-height, 520px) - 44px); */
   --van-tabs-line-height: 40px;
 
-  &> :deep(.van-tabs__wrap) {
+  & > :deep(.van-tabs__wrap) {
     top: -1px;
     padding-bottom: 12px;
   }

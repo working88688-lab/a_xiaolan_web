@@ -17,7 +17,9 @@ const props = defineProps<{
   rows?: number
 }>()
 
-const rowItemsLength = computed(() => (Number.isFinite(Number(props.cols)) && Number(props.cols) > 0 ? Number(props.cols) : 6))
+const rowItemsLength = computed(() =>
+  Number.isFinite(Number(props.cols)) && Number(props.cols) > 0 ? Number(props.cols) : 6
+)
 const rows = computed(() => (Number.isFinite(Number(props.rows)) && Number(props.rows) > 0 ? Number(props.rows) : 3))
 
 const splitIndex = computed(() => rowItemsLength.value * rows.value)

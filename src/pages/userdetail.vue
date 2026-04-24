@@ -32,7 +32,10 @@ watch(
   userInfo,
   v => {
     if (!detailDebug) return
-    console.log('%c========== [userdetail] ① 用户信息 /api/users/getUserHome（useMyFetch.data）==========', 'font-weight:bold;color:#1677ff')
+    console.log(
+      '%c========== [userdetail] ① 用户信息 /api/users/getUserHome（useMyFetch.data）==========',
+      'font-weight:bold;color:#1677ff'
+    )
     console.log('完整 userInfo 对象：', v)
     console.log('字段 tags_ary（类型里预留的个人标签名，后端若返回会在这里）：', v?.tags_ary)
   },
@@ -134,7 +137,10 @@ async function loadUserhomeTags() {
   if (id == null || id === '') {
     homeTagList.value = []
     if (detailDebug) {
-      console.log('%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags（跳过：无 id）==========', 'font-weight:bold;color:#ee0a24')
+      console.log(
+        '%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags（跳过：无 id）==========',
+        'font-weight:bold;color:#ee0a24'
+      )
       console.log({ fullPath: route.fullPath, query: { ...route.query } })
     }
     return
@@ -152,7 +158,10 @@ async function loadUserhomeTags() {
     homeTagList.value = picked.filter(t => t.name)
 
     if (detailDebug) {
-      console.log('%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags ==========', 'font-weight:bold;color:#07c160')
+      console.log(
+        '%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags ==========',
+        'font-weight:bold;color:#07c160'
+      )
       console.log('请求参数 to_uid：', String(id))
       console.log('整包响应 res（解密后，含 status/msg/data）：', res)
       console.log('res.data（标签接口返回的原始 data，一般为数组）：', res?.data)
@@ -162,7 +171,10 @@ async function loadUserhomeTags() {
   } catch (err) {
     homeTagList.value = []
     if (detailDebug) {
-      console.log('%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags（请求失败）==========', 'font-weight:bold;color:#ee0a24')
+      console.log(
+        '%c========== [userdetail] ② 标签接口 /api/users/get_userhome_tags（请求失败）==========',
+        'font-weight:bold;color:#ee0a24'
+      )
       console.warn(err)
     }
   }

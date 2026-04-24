@@ -45,7 +45,10 @@
               <img class="my-icon-arrow" src="~/assets/image/my/icon_right_grey_thin.png" />
             </div>
             <div class="user-withdraw-prompt">提现规则</div>
-            <div class="user-withdraw-prompt" v-html="DOMPurify.sanitize(info?.income?.rule?.replaceAll('\n', '<br/>') ?? '')" />
+            <div
+              class="user-withdraw-prompt"
+              v-html="DOMPurify.sanitize(info?.income?.rule?.replaceAll('\n', '<br/>') ?? '')"
+            />
             <dx-button class="user-public-btn" :disabled="withdrawing" @click="onWithdraw">确认提现</dx-button>
           </div>
         </scroll-list>
