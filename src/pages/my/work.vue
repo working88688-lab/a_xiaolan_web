@@ -228,7 +228,14 @@
               <dx-hoc-list v-if="key" ref="hide_list_ref" :api="hideListApi">
                 <template #item="{ item }">
                   <div class="work-item-block">
-                    <div class="work-item">
+                    <div
+                      class="work-item work-item--clickable"
+                      role="button"
+                      tabindex="0"
+                      @click="onOpenVideoDetail(item)"
+                      @keydown.enter.prevent="onOpenVideoDetail(item)"
+                      @keydown.space.prevent="onOpenVideoDetail(item)"
+                    >
                       <video-item-cover
                         :key="item.id"
                         class="work-cover"
