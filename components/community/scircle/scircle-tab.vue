@@ -638,7 +638,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
 import successBgUrl from '~/assets/image/success-bg.png'
 import tqItemUrl from '~/assets/image/tq-item.png'
 
@@ -965,6 +965,7 @@ const myProfileSelected = ref<string[]>([])
 const expectProfileSelected = ref<string[]>([])
 const profileImg = ref('')
 const profileImageInputRef = ref<HTMLInputElement | null>(null)
+const profileImgObjectUrl = ref<string | null>(null)
 const isSavingStep1 = ref(false)
 const isSavingStep2 = ref(false)
 const isUploadingImage = ref(false)
@@ -1131,6 +1132,14 @@ function onPickProfileImage() {
 function onDeleteProfileImage() {
   if (isUploadingImage.value) return
   profileImg.value = ''
+  if (profileImgObjectUrl.value) {
+    try {
+      URL.revokeObjectURL(profileImgObjectUrl.value)
+    } catch {
+      /* ignore */
+    }
+    profileImgObjectUrl.value = null
+  }
   const input = profileImageInputRef.value
   if (input) input.value = ''
 }
@@ -1146,6 +1155,24 @@ async function onProfileImageChange(event: Event) {
   }
   try {
     isUploadingImage.value = true
+
+    // 选完立刻反显（与 van-uploader 类似体验）；上传完成后用服务端 url 替换
+    if (profileImgObjectUrl.value) {
+      try {
+        URL.revokeObjectURL(profileImgObjectUrl.value)
+      } catch {
+        /* ignore */
+      }
+      profileImgObjectUrl.value = null
+    }
+    try {
+      const objectUrl = URL.createObjectURL(file)
+      profileImgObjectUrl.value = objectUrl
+      profileImg.value = objectUrl
+    } catch {
+      /* ignore：不影响后续上传 */
+    }
+
     const compressed = await __.$ImageCompression.compressor(file)
     const uploadRes = await __.$Api.uploadImage({ file: compressed, useCompress: false })
     // 兼容：既可能是拦截后返回的字符串，也可能是原始 { code, msg } 对象
@@ -1163,6 +1190,14 @@ async function onProfileImageChange(event: Event) {
     }
 
     profileImg.value = resolveMediaUrl(raw)
+    if (profileImgObjectUrl.value) {
+      try {
+        URL.revokeObjectURL(profileImgObjectUrl.value)
+      } catch {
+        /* ignore */
+      }
+      profileImgObjectUrl.value = null
+    }
     __.$Toast('图片上传成功')
   } catch (error) {
     console.error('图片上传失败:', error)
@@ -1172,6 +1207,17 @@ async function onProfileImageChange(event: Event) {
     if (input) input.value = ''
   }
 }
+
+onBeforeUnmount(() => {
+  if (profileImgObjectUrl.value) {
+    try {
+      URL.revokeObjectURL(profileImgObjectUrl.value)
+    } catch {
+      /* ignore */
+    }
+    profileImgObjectUrl.value = null
+  }
+})
 
 // 语音功能：上传/删除/播放个人语音先注释
 

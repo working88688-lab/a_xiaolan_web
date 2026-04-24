@@ -334,11 +334,15 @@ async function submitMagic() {
     }
     // 兜底清洗：避免出现空白/重复斜杠
     thumbUrl = thumbUrl.replace(/\s+/g, '')
-    try {
-      const u = new URL(thumbUrl)
-      u.pathname = u.pathname.replace(/\/{2,}/g, '/')
-      thumbUrl = u.toString()
-    } catch {
+    if (/^https?:\/\//i.test(thumbUrl)) {
+      try {
+        const u = new URL(thumbUrl)
+        // 提交给后端时只传路径，避免传全域名 URL
+        thumbUrl = `${u.pathname}${u.search}`.replace(/\/{2,}/g, '/')
+      } catch {
+        thumbUrl = thumbUrl.replace(/\/{2,}/g, '/')
+      }
+    } else {
       thumbUrl = thumbUrl.replace(/\/{2,}/g, '/')
     }
 

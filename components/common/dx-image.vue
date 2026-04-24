@@ -1,7 +1,18 @@
 <template>
   <div ref="containerRef" :class="classNames">
     <img
-      v-if="props.src"
+      v-if="props.src && isDirectSrc"
+      :key="props.src"
+      :src="props.src"
+      :style="{
+        'object-fit': fit
+      }"
+      :data-index="props.index"
+      :data-image-preview="preview"
+      :alt="alt"
+    />
+    <img
+      v-else-if="props.src"
       :key="props.src"
       v-lazyLoad:[props.groupId]="props.src"
       :style="{
@@ -52,6 +63,13 @@ const classNames = computed(() => {
       noBg: props.noBg
     })
   ]
+})
+
+const isDirectSrc = computed(() => {
+  const s = String(props.src ?? '').trim()
+  if (!s) return false
+  // 本地预览（blob/data）不走 lazyLoad 指令，否则无法反显
+  return s.startsWith('blob:') || s.startsWith('data:')
 })
 
 const containerRef = useTemplateRef<HTMLDivElement>('containerRef')

@@ -39,7 +39,7 @@ function listStatusParam(type: AiTypeKey, tab: StatusKey): number {
 const API_MAP: Record<AiTypeKey, string> = {
   face: 'api/ai/my_face',
   undress: 'api/ai/my_strip',
-  magic: 'api/aimagic/my_magic'
+  magic: 'api/aimagic/my_generate_video'
 }
 
 const POSTER_FIELDS: Record<AiTypeKey, Record<StatusKey, string[]>> = {
@@ -123,7 +123,12 @@ function resolvePoster(item: Record<string, any>) {
       </button>
     </div>
 
-    <dx-hoc-list class="ai-record-grid" :api="activeApi" :params="listParams">
+    <dx-hoc-list
+      :key="activeApi"
+      class="ai-record-grid"
+      :api="activeApi"
+      :params="listParams"
+    >
       <template #item="{ item }">
         <div class="ai-record-item">
           <dx-cover
