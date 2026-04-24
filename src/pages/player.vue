@@ -25,7 +25,10 @@
             video_tag_key: data.detail?.video_tag_key || '',
             video_title: data.detail?.title,
             video_tag_name: data.detail?.tags,
-            duration: data.detail?.duration
+            duration: data.detail?.duration,
+            media_id: data.detail?.media_id || '',
+            video_content_type: data.detail?.video_content_type || '',
+            recommend_trace_id: data.detail?.recommend_trace_id || ''
           }"
           @preview-ended="onVideoEnd"
         ></xg-player>
@@ -188,6 +191,7 @@ const {
 } = useMyFetch<VideoData>({
   api: __.$Api.Video.detail,
   success() {
+    console.log('[VideoDetail]', data.value.detail)
     if (data.value.topic_info?.id) {
       get_collects({
         topic_id: data.value.topic_info.id

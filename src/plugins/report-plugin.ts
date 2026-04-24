@@ -352,6 +352,8 @@ export default defineNuxtPlugin((nuxtApp) => {
       payload,
     }
 
+    console.log('[Tracker]', event, payload)
+
     return limitedFetch(data).catch((e) => {
       console.log('e: ', e)
     })
@@ -628,6 +630,60 @@ export default defineNuxtPlugin((nuxtApp) => {
           clearTimeout(ad_impression_timer)
           ad_impression_timer = null
         }, 5000)
+      }
+    },
+
+    // 小说事件 novel_event
+    trackNovelEvent(extra) {
+      if (checkRule(this._ctx, 'novel_event')) {
+        window.WebSDK?.track({
+          event: 'novel_event',
+          payload: {
+            media_id: extra.media_id,
+            novel_id: extra.novel_id,
+            novel_title: extra.novel_title,
+            novel_type_id: extra.novel_type_id,
+            novel_type_name: extra.novel_type_name,
+            recommend_trace_id: extra.recommend_trace_id,
+            novel_tag_key: extra.novel_tag_key,
+            novel_tag_name: extra.novel_tag_name,
+            read_progress: extra.read_progress,
+            page_no: extra.page_no,
+            novel_behavior_key: extra.novel_behavior_key,
+            novel_behavior_name: extra.novel_behavior_name,
+          },
+        })
+        return send(this._ctx, {
+          event: 'novel_event',
+          ...extra,
+        })
+      }
+    },
+
+    // 漫画事件 comic_event
+    trackComicEvent(extra) {
+      if (checkRule(this._ctx, 'comic_event')) {
+        window.WebSDK?.track({
+          event: 'comic_event',
+          payload: {
+            media_id: extra.media_id,
+            comic_id: extra.comic_id,
+            comic_title: extra.comic_title,
+            comic_type_id: extra.comic_type_id,
+            comic_type_name: extra.comic_type_name,
+            recommend_trace_id: extra.recommend_trace_id,
+            comic_tag_key: extra.comic_tag_key,
+            comic_tag_name: extra.comic_tag_name,
+            read_progress: extra.read_progress,
+            page_no: extra.page_no,
+            comic_behavior_key: extra.comic_behavior_key,
+            comic_behavior_name: extra.comic_behavior_name,
+          },
+        })
+        return send(this._ctx, {
+          event: 'comic_event',
+          ...extra,
+        })
       }
     },
 
