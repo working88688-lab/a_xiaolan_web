@@ -61,7 +61,7 @@
           align="row"
           :like="props.data.is_like === 1"
           :api="__.$Api.Video.liking"
-          :likes="props.data.like"
+          :likes="props.data.total_likes ?? props.data.like_num ?? props.data.like ?? 0"
           :use-toast="false"
         >
           <template #default="{ likes }">

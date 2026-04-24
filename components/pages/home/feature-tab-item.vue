@@ -53,6 +53,33 @@ const is_recommend = props.tab.name === '推荐'
 const is_follow_tab = computed(() => props.tab.api === '/api/mv/listOfFollow')
 const followTabDebug = import.meta.dev && import.meta.client
 
+function pickLikeFieldsFromFollowListItem(item: any) {
+  return {
+    id: item?.id ?? item?.mv_id ?? item?._id,
+    title: item?.title ?? item?.name,
+    user_uid: item?.user?.uid ?? item?.uid,
+    // 常见点赞/喜欢字段：不同接口命名可能不同
+    like_num: item?.like_num,
+    likes: item?.likes,
+    like: item?.like,
+    is_like: item?.is_like,
+    is_follow: item?.is_follow,
+    is_followed: item?.is_followed,
+    is_attention: item?.is_attention
+  }
+}
+
+function pickLikeFieldsFromRecommendUser(user: any) {
+  return {
+    uid: user?.uid,
+    nickname: user?.nickname,
+    total_likes: user?.total_likes,
+    like_num: user?.like_num,
+    is_followed: user?.is_followed,
+    is_attention: user?.is_attention
+  }
+}
+
 const followRecommendList = ref<any[]>([])
 const loadingFollowRecommend = ref(false)
 const { listData, execute, loading, refresh, isEmpty, isEnd, result, isError, isReady } = useFetchList<any>({
@@ -83,6 +110,29 @@ const { listData, execute, loading, refresh, isEmpty, isEnd, result, isError, is
       const d: any = result.value?.data
       const list = Array.isArray(d?.list) ? d.list : []
       const users = Array.isArray(d?.recommend_users) ? d.recommend_users : []
+
+      if (followTabDebug) {
+        const titleStyle =
+          'background:#111827;color:#fff;padding:6px 10px;border-radius:8px;font-weight:900;font-size:13px'
+        const metaStyle = 'color:#60a5fa;font-weight:900'
+        // eslint-disable-next-line no-console
+        console.groupCollapsed(
+          `%c[关注Tab] 数据分支检查%c list=${list.length} recommend_users=${users.length}（用于排查点赞字段）`,
+          titleStyle,
+          metaStyle
+        )
+        // eslint-disable-next-line no-console
+        console.log('[关注Tab] list[0..10] 原始片段 =', list.slice(0, 10))
+        // eslint-disable-next-line no-console
+        console.table(list.slice(0, 20).map(pickLikeFieldsFromFollowListItem))
+        // eslint-disable-next-line no-console
+        console.log('[关注Tab] recommend_users[0..10] 原始片段 =', users.slice(0, 10))
+        // eslint-disable-next-line no-console
+        console.table(users.slice(0, 20).map(pickLikeFieldsFromRecommendUser))
+        // eslint-disable-next-line no-console
+        console.groupEnd()
+      }
+
       if (list.length === 0 && users.length && !followRecommendList.value.length) {
         followRecommendList.value = users.slice(0, 50)
       }
