@@ -18,7 +18,18 @@ const EVENT_MAP = {
     return new Promise(resolve => {
       const router = useRouter()
       router.isReady().then(() => {
-        router.push('/coin-recharge1')
+        router.push('/coin-recharge')
+
+        resolve(true)
+      })
+    })
+  },
+  /** 活动 H5 跳转社区（与 xlpmncode://community 对应） */
+  'pwa::view::community': () => {
+    return new Promise(resolve => {
+      const router = useRouter()
+      router.isReady().then(() => {
+        router.push('/community?tab=scircle')
 
         resolve(true)
       })
