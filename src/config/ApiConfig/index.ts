@@ -156,12 +156,9 @@ class HttpApi {
         if (useCompress) {
           file = await _this.app.$ImageCompression.compressor(file)
         }
-        return _this.app.$G.getConfig().then(({ imgUploadUrl, imgDomain }) => {
-          const domain = imgDomain || imgUploadUrl
+        return _this.app.$G.getConfig().then(({ imgUploadUrl }) => {
           return UploadImage({
             baseURL: `${imgUploadUrl}`,
-            fullAddress: true,
-            imgDomain: domain,
             // url: url,
             method: 'POST',
             onUploadProgress,

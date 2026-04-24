@@ -328,7 +328,7 @@ async function submitMagic() {
 
     // 2) 先上传图片，拿到可访问 URL，再提交生成接口
     const uploadRes = await __.$Api.uploadImage({ file: rawFile, useCompress: true })
-    let thumbUrl = String((uploadRes as any) ?? '').trim()
+    let thumbUrl = String((uploadRes as any) ?? '').trim() 
     if (!thumbUrl) {
       return __.$Toast('图片上传失败，请重试')
     }
