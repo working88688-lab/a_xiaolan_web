@@ -12,12 +12,29 @@ const search_ref = ref()
 const main_tab = ref(0)
 const render_sidebar = ref(false)
 
+function normalizeKeyword(val: string) {
+  return String(val ?? '').trim()
+}
+
+function canSearchKeyword(val: string) {
+  const keyword = normalizeKeyword(val)
+  // 不允许单个字符（含单个汉字）搜索
+  if (keyword.length < 2) {
+    __.$Toast('至少两位搜索关键字')
+    return { ok: false as const, keyword }
+  }
+  return { ok: true as const, keyword }
+}
+
 function onSearch(new_value: string) {
-  router.push(`/search/result?keyword=${new_value}&_index=${route.query._index || 0}`)
+  const { ok, keyword } = canSearchKeyword(new_value)
+  if (!ok) return
+
+  router.push(`/search/result?keyword=${keyword}&_index=${route.query._index || 0}`)
 
   nextTick(() => {
-    if (!searchHistory.value.includes(new_value)) {
-      searchHistory.value = [...searchHistory.value, new_value]
+    if (!searchHistory.value.includes(keyword)) {
+      searchHistory.value = [...searchHistory.value, keyword]
     }
 
     search_ref.value?.set_value()
@@ -32,8 +49,10 @@ function onBack() {
 }
 
 function onHistorySearch(val: string) {
-  search_ref.value?.saveHistory(val)
-  router.push(`/search/result?keyword=${val}&_index=${route.query._index || 0}`)
+  const { ok, keyword } = canSearchKeyword(val)
+  if (!ok) return
+  search_ref.value?.saveHistory(keyword)
+  router.push(`/search/result?keyword=${keyword}&_index=${route.query._index || 0}`)
 }
 
 function onClearHistory() {
