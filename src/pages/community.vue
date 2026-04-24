@@ -40,6 +40,7 @@
       @dismiss="onCommunityNavGuideDismiss"
     />
 
+    <!--
     <van-popup
       v-model:show="showScircleInterstitial"
       teleport="body"
@@ -60,6 +61,7 @@
         <img class="scircle-interstitial-img" :src="tqAdUrl" alt="同圈广告" @click="onScircleInterstitialClick" />
       </div>
     </van-popup>
+    -->
   </div>
 </template>
 
