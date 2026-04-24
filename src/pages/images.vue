@@ -237,7 +237,13 @@ const isEnoughCoins = computed(() => {
  */
 const listSeries = computed(() => {
   const raw: any = pageData.value || {}
-  const series = Array.isArray(raw.series) ? raw.series : []
+  let series = Array.isArray(raw.series) ? raw.series : []
+
+  // 接口可能不返回 series，此时用 thumb 做兜底，保证列表至少有一张可展示
+  if (series.length === 0) {
+    const thumb = raw.thumb_full || raw.thumb || ''
+    if (thumb) series = [{ img_url_full: thumb }]
+  }
 
   // 已解锁：直接展示接口返回
   if (Boolean(raw.has_right) || raw.is_pay === 1) return series
