@@ -163,8 +163,8 @@
           <div class="scircle-settings-scroll">
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                个人标签（可多选）
                 <span class="scircle-required">*</span>
+                个人标签（可多选）
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -183,8 +183,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                个人倾向（可多选）
                 <span class="scircle-required">*</span>
+                个人倾向（可多选）
               </div>
               <div class="scircle-settings-tags scircle-settings-tags--small">
                 <button
@@ -203,8 +203,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                个人性癖好（可多选）
                 <span class="scircle-required">*</span>
+                个人性癖好（可多选）
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -405,8 +405,8 @@
           <div class="scircle-settings-scroll">
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                他的标签（可多选）
                 <span class="scircle-required">*</span>
+                他的标签（可多选）
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -424,8 +424,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                他的倾向（可多选）
                 <span class="scircle-required">*</span>
+                他的倾向（可多选）
               </div>
               <div class="scircle-settings-tags scircle-settings-tags--small">
                 <button
@@ -443,8 +443,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                他的性癖好（可多选）
                 <span class="scircle-required">*</span>
+                他的性癖好（可多选）
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -1859,7 +1859,7 @@ async function goChat() {
 
 .scircle-required {
   color: #ee0a24;
-  margin-left: 4px;
+  margin-right: 4px;
   font-weight: 600;
 }
 
