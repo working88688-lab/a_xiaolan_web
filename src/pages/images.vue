@@ -139,10 +139,12 @@
         >
           <img
             class="dx-preview-image"
-            :src="src"
+            v-lazyLoad:[Number(pageData?.id)]="src"
+            :src="imgLoading"
             :style="style"
             alt=""
             @load="onLoad"
+            @decrypted="onLoad"
             @click="onPreviewImageTapFromClick"
           />
 
@@ -159,7 +161,7 @@
           </button>
 
           <div
-            v-if="!isPreviewClean && !isPreviewUnlocked && previewImages?.length > 1 && src !== previewImages?.[0]"
+            v-if="!isPreviewClean && !isPreviewUnlocked && previewImages?.length > 1 && currentIndex > 0"
             class="dx-preview-locked-overlay"
           >
             <div class="dx-preview-pay-card">
@@ -230,6 +232,13 @@ const isEnoughCoins = computed(() => {
   if (needCoins.value <= 0) return true
   return userCoins.value >= needCoins.value
 })
+
+const getDecryptedUrl = (url: string) => {
+  const globalObject: any = (__ as any).$GlobalObject || {}
+  const cache = globalObject?._CACHE_IMAGES_MAPS?.[url]
+  if (cache?.status === 1 && typeof cache.url === 'string' && cache.url) return cache.url
+  return url
+}
 
 /**
  * 展示列表兜底：locked 状态下，如果接口 series 只返回 0/1 张，会导致底部遮罩/引导消失
@@ -398,12 +407,7 @@ const onImageClick = (index: number | string) => {
 
   if (!images.length) return
 
-  // 锁定态：给每一张加唯一 fragment，确保预览 slot 内能区分“第1张/其他张”
-  if (!isPreviewUnlocked.value) {
-    previewImages.value = images.map((u: string, idx: number) => `${u}#pv-${idx}`)
-  } else {
-    previewImages.value = images
-  }
+  previewImages.value = images
   currentIndex.value = i
   showPreview.value = true
 }
@@ -480,7 +484,8 @@ const onPreviewImageTap = () => {
 const safeFilename = (name: string) => name.replace(/[\\/:*?"<>|]/g, '_').slice(0, 120)
 
 const onSaveClick = async () => {
-  const url = previewVisibleImages.value[currentIndex.value]
+  const urlRaw = previewVisibleImages.value[currentIndex.value]
+  const url = urlRaw ? getDecryptedUrl(urlRaw) : ''
   if (!url) {
     __.$Toast('图片地址无效')
     return
