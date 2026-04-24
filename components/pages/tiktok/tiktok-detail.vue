@@ -173,7 +173,9 @@ function openShare() {
       video_title: item.title,
       video_tag_name: item.tags,
       duration: item.duration,
-      video_content_type: 'short'
+      media_id: item.media_id || '',
+      video_content_type: item.video_content_type || 'short_video',
+      recommend_trace_id: item.recommend_trace_id || ''
     }"
     :active="props.active"
     :disabled="showPreviewTip"

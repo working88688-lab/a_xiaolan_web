@@ -26,7 +26,9 @@
             video_title: data.detail?.title,
             video_tag_name: data.detail?.tags,
             duration: data.detail?.duration,
-            video_content_type: 'long'
+            media_id: data.detail?.media_id || '',
+            video_content_type: data.detail?.video_content_type || '',
+            recommend_trace_id: data.detail?.recommend_trace_id || ''
           }"
           @preview-ended="onVideoEnd"
         ></xg-player>

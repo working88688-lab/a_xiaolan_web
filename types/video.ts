@@ -30,6 +30,9 @@ export interface VideoItem {
   video_type_id: number
   video_tag_key: string
   video_type_name: string
+  media_id?: string
+  video_content_type?: string
+  recommend_trace_id?: string
 }
 
 export interface VideoData {
