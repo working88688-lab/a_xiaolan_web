@@ -2,6 +2,7 @@
 import type { ForumItem } from '@types'
 import type { UploaderFileListItem } from 'vant'
 const __ = useNuxtApp()
+const publishVideoDebug = import.meta.env.DEV && import.meta.client
 
 const formState = reactive({
   title: '',
@@ -69,6 +70,21 @@ const { validate } = useValidator({
 })
 
 const publishing = ref(false)
+
+function toSubmitPath(input: unknown): string {
+  const raw = String(input ?? '').trim()
+  if (!raw) return ''
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      const u = new URL(raw)
+      return `${u.pathname || ''}${u.search || ''}${u.hash || ''}` || raw
+    } catch {
+      return raw
+    }
+  }
+  return raw
+}
+
 async function onSubmit() {
   try {
     const { title, coins, videos, images } = formState
@@ -90,15 +106,27 @@ async function onSubmit() {
     console.log('thumb_height: ', thumb_height)
     console.log('thumb_width: ', thumb_width)
 
-    await __.$Api.Video.upload({
+    const rawImgUrl = (images[0] as any).remoteUrl || images[0].url
+    const payload = {
       title,
       coins,
       tags,
-      img_url: (images[0] as any).remoteUrl || images[0].url,
+      img_url: toSubmitPath(rawImgUrl),
       url: videos[0].url,
       thumb_width,
       thumb_height
-    })
+    }
+    if (publishVideoDebug) {
+      // eslint-disable-next-line no-console
+      console.log('%c[publish/video] 提交时间与数据', 'color:#1677ff;font-weight:700', {
+        nowTs: Date.now(),
+        nowISO: new Date().toISOString(),
+        rawImgUrl,
+        payload
+      })
+    }
+
+    await __.$Api.Video.upload(payload)
     reset()
   } catch (error) {
     console.log('error: ', error)
@@ -138,6 +166,29 @@ watch(showPicker, val => {
     searchKeyword.value = ''
   }
 })
+
+watch(
+  () => formState.images,
+  images => {
+    if (!publishVideoDebug) return
+    const first = images?.[0] as any
+    if (!first) return
+    const file = first?.file as File | undefined
+    // eslint-disable-next-line no-console
+    console.log('%c[publish/video] 封面上传时间数据', 'color:#13c2c2;font-weight:700', {
+      nowTs: Date.now(),
+      nowISO: new Date().toISOString(),
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type,
+      fileLastModified: file?.lastModified,
+      fileLastModifiedISO: file?.lastModified ? new Date(file.lastModified).toISOString() : '',
+      imageUrl: first?.url,
+      imageRemoteUrl: first?.remoteUrl
+    })
+  },
+  { deep: true }
+)
 </script>
 <template>
   <div v-if="key" :key="key" class="container">

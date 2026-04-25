@@ -25,6 +25,105 @@ const navigateTo = (item: any) => {
 
 const route = useRoute()
 const list_ref = useTemplateRef('list')
+const noticeDebug = import.meta.env.DEV && import.meta.client
+
+function stringOrEmpty(v: unknown): string {
+  return typeof v === 'string' ? v.trim() : ''
+}
+
+function looksLikeImageUrl(s: string): boolean {
+  if (!s) return false
+  // 兼容后端返回的完整 URL / 根相对路径 / upload 路径
+  if (/^(https?:\/\/\S+|\/\S+)$/.test(s)) {
+    if (/\.(png|jpe?g|gif|webp|bmp|svg)(\?|#|$)/i.test(s)) return true
+    if (/\/upload[_/]/i.test(s)) return true
+  }
+  return false
+}
+
+function hasImagePayload(v: unknown): boolean {
+  if (Array.isArray(v)) return v.length > 0
+  if (v && typeof v === 'object') return Object.keys(v as Record<string, any>).length > 0
+  return !!stringOrEmpty(v)
+}
+
+function isImageType(v: unknown): boolean {
+  if (typeof v === 'number') return v === 2
+  if (typeof v === 'string') {
+    const t = v.trim().toLowerCase()
+    return t === '2' || t === 'image' || t === 'img' || t === 'pic' || t === 'photo'
+  }
+  return false
+}
+
+function getChatPreview(item: any): string {
+  // 1) 优先取常见文本字段
+  const textCandidates = [
+    item?.chat_log,
+    item?.content,
+    item?.last_content,
+    item?.last_message?.content,
+    item?.last_msg?.content
+  ]
+  for (const raw of textCandidates) {
+    const s = stringOrEmpty(raw)
+    if (!s) continue
+    // 历史格式：[图片] <url>
+    if (/^\[图片\](\s+\S+)?$/u.test(s)) return '[图片]'
+    // 新格式：content 直接存图片 url
+    if (looksLikeImageUrl(s)) return '[图片]'
+    return s
+  }
+
+  // 2) 再看类型字段（部分接口仅给 type，不给文案）
+  const typeCandidates = [
+    item?.chat_log_type,
+    item?.msg_type,
+    item?.message_type,
+    item?.last_message?.type,
+    item?.last_msg?.type
+  ]
+  if (typeCandidates.some(isImageType)) return '[图片]'
+
+  // 3) 最后兜底看图片载荷字段
+  const imageCandidates = [
+    item?.images,
+    item?.image,
+    item?.img,
+    item?.thumb,
+    item?.pic,
+    item?.last_message?.images,
+    item?.last_message?.image,
+    item?.last_msg?.images,
+    item?.last_msg?.image
+  ]
+  if (imageCandidates.some(hasImagePayload)) return '[图片]'
+
+  return ''
+}
+
+function debugChatFriendsResponse(res: any) {
+  if (!noticeDebug) return
+  const list = Array.isArray(res?.data?.list) ? res.data.list : []
+  // eslint-disable-next-line no-console
+  console.log('%c[my/notice 私信] /api/message/friends 原始响应', 'color:#1677ff;font-weight:700', res)
+  // eslint-disable-next-line no-console
+  console.table(
+    list.map((it: any) => ({
+      uid: it?.friend?.uid,
+      nickname: it?.friend?.nickname,
+      chat_log: it?.chat_log,
+      chat_log_type: it?.chat_log_type,
+      msg_type: it?.msg_type,
+      message_type: it?.message_type,
+      last_message_type: it?.last_message?.type,
+      last_message_content: it?.last_message?.content,
+      msg_count: it?.msg_count,
+      preview: getChatPreview(it) || '暂无新消息'
+    }))
+  )
+}
+
 const beforeClose = async (item: any) => {
   return new Promise(resolve => {
     showConfirmDialog({
@@ -66,6 +165,7 @@ const { key, activeTab } = useKeepAlive({
             :fetch-props="{ useShallowRef: true }"
             :params="{ size: 10 }"
             :api="__.$Api.User.chat_friends"
+            :success="debugChatFriendsResponse"
           >
             <template #item="{ item }">
               <van-swipe-cell :before-close="() => beforeClose(item)" stop-propagation>
@@ -82,7 +182,7 @@ const { key, activeTab } = useKeepAlive({
                       <div class="ml-1 flex-1">
                         <div class="text-xl">{{ item.friend.nickname }}</div>
                         <div class="flex text-sm">
-                          {{ item.chat_log || '暂无新消息' }}
+                          {{ getChatPreview(item) || '暂无新消息' }}
                           <van-badge v-if="item.msg_count > 0" position="" :content="item.msg_count" />
                         </div>
                       </div>
