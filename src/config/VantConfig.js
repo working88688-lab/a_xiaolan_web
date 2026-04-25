@@ -8,14 +8,29 @@ import numeral from 'numeral'
 import en from 'vant/es/locale/lang/en-US'
 import zh from 'vant/es/locale/lang/zh-CN'
 
+const TOAST_TOP_Z_INDEX = 2147483647
+
+function withTopToastZIndex(options) {
+  if (typeof options === 'string') {
+    return {
+      message: options,
+      zIndex: TOAST_TOP_Z_INDEX
+    }
+  }
+  return {
+    ...(options || {}),
+    zIndex: TOAST_TOP_Z_INDEX
+  }
+}
+
 export default defineNuxtPlugin(app => {
   console.log(`【${process.client ? 'CSR' : 'SSR'}】@初始组件UI配置完成~`)
 
   return {
     provide: {
       MessageClose: () => closeToast(),
-      MessageSuccess: options => showSuccessToast(options),
-      MessageLoading: options => showLoadingToast(options),
+      MessageSuccess: options => showSuccessToast(withTopToastZIndex(options)),
+      MessageLoading: options => showLoadingToast(withTopToastZIndex(options)),
       Alert: options => {
         if (typeof options === 'object') {
           return showDialog({
@@ -58,15 +73,15 @@ export default defineNuxtPlugin(app => {
         const _options =
           typeof options === 'string'
             ? {
-              message: options,
-              transition: 'van-dialog-bounce'
+                message: options,
+                transition: 'van-dialog-bounce'
             }
             : {
-              ...options,
-              transition: 'van-dialog-bounce'
+                ...options,
+                transition: 'van-dialog-bounce'
             }
 
-        showToast(_options)
+        showToast(withTopToastZIndex(_options))
       },
       Numeral: options => numeral(options),
       vantLang: () => ({
