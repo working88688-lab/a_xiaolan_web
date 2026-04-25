@@ -72,8 +72,8 @@ async function fetchPreStrip() {
       res
     )
     const d = (res?.data ?? {}) as Record<string, unknown>
+    console.log('[AI-UNDRESS] d 所有字段:', JSON.parse(JSON.stringify(d)))
     stripData.value = {
-      // free_num / 次数：兼容后端不同命名
       free_num: pickNumericField(d, [
         'free_num',
         'freeNum',
@@ -86,28 +86,11 @@ async function fetchPreStrip() {
         'remain_free_num',
         'ai_ty_free_num'
       ]),
-      // coin / 余额：兼容你截图里的 ai_ty_coins
       coin: pickNumericField(d, ['coin', 'coins', 'balance', 'ai_type_coins', 'ai_ty_coin', 'ai_type_coin']),
-      // cost_coin / 价格：兼容 cost_coin、need_coin、price 以及 ai_ty_price/ai_strip_price 之类
-      cost_coin: pickNumericField(d, [
-        'cost_coin',
-        'cost',
-        'need_coin',
-        'needCoins',
-        'price',
-        'gold_coin',
-        'gold',
-        // 你当前 pre_strip 返回里：ai_ty_coins=190（支付价格）
-        'ai_ty_coins',
-        'ai_ty_cost',
-        'ai_ty_price',
-        'ai_strip_price',
-        'strip_price',
-        'pay_coin',
-        'payCoins'
-      ]),
+      cost_coin: pickNumericField(d, ['ai_ty_coins']),
       tips: pickStringField(d, ['tips', 'tip', 'message', 'msg'])
     }
+    console.log('[AI-UNDRESS] stripData 解析结果:', JSON.parse(JSON.stringify(stripData.value)))
   } catch (error) {
     console.error('获取AI去衣预检查失败:', error)
   }
