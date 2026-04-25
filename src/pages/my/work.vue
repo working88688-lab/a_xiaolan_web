@@ -15,9 +15,17 @@
           <van-icon name="arrow-left" class="!absolute left-0 p-1 !text-2xl" @click="__.$Back"></van-icon>
         </template>
         <template #right>
-          <publish-popup v-show="nav_tab === 0" class="original-auth-btn !absolute right-0 flex items-center p-1">
+          <div
+            v-show="nav_tab === 0"
+            class="original-auth-btn !absolute right-0 flex cursor-pointer items-center p-1"
+            role="button"
+            tabindex="0"
+            @click="onGoPostAuth"
+            @keydown.enter.prevent="onGoPostAuth"
+            @keydown.space.prevent="onGoPostAuth"
+          >
             <span class="original-auth-btn">原创认证</span>
-          </publish-popup>
+          </div>
         </template>
         <van-tab title="视频">
           <dx-tabs v-model:active="video_tab" class="dx-tabs primary-tabs" animated swipeable>
@@ -542,6 +550,10 @@ const onTips = async () => {
 
 function onGoPublishVideo() {
   router.push('/publish/video')
+}
+
+function onGoPostAuth() {
+  router.push('/post/auth')
 }
 
 function onOpenVideoDetail(item: any) {

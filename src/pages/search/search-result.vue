@@ -7,12 +7,42 @@ const search_ref = ref()
 
 const searchValue = ref()
 const route = useRoute()
+const router = useRouter()
+const __ = useNuxtApp()
+const searchTriggerTick = ref(0)
+
+function normalizeKeyword(val: string) {
+  return String(val ?? '').trim()
+}
+
+function canSearchKeyword(val: string) {
+  const keyword = normalizeKeyword(val)
+  // 与 /search 页面保持一致：不允许单个字符（含单个汉字）搜索
+  if (keyword.length < 2) {
+    __.$Toast('至少两位搜索关键字')
+    return { ok: false as const, keyword }
+  }
+  return { ok: true as const, keyword }
+}
 
 function onSearch(value: string) {
-  if (!value) {
-    return
-  }
-  searchValue.value = value
+  const { ok, keyword } = canSearchKeyword(value)
+  if (!ok) return
+  searchValue.value = keyword
+  // 同关键词反复点击也要强制刷新请求
+  searchTriggerTick.value += 1
+  // 同步 URL，便于回退与分享；_t 保证同词重复搜索也触发路由更新
+  router
+    .replace({
+      path: '/search/result',
+      query: {
+        ...route.query,
+        keyword,
+        _index: String(activeTab.value ?? 0),
+        _t: String(Date.now())
+      }
+    })
+    .catch(() => {})
 }
 
 const { key, activeTab } = useKeepAlive({
@@ -33,15 +63,26 @@ const { key, activeTab } = useKeepAlive({
   }
 })
 
+watch(
+  () => route.query.keyword,
+  value => {
+    const keyword = normalizeKeyword(String(value ?? ''))
+    if (!keyword) return
+    searchValue.value = keyword
+    nextTick(() => {
+      search_ref.value?.set_value(keyword)
+    })
+  }
+)
+
 onMounted(() => {
   nextTick(() => {
     search_ref.value?.set_value(route.query.keyword)
   })
 })
 
-const app = useNuxtApp()
 function onTrack(data: any) {
-  app.$Tracker.trackKeywordSearch({
+  __.$Tracker.trackKeywordSearch({
     keyword: searchValue.value,
     search_result_count: data.count
   })
@@ -56,7 +97,7 @@ function onTrack(data: any) {
     </div>
 
     <div v-if="key && searchValue" class="scroll-container">
-      <dx-tabs :key="searchValue" v-model:active="activeTab" class="first-no-padding dx-tabs text-lg" shrink>
+      <dx-tabs :key="`${searchValue}-${searchTriggerTick}`" v-model:active="activeTab" class="first-no-padding dx-tabs text-lg" shrink>
         <van-tab title="视频">
           <dx-hoc-list :on-track class="dx-grid-1" api="api/search/mv" :params="{ kwy: searchValue, show_type: 0 }">
             <template #item="{ item, index, items }">
