@@ -237,15 +237,19 @@ const handleBuyAction = async (index: number) => {
 }
 
 const handleFreeAction = (index: number) => {
+  if (!pageData.value?.series?.length) {
+    __.$Toast('暂无章节数据')
+    return
+  }
+  const item = pageData.value.series[index] ?? pageData.value.series[0]
+  sid.value = item?.series
   showComicsReader.value = true
-  const item = pageData.value!.series[index]
-  sid.value = item.series
 }
 
 const handleTips = (item: StoryItem, index: number) => {
-  const seriesList = pageData.value!.series
-  const coinsNumber = pageData.value!.coins
-  const isPays = pageData.value!.is_pay
+  const seriesList = pageData.value?.series ?? []
+  const coinsNumber = pageData.value?.coins ?? 0
+  const isPays = pageData.value?.is_pay ?? 0
 
   if (seriesList.length <= 5 && isPays == 0) {
     if (coinsNumber > 0) {
@@ -284,19 +288,18 @@ const handleTips = (item: StoryItem, index: number) => {
 }
 
 const onBeginReading = () => {
+  const seriesList = pageData.value?.series ?? []
   if (isRead) {
     const isReadNumber = isRead.value.s_id ?? 0
     if (isReadNumber >= 0) {
       const index = isReadNumber - 1
-      const episode = pageData.value!.series[index] ?? 1
+      const episode = seriesList[index] ?? seriesList[0]
       handleTips(episode, index >= 0 ? index : 0)
     } else {
-      const episode = pageData.value!.series[0] ?? 1
-      handleTips(episode, 0)
+      handleTips(seriesList[0], 0)
     }
   } else {
-    const episode = pageData.value!.series[0] ?? 1
-    handleTips(episode, 0)
+    handleTips(seriesList[0], 0)
   }
 }
 

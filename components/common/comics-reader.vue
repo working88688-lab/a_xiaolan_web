@@ -113,12 +113,12 @@ function getComicTrackBase() {
     media_id: props.data?.media_id ?? '',
     comic_id: String(props.data?.id ?? ''),
     comic_title: props.data?.title ?? '',
-    comic_type_id: props.data?.comic_type_id ?? '',
-    comic_type_name: props.data?.comic_type_name ?? '',
+    comic_type_id: props.data?.comic_type_id || 'default',
+    comic_type_name: props.data?.comic_type_name || '默认分类',
     recommend_trace_id: props.data?.recommend_trace_id ?? '',
-    comic_tag_key: props.data?.comic_tag_key ?? '',
-    comic_tag_name: props.data?.comic_tag_name ?? '',
-    page_no: props.sid ?? 0,
+    comic_tag_key: props.data?.comic_tag_key || 'default',
+    comic_tag_name: props.data?.comic_tag_name || '默认标签',
+    page_no: props.sid ?? 1,
     read_progress: 0,
   }
 }
