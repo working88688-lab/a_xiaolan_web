@@ -50,12 +50,12 @@ const POSTER_FIELDS: Record<AiTypeKey, Record<StatusKey, string[]>> = {
   },
   undress: {
     processing: ['thumb'],
-    done: ['result_image', 'thumb'],
+    done: ['strip_thumb', 'thumb'],
     failed: ['thumb']
   },
   magic: {
     processing: ['thumb'],
-    done: ['result_video', 'thumb'],
+    done: ['cover', 'thumb'],
     failed: ['thumb']
   }
 }
@@ -64,10 +64,16 @@ function onDownload(url: string) {
   onWinOpen(__.$GlobalObject._CACHE_IMAGES_MAPS?.[url]?.url)
 }
 
+const showVideoPopup = ref(false)
+const activeVideoItem = ref<any>(null)
+
 function onPreview(item: any, type: AiTypeKey) {
   if (type === 'face' && statusTab.value === 'done') {
     dynamicStore.update_cache(CACHE_KEY.PREVIEW_AI_FACE, item)
     router.push(`/ai/preview-face?type=2`)
+  } else if (type === 'magic' && statusTab.value === 'done' && item.video) {
+    activeVideoItem.value = item
+    showVideoPopup.value = true
   }
 }
 
@@ -123,23 +129,55 @@ function resolvePoster(item: Record<string, any>) {
       </button>
     </div>
 
-    <dx-hoc-list :key="activeApi" class="ai-record-grid" :api="activeApi" :params="listParams">
+    <dx-hoc-list :key="activeApi" class="ai-record-grid" :api="activeApi" :params="listParams" :success="(res) => console.log('[AiRecord]', aiType, statusTab, res)">
       <template #item="{ item }">
         <div class="ai-record-item">
           <dx-cover class="ai-record-cover" :poster="resolvePoster(item)" @click="onPreview(item, aiType)">
             <div v-if="statusTab === 'processing'" class="ai-record-cover-mask">
               <van-loading class="ai-record-cover-loading" type="spinner" />
             </div>
-            <div v-if="aiType === 'face' && statusTab === 'done'" class="ai-record-cover-actions">
-              <dx-button class="ai-record-save-btn" size="mini" @click.stop="onDownload(item.face_thumb)">
-                保存
-              </dx-button>
+            <div v-if="statusTab === 'done'" class="ai-record-cover-actions">
+              <dx-button
+                v-if="aiType === 'face'"
+                class="ai-record-save-btn"
+                size="mini"
+                @click.stop="onDownload(item.face_thumb)"
+              >保存</dx-button>
+              <dx-button
+                v-else-if="aiType === 'undress'"
+                class="ai-record-save-btn"
+                size="mini"
+                @click.stop="onDownload(item.strip_thumb)"
+              >保存</dx-button>
+              <dx-button
+                v-else-if="aiType === 'magic'"
+                class="ai-record-save-btn"
+                size="mini"
+                @click.stop="onWinOpen(item.down_url)"
+              >保存</dx-button>
             </div>
+            <div v-if="aiType === 'magic' && statusTab === 'done' && item.video" class="ai-record-play-icon">▶</div>
           </dx-cover>
           <div class="ai-record-time">时间：{{ item.created_at }}</div>
         </div>
       </template>
     </dx-hoc-list>
+
+    <van-popup v-model:show="showVideoPopup" position="bottom" teleport="body" round closeable @closed="activeVideoItem = null">
+      <div class="ai-record-video-popup">
+        <xg-player
+          v-if="activeVideoItem"
+          :key="activeVideoItem.id"
+          class="ai-record-video-player"
+          :active="showVideoPopup"
+          :src="activeVideoItem.video"
+          :poster="activeVideoItem.cover"
+          :autoplay="true"
+          :loop="true"
+          :short="true"
+        />
+      </div>
+    </van-popup>
   </div>
 </template>
 
@@ -239,5 +277,31 @@ function resolvePoster(item: Record<string, any>) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.ai-record-play-icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.ai-record-video-popup {
+  padding: 16px 0 32px;
+}
+
+.ai-record-video-player {
+  width: 100%;
+  height: 460px;
 }
 </style>
