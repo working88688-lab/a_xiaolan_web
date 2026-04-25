@@ -207,10 +207,37 @@ export default defineNuxtPlugin(nuxtApp => {
 
           // 5. 异常处理
           .catch(err => {
+            // 新上传图片偶发“短时间不可访问”（CDN/存储延迟），这里不要把失败永久缓存成 status=2，
+            // 否则本页生命周期内永远不会再尝试加载，必须刷新/重进才恢复。
+            const maxRetry = 3
+            const key = '__lazy_retry__'
+            const tried = Number(el[key] ?? 0)
+            el[key] = tried + 1
 
+            // 清理本次 pending，避免队列泄漏
+            try {
+              const cache = $GlobalObject['_CACHE_IMAGES_MAPS']?.[imglink]
+              if (cache && Array.isArray(cache.pending)) cache.pending = []
+            } catch {}
+
+            if (tried < maxRetry) {
+              // 继续保持 loading 状态，延迟后再尝试
+              const delay = [500, 1500, 3000][tried] ?? 3000
+              // 允许下次重新触发加载
+              try {
+                Reflect.deleteProperty($GlobalObject['_CACHE_IMAGES_MAPS'], imglink)
+              } catch {}
+              setTimeout(() => {
+                // 元素可能已卸载
+                if (!document.contains(el)) return
+                lazyLoad(el, binding, vnode)
+              }, delay)
+              return
+            }
+
+            // 超过重试次数：才认为失败并给出兜底图
             !noloads && errorHandler(el)
             $GlobalObject['_CACHE_IMAGES_MAPS'][imglink].status = 2 //加载失败
-
             console.error(`图片获取失败:${imglink}`, err)
           })
           .finally(() => {

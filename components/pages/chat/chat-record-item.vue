@@ -25,25 +25,6 @@ const imageUrl = computed(() => {
   return normalizeChatImageUrl(props.item?.images)
 })
 
-const imageFailed = ref(false)
-watch(
-  imageUrl,
-  () => {
-    imageFailed.value = false
-  },
-  { immediate: true }
-)
-
-function onImageError(e: Event) {
-  imageFailed.value = true
-  void e
-}
-
-function onImageLoad(e: Event) {
-  imageFailed.value = false
-  void e
-}
-
 const textContent = computed(() => {
   const raw = props.item?.content
   const s = typeof raw === 'string' ? raw.trim() : ''
@@ -66,17 +47,14 @@ const textContent = computed(() => {
               {{ textContent }}
             </template>
 
-            <div v-if="imageUrl" class="img-box" :class="{ 'is-failed': imageFailed }">
+            <div v-if="imageUrl" class="img-box">
               <img
                 v-lazyLoad="imageUrl"
                 loading="lazy"
                 decoding="async"
                 data-image-preview="true"
                 style="object-fit: contain"
-                @load="onImageLoad"
-                @error="onImageError"
-              />
-              <div v-if="imageFailed" class="img-fallback">图片加载失败</div>
+              /> 
             </div>
           </div>
         </div>
