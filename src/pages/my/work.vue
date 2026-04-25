@@ -119,14 +119,7 @@
             <van-tab title="待审核">
               <dx-hoc-list v-if="key" ref="pending_list_ref" :api="submitListApi">
                 <template #item="{ item }">
-                  <div
-                    class="work-item work-item--clickable"
-                    role="button"
-                    tabindex="0"
-                    @click="onOpenVideoDetail(item)"
-                    @keydown.enter.prevent="onOpenVideoDetail(item)"
-                    @keydown.space.prevent="onOpenVideoDetail(item)"
-                  >
+                  <div class="work-item work-item--disabled-click" @click.stop.prevent>
                     <video-item-cover
                       :key="item.id"
                       class="work-cover"
@@ -173,14 +166,7 @@
               <dx-hoc-list v-if="key" ref="rejected_list_ref" :api="rejectListApi">
                 <template #item="{ item }">
                   <div class="work-item-block">
-                    <div
-                      class="work-item work-item--clickable"
-                      role="button"
-                      tabindex="0"
-                      @click="onOpenVideoDetail(item)"
-                      @keydown.enter.prevent="onOpenVideoDetail(item)"
-                      @keydown.space.prevent="onOpenVideoDetail(item)"
-                    >
+                    <div class="work-item work-item--disabled-click" @click.stop.prevent>
                       <video-item-cover
                         :key="item.id"
                         class="work-cover"
@@ -615,6 +601,16 @@ function onOpenVideoDetail(item: any) {
 .work-item--clickable {
   cursor: pointer;
   touch-action: manipulation;
+}
+
+/* 待审核/未通过：整卡禁点，只保留删除按钮可交互 */
+.work-item--disabled-click * {
+  pointer-events: none;
+}
+
+.work-item--disabled-click .work-delete-btn,
+.work-item--disabled-click .work-delete-btn * {
+  pointer-events: auto;
 }
 
 .work-cover {
