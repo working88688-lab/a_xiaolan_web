@@ -87,6 +87,8 @@
                             </svg>
                             <span>{{ item.like_count || 0 }}</span>
                           </div>
+                          <!-- 上架中：收藏按钮先注释 -->
+                          <!--
                           <div class="work-footer-item">
                             <svg
                               class="work-stat-icon"
@@ -104,6 +106,7 @@
                             </svg>
                             <span>{{ item.favorite_count || 0 }}</span>
                           </div>
+                          -->
                         </div>
                         <!-- 暂时注释掉 -->
                         <!-- <div class="work-action" @click="onDownShelves(item)">下架</div> -->
