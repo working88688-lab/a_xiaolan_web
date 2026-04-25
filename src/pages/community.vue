@@ -34,6 +34,12 @@
       <nuxt-icon name="search" filled class="icon-search !text-[20px] !text-[#141414]"></nuxt-icon>
     </nuxt-link>
 
+    <div class="float-btn">
+      <publish-popup>
+        <img src="~/assets/image/community/addFeedButton.svg" alt="" />
+      </publish-popup>
+    </div>
+
     <community-nav-first-guide
       v-if="showCommunityNavGuide"
       :tabs-ref="mainTabsRef"
@@ -97,6 +103,7 @@ const { data, loading } = useMyFetch<{
 const index_map = {
   recomment: 3,
   dating: 3,
+  scircle: 3,
   mh: 5,
   images: 6,
   story: 7
@@ -177,6 +184,15 @@ watch(
   position: absolute;
   right: 0;
   padding: 10px 10px 10px 10px;
+}
+
+.float-btn {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  right: 16px;
+  bottom: 100px;
+  cursor: pointer;
 }
 
 .scircle-interstitial-popup {
