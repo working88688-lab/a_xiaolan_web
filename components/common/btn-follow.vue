@@ -48,14 +48,40 @@ const text = computed(() => {
   return follow.value ? '已关注' : `${props.symbol || ''}关注`
 })
 
+const followDebug = import.meta.env.DEV && import.meta.client
+
 const _api = props.api || __.$Api.User.updateFollow
-const params = props.params || {
-  to_uid: props.uid
+
+function buildPayload() {
+  const base =
+    typeof props.params === 'function'
+      ? props.params()
+      : props.params || {
+          to_uid: props.uid
+        }
+  return { ...base }
 }
 
 const onFollow = async (_data: any) => {
   try {
-    const { data } = await _api(params)
+    const payload = buildPayload()
+    if (payload?.to_uid == null || payload?.to_uid === '') {
+      if (followDebug) {
+        console.warn('[btn-follow] 缺少 to_uid，已拦截请求', { uid: props.uid, params: props.params, payload })
+      }
+      __.$Toast('操作太频繁')
+      return
+    }
+    if (followDebug) {
+      console.groupCollapsed(
+        '%c[btn-follow] 请求 payload',
+        'background:#111827;color:#fff;padding:6px 10px;border-radius:8px;font-weight:900'
+      )
+      console.log('api =', _api)
+      console.log('payload =', payload)
+      console.groupEnd()
+    }
+    const { data } = await _api(payload)
 
     follow.value = !follow.value
 

@@ -13,9 +13,7 @@
     <div class="publish-popup-panel">
       <div class="publish-popup-header">
         <h6 class="publish-popup-title">发布视频</h6>
-        <button v-if="!is_original" class="publish-popup-auth" type="button" @click="on_post_auth">
-          {{ is_original ? '发布原创' : '申请原创认证' }}
-        </button>
+
       </div>
       <div class="publish-popup-body">
         <div class="publish-popup-grid">

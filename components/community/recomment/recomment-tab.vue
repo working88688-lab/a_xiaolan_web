@@ -16,7 +16,7 @@
             api="api/community/listPost"
             :params="{ sort: tab.name }"
           >
-            <template #item="{ item }">
+            <template #item="{ item }"> 
               <post-item :key="item.id" show-original :item="item"></post-item>
             </template>
           </dx-hoc-list>

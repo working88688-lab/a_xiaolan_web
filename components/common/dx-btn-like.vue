@@ -90,6 +90,8 @@ const slots = defineSlots<{
 const isLike = ref(props.like)
 const localLikes = ref(props.likes || 0)
 
+const likeDebug = import.meta.env.DEV && import.meta.client
+
 const iconSize = computed(() => {
   return typeof props.size === 'number' ? `${props.size}rem` : props.size
 })
@@ -107,6 +109,17 @@ const onLike = async (_data: any) => {
     const params = {
       ...props.params,
       [props.idKey]: props.id
+    }
+
+    if (likeDebug) {
+      console.groupCollapsed(
+        '%c[dx-btn-like] 请求 payload',
+        'background:#111827;color:#fff;padding:6px 10px;border-radius:8px;font-weight:900'
+      )
+      console.log('api =', props.api)
+      console.log('idKey =', props.idKey, 'id =', props.id)
+      console.log('payload =', params)
+      console.groupEnd()
     }
 
     const res = await _api(params)

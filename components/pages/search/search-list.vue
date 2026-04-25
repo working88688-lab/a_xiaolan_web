@@ -14,6 +14,15 @@ const emit = defineEmits<{
 }>()
 const __ = useNuxtApp()
 
+function normalizeKeyword(val: unknown) {
+  return String(val ?? '').trim()
+}
+
+function isDisplayableKeyword(val: unknown) {
+  // 不展示单个字符（含单个汉字）
+  return normalizeKeyword(val).length >= 2
+}
+
 function onClearHistory() {
   if (props.list?.length) {
     __.$Alert({
@@ -40,6 +49,29 @@ const { data: state, loading } = useMyFetch<{
 }>({
   api: 'api/search/index',
   immediate: true
+})
+
+const filteredRankList = computed(() => {
+  const list = state.value?.rank_list
+  if (!Array.isArray(list)) return []
+  return list.filter(it => isDisplayableKeyword(it?.work))
+})
+
+const filteredHotSearch = computed(() => {
+  const list = state.value?.hotSearch
+  if (!Array.isArray(list)) return []
+  return list.filter(it => isDisplayableKeyword(it))
+})
+
+const filteredRecommend = computed(() => {
+  const list = state.value?.recommend
+  if (!Array.isArray(list)) return []
+  return list
+    .map(it => {
+      const data = Array.isArray(it?.data) ? it.data.filter((x: any) => isDisplayableKeyword(x)) : []
+      return { ...it, data }
+    })
+    .filter(it => Array.isArray(it.data) && it.data.length > 0 && String(it?.title ?? '').trim() !== '')
 })
 
 function iconRanking(index: number) {
@@ -83,7 +115,7 @@ function iconRanking(index: number) {
           <p class="mb-1 text-xl font-medium">热搜排行</p>
           <div class="grid grid-cols-1 gap-1">
             <div
-              v-for="(item, index) in state.rank_list"
+              v-for="(item, index) in filteredRankList"
               :key="index"
               class="flex items-center"
               @click="onSearch(item.work)"
@@ -108,13 +140,13 @@ function iconRanking(index: number) {
         <div class="search-box">
           <div class="mb-1 text-xl font-medium">热搜标签</div>
           <div class="search-row">
-            <div v-for="item in state.hotSearch" :key="item" class="search-item1" @click="onSearch(item)">
+            <div v-for="item in filteredHotSearch" :key="item" class="search-item1" @click="onSearch(item)">
               {{ item }}
             </div>
           </div>
         </div>
         <div
-          v-for="(item, index) in state.recommend"
+          v-for="(item, index) in filteredRecommend"
           :key="index"
           class="search-box"
           :style="{ paddingTop: 10, paddingRight: 14, paddingBottom: 20 }"

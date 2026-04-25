@@ -168,7 +168,7 @@ const onClose = () => {
   __.$Tracker.trackNovelEvent({
     ...getNovelTrackBase(),
     novel_behavior_key: 'novel_close',
-    novel_behavior_name: '关闭',
+    novel_behavior_name: '关闭'
   })
   emit('update:show', false)
   showSetting.value = false
@@ -198,7 +198,7 @@ const onRead = async () => {
       __.$Tracker.trackNovelEvent({
         ...getNovelTrackBase(),
         novel_behavior_key: 'novel_view',
-        novel_behavior_name: '阅读',
+        novel_behavior_name: '阅读'
       })
     }
   } catch (error) {

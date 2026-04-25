@@ -177,6 +177,12 @@ async function fetchCalendarData() {
     const res = await __.$Api.Checkin.calendar()
     const data = res.data as CalendarResponse
 
+    // 便于线上/测试包排查：不依赖 import.meta.dev（仅在客户端打印）
+    if (import.meta.client) {
+      // eslint-disable-next-line no-console
+      console.log('[Checkin.calendar] res.data 原始数据 =>', data)
+    }
+
     if (import.meta.dev) {
       const styleTitle = 'background:#111827;color:#FDE68A;padding:2px 8px;border-radius:6px;font-weight:800;'
       const styleKey = 'color:#60A5FA;font-weight:700;'
@@ -528,16 +534,11 @@ const prizePositions = computed(() => {
   })
 })
 
-function isRemoteIconUrl(url: string) {
-  const u = url?.trim() ?? ''
-  return u.startsWith('http://') || u.startsWith('https://') || u.startsWith('//')
-}
-
 /** 转盘奖品图：除绝对 URL 外，常见根相对资源路径也需走 v-lazyLoad 解密 */
 function isPrizeIconWorkerUrl(url: string) {
   const u = url?.trim() ?? ''
   if (!u) return false
-  return isRemoteIconUrl(u) || u.startsWith('/')
+  return u.startsWith('http://') || u.startsWith('https://') || u.startsWith('//') || u.startsWith('/')
 }
 
 /** 日历上标为「今天」的可签格（与 can_sign && !signed 一致） */
@@ -572,13 +573,7 @@ const signPanelButtonLabel = computed(() => {
   return '已签到'
 })
 
-/** 日历格本地兜底图（按 reward_key）；远程图请在模板里用 v-lazyLoad，走 worker 解密 */
-function getDayIcon(day: CheckinDay) {
-  if (day.status === 'signed') {
-    return day.rewardType === 'tx' ? img.txSigned : day.rewardType === 'cj' ? img.cjSigned : img.jfSigned
-  }
-  return day.rewardType === 'tx' ? img.tx : day.rewardType === 'cj' ? img.cj : img.jf
-}
+// 日历格图标：直接使用接口返回的 icon（不做本地兜底）
 </script>
 
 <template>
@@ -621,14 +616,7 @@ function getDayIcon(day: CheckinDay) {
         <div class="checkin-grid">
           <div v-for="d in days" :key="d.day" class="checkin-cell" :class="[`is-${d.status}`]">
             <div class="checkin-cell-icon">
-              <img
-                v-if="isRemoteIconUrl(d.icon)"
-                :key="d.icon"
-                v-lazyLoad="d.icon.trim()"
-                class="checkin-cell-icon-img"
-                alt=""
-              />
-              <img v-else class="checkin-cell-icon-img" :src="getDayIcon(d)" alt="" />
+              <img v-if="d.icon" :key="d.icon" v-lazyLoad="d.icon.trim()" class="checkin-cell-icon-img" alt="" />
               <div class="checkin-cell-text">{{ d.rewardText }}</div>
             </div>
             <div class="checkin-cell-pill" :class="{ 'is-today': d.status === 'today' }">
@@ -1316,7 +1304,7 @@ function getDayIcon(day: CheckinDay) {
   aspect-ratio: 966 / 1182;
   border-radius: 22px;
   background-repeat: no-repeat;
-  background-position: right center;
+  background-position: 14px center;
   background-size: contain;
   box-sizing: border-box;
   position: relative;

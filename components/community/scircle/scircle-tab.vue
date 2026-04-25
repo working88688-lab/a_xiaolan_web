@@ -163,8 +163,8 @@
           <div class="scircle-settings-scroll">
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                个人标签（可多选）
                 <span class="scircle-required">*</span>
+                个人标签（可多选）
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -183,8 +183,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                个人倾向（可多选）
                 <span class="scircle-required">*</span>
+                个人倾向（可多选）
               </div>
               <div class="scircle-settings-tags scircle-settings-tags--small">
                 <button
@@ -203,8 +203,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                个人性癖好（可多选）
                 <span class="scircle-required">*</span>
+                个人性癖好（可多选）
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -405,8 +405,8 @@
           <div class="scircle-settings-scroll">
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                他的标签（可多选）
                 <span class="scircle-required">*</span>
+                他的标签（可多选）
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -424,8 +424,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                他的倾向（可多选）
                 <span class="scircle-required">*</span>
+                他的倾向（可多选）
               </div>
               <div class="scircle-settings-tags scircle-settings-tags--small">
                 <button
@@ -443,8 +443,8 @@
 
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">
-                他的性癖好（可多选）
                 <span class="scircle-required">*</span>
+                他的性癖好（可多选）
               </div>
               <div class="scircle-settings-tags">
                 <button
@@ -1332,23 +1332,21 @@ async function onStartMatch() {
     const rows = normalizeMatchItems(res?.data)
     if (scircleDebug) {
       const styleTitle =
-        'background:#111827;color:#fff;padding:4px 8px;border-radius:6px;font-weight:800;font-size:12px'
-      const styleWarn = 'background:#b91c1c;color:#fff;padding:2px 6px;border-radius:6px;font-weight:800'
+        'background:#111827;color:#fff;padding:6px 10px;border-radius:8px;font-weight:900;font-size:13px'
+      const styleMeta = 'color:#60a5fa;font-weight:900'
+      const styleWarn = 'background:#b91c1c;color:#fff;padding:2px 6px;border-radius:6px;font-weight:900'
       const raw = res?.data
       const rawCount = Array.isArray(raw) ? raw.length : Array.isArray(raw?.list) ? raw.list.length : undefined
-      console.groupCollapsed(
-        `%c[iOS][同圈] 匹配接口返回（${apiName || 'unknown'}）%c rawCount=${rawCount ?? 'unknown'} normalizeCount=${rows.length}`,
-        styleTitle,
-        rawCount == null && rows.length === 0 ? styleWarn : 'color:#16a34a;font-weight:800'
-      )
-      console.log('%c[scircle][match] 接口整包 res =', 'font-weight:800;color:#111827', res)
-      console.log('%c[scircle][match] res.data =', 'font-weight:800;color:#111827', raw)
-      console.log('%c[scircle][match] res.data(推测原始条数) =', 'font-weight:800;color:#111827', rawCount)
-      console.log(
-        '%c[scircle][match] normalizeMatchItems(res.data) 长度 =',
-        'font-weight:800;color:#111827',
-        rows.length
-      )
+      const title = `[同圈][match] ${apiName || 'unknown'} 返回`
+      const meta = `rawCount=${rawCount ?? 'unknown'} normalizeCount=${rows.length}`
+      console.groupCollapsed(`%c${title}%c ${meta}`, styleTitle, styleMeta)
+      console.log('%c[scircle][match] 接口整包 res =', 'font-weight:900;color:#111827', res)
+      console.log('%c[scircle][match] res.data =', 'font-weight:900;color:#111827', raw)
+      console.log('%c[scircle][match] rawCount =', 'font-weight:900;color:#111827', rawCount)
+      console.log('%c[scircle][match] normalizeCount =', 'font-weight:900;color:#111827', rows.length)
+      if (rawCount == null && rows.length === 0) {
+        console.log('%c[scircle][match] ⚠ 返回结构疑似不符合预期（rawCount 无法推断且 normalize 为空）', styleWarn)
+      }
       console.table(
         rows.map((it, i) => ({
           i,
@@ -1859,7 +1857,7 @@ async function goChat() {
 
 .scircle-required {
   color: #ee0a24;
-  margin-left: 4px;
+  margin-right: 4px;
   font-weight: 600;
 }
 
@@ -2435,6 +2433,7 @@ async function goChat() {
   padding: 0 10px;
   box-sizing: border-box;
   color: #fff;
+  background-color: rgba(0, 0, 0, 0.45);
 }
 
 .tq-detail-top-left {
@@ -2480,6 +2479,10 @@ async function goChat() {
   text-align: center;
   font-size: 14px;
   font-weight: 500;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .tq-detail-body {
@@ -2490,8 +2493,9 @@ async function goChat() {
   bottom: 90px;
   bottom: calc(90px + env(safe-area-inset-bottom));
   z-index: 3;
-  padding: 0 14px;
+  padding: 10px 14px;
   box-sizing: border-box;
+  background-color: rgba(0, 0, 0, 0.45);
 }
 
 .tq-detail-match {
@@ -2502,7 +2506,7 @@ async function goChat() {
 
 .tq-detail-tags {
   overflow: hidden;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
 }
 
 .tq-detail-tags-scroll {

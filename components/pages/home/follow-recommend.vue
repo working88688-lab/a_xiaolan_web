@@ -18,8 +18,8 @@
         </div>
         <btn-follow :uid="user.uid" :attention="user.is_followed ?? user.is_attention" :use-default-style="true" />
       </div>
-
       <div class="stats-row">
+        <!-- {{ JSON.stringify(user,null,4) }} -->
         <div class="stat">
           <div class="stat-number">{{ formatNumber(user.videos_count ?? user.video_num) }}</div>
           <div class="stat-label">视频</div>
@@ -35,7 +35,9 @@
           <div class="stat-label">播放</div>
         </div>
         <div class="stat">
-          <div class="stat-number">{{ formatNumber(user.total_likes ?? user.like_num) }}</div>
+          <div class="stat-number">
+            {{ formatNumber(pickUserTotalLikes(user)) }}
+          </div>
           <div class="stat-label">点赞</div>
         </div>
       </div>
@@ -77,6 +79,8 @@ const props = defineProps<{
   list: any[]
 }>()
 
+const followRecommendDebug = import.meta.env.DEV && import.meta.client
+
 const globalStore = useGlobalStore()
 const appConfig = useAppConfig()
 
@@ -116,10 +120,66 @@ function resolveMediaUrl(path: string | undefined): string {
 }
 
 const formatNumber = (value: number | string | undefined) => {
+  if (value == null) return '0'
+  if (typeof value === 'string') {
+    const t = value.trim()
+    if (!t) return '0'
+    // 后端若已返回格式化后的值（如 3.1W / 3.1万），直接展示，避免 Number('3.1W') -> NaN
+    if (/[Ww万]/.test(t)) return t
+    const parsed = Number(t)
+    if (!Number.isFinite(parsed)) return '0'
+    if (parsed >= 10000) return (parsed / 10000).toFixed(1) + 'W'
+    return String(parsed)
+  }
   const n = Number(value || 0)
+  if (!Number.isFinite(n)) return '0'
   if (n >= 10000) return (n / 10000).toFixed(1) + 'W'
   return n.toString()
 }
+
+function pickUserTotalLikes(user: any) {
+  // 优先 total_likes；兼容常见嵌套返回结构
+  return (
+    user?.total_likes ??
+    user?.stats?.total_likes ??
+    user?.count?.total_likes ??
+    user?.total_like_num ??
+    user?.like_num ??
+    user?.likes ??
+    user?.like_count
+  )
+}
+
+watch(
+  () => props.list,
+  list => {
+    if (!followRecommendDebug) return
+    if (!Array.isArray(list) || !list.length) return
+    // eslint-disable-next-line no-console
+    console.groupCollapsed(
+      '%c[follow-recommend] 推荐用户列表字段检查（点赞）',
+      'background:#111827;color:#fff;padding:6px 10px;border-radius:8px;font-weight:900'
+    )
+    // eslint-disable-next-line no-console
+    console.table(
+      list.slice(0, 30).map((u: any) => ({
+        uid: u?.uid,
+        nickname: u?.nickname,
+        total_likes: u?.total_likes,
+        'stats.total_likes': u?.stats?.total_likes,
+        'count.total_likes': u?.count?.total_likes,
+        total_like_num: u?.total_like_num,
+        like_num: u?.like_num,
+        likes: u?.likes,
+        like_count: u?.like_count,
+        picked: pickUserTotalLikes(u)
+      }))
+    )
+    // eslint-disable-next-line no-console
+    console.groupEnd()
+  },
+  { immediate: true }
+)
 
 const formatDuration = (seconds: number | undefined) => {
   const sec = Number(seconds || 0)

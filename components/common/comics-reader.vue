@@ -127,7 +127,7 @@ const onClose = () => {
   __.$Tracker.trackComicEvent({
     ...getComicTrackBase(),
     comic_behavior_key: 'comic_close',
-    comic_behavior_name: '关闭',
+    comic_behavior_name: '关闭'
   })
   emit('update:show', false)
 }
@@ -152,7 +152,7 @@ const onRead = async () => {
       __.$Tracker.trackComicEvent({
         ...getComicTrackBase(),
         comic_behavior_key: 'comic_view',
-        comic_behavior_name: '阅读',
+        comic_behavior_name: '阅读'
       })
     }
   } catch (error) {
