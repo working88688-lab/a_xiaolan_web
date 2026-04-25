@@ -4,21 +4,8 @@ const props = defineProps<{
   createAt?: string
   replyAt?: string
 }>()
-const __ = useNuxtApp()
 
 const { u: user } = storeToRefs(useUserStore())
-
-const imgBaseOrigin = ref('')
-onMounted(async () => {
-  if (!import.meta.client) return
-  try {
-    const cfg = (await __.$G.getConfig()) as any
-    const base = String(cfg?.imgDomain || cfg?.imgUploadUrl || '').trim()
-    imgBaseOrigin.value = base ? new URL(base).origin : window.location.origin
-  } catch {
-    imgBaseOrigin.value = window.location.origin
-  }
-})
 
 function normalizeChatImageUrl(input: unknown): string {
   const s = typeof input === 'string' ? input.trim() : ''
@@ -30,29 +17,12 @@ function normalizeChatImageUrl(input: unknown): string {
     u.pathname = u.pathname.replace(/\/{2,}/g, '/')
     return u.toString()
   } catch {
-    const cleaned = s.replace(/\/{2,}/g, '/')
-    // 相对路径时优先拼接图片域名，避免落到 localhost
-    if (imgBaseOrigin.value && /^\//.test(cleaned)) {
-      return `${imgBaseOrigin.value.replace(/\/$/, '')}${cleaned}`
-    }
-    return cleaned
+    return s.replace(/\/{2,}/g, '/')
   }
 }
 
 const imageUrl = computed(() => {
-  const it = props.item || {}
-  const v = it.thumb_full ?? it.images ?? it.thumb ?? it.image ?? it.pic ?? it.pic_url ?? it.img ?? it.img_url ?? ''
-  const direct = normalizeChatImageUrl(v)
-  if (direct) return direct
-
-  // 兼容：如果后端只回传 content，但我们把图片 url 拼进了 content
-  const content = typeof it.content === 'string' ? it.content.trim() : ''
-  if (!content) return ''
-  const m = content.match(/^\[图片\]\s+(\S+)$/u)
-  if (m?.[1]) {
-    return normalizeChatImageUrl(m[1])
-  }
-  return ''
+  return normalizeChatImageUrl(props.item?.images)
 })
 
 const imageFailed = ref(false)
@@ -69,12 +39,17 @@ function onImageError(e: Event) {
   void e
 }
 
+function onImageLoad(e: Event) {
+  imageFailed.value = false
+  void e
+}
+
 const textContent = computed(() => {
   const raw = props.item?.content
   const s = typeof raw === 'string' ? raw.trim() : ''
   if (!s) return ''
   // 图片消息为了会话列表摘要可能会塞一个占位文案，这里在明细里不展示
-  if (imageUrl.value && (/^\[图片\]$/u.test(s) || /^\[图片\]\s+https?:\/\/\S+$/u.test(s))) return ''
+  if (imageUrl.value && /^\[图片\]$/u.test(s)) return ''
   return s
 })
 </script>
@@ -86,22 +61,22 @@ const textContent = computed(() => {
       <div class="mine-box">
         <div class="customer-service-avatar" />
         <div class="content">
-          <div class="inner-box">
+          <div class="inner-box"> 
             <template v-if="textContent">
               {{ textContent }}
             </template>
 
             <div v-if="imageUrl" class="img-box" :class="{ 'is-failed': imageFailed }">
-              <div v-if="imageFailed" class="img-fallback">图片加载失败</div>
               <img
-                v-else
-                :src="imageUrl"
+                v-lazyLoad="imageUrl"
                 loading="lazy"
                 decoding="async"
                 data-image-preview="true"
                 style="object-fit: contain"
+                @load="onImageLoad"
                 @error="onImageError"
               />
+              <div v-if="imageFailed" class="img-fallback">图片加载失败</div>
             </div>
           </div>
         </div>

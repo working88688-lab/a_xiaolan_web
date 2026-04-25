@@ -200,17 +200,18 @@ async function onPickedImage(e: Event) {
     }
     if (!url) throw new Error('图片上传失败')
 
-    // 发送图片消息：
-    // - 现网 friendMessage 刷新后可能只返回 content，不返回 images/thumb 字段
-    // - 为了确保消息列表能渲染图片，把 url 一并写进 content，前端渲染时解析
+    // 发送图片消息： 
     const payload = {
-      uid,
-      content: `[图片] ${url}`,
-      chat_token: user.value?.chat_token
+      uid, 
+      image: url,
+      chat_token: user.value?.chat_token,
+      msg_type: "image",
     }
     const sendRes = await __.$Api.User.chat(payload)
     void sendRes
     __.$Toast('图片已发送')
+    console.log('payload',JSON.stringify(payload))
+    console.log('sendRes',JSON.stringify(sendRes))
     void fetchChatQuota()
     await nextTick()
     await listRef.value?.refresh_data?.()
