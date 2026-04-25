@@ -26,18 +26,30 @@ function canSearchKeyword(val: string) {
   return { ok: true as const, keyword }
 }
 
+function pushSearchResult(keyword: string) {
+  const _index = Array.isArray(route.query._index) ? route.query._index[0] : route.query._index
+  router.push({
+    path: '/search/result',
+    query: {
+      keyword,
+      _index: String(_index ?? '0')
+    }
+  })
+}
+
 function onSearch(new_value: string) {
   const { ok, keyword } = canSearchKeyword(new_value)
   if (!ok) return
 
-  router.push(`/search/result?keyword=${keyword}&_index=${route.query._index || 0}`)
+  pushSearchResult(keyword)
 
   nextTick(() => {
     if (!searchHistory.value.includes(keyword)) {
       searchHistory.value = [...searchHistory.value, keyword]
     }
 
-    search_ref.value?.set_value()
+    // 保留关键字；无参会 set_value(undefined) 清空输入框，且 keyword 含 # 时应用 query 对象编码避免被当成 hash
+    search_ref.value?.set_value(keyword)
   })
 }
 
@@ -52,7 +64,7 @@ function onHistorySearch(val: string) {
   const { ok, keyword } = canSearchKeyword(val)
   if (!ok) return
   search_ref.value?.saveHistory(keyword)
-  router.push(`/search/result?keyword=${keyword}&_index=${route.query._index || 0}`)
+  pushSearchResult(keyword)
 }
 
 function onClearHistory() {

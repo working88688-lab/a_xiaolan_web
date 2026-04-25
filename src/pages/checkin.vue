@@ -50,6 +50,58 @@ interface CalendarResponse {
   }>
 }
 
+/**
+ * 签到日历接口有两种常见壳：
+ * - `res.data` 为 `{ calendar, is_sign, ... }`
+ * - `res.data` 直接为 calendar 数组，则 `is_sign / continuous_day / my_points` 等与 `data` 平级挂在 `res` 上
+ */
+function normalizeCalendarApiResult(res: any): CalendarResponse {
+  const root = res && typeof res === 'object' ? res : {}
+  const payload = root.data
+
+  const firstDefined = <T,>(...vals: Array<T | undefined | null>): T | undefined => {
+    for (const v of vals) {
+      if (v !== undefined && v !== null) return v as T
+    }
+    return undefined
+  }
+
+  if (Array.isArray(payload)) {
+    return {
+      calendar: payload,
+      is_sign: firstDefined(root.is_sign, (payload as any)?.is_sign) as CalendarResponse['is_sign'],
+      continuous_day: Number(firstDefined(root.continuous_day, 0)) || 0,
+      my_points: toDrawPointsNumber(firstDefined(root.my_points, 0)),
+      my_match_card_times: Number(firstDefined(root.my_match_card_times, 0)) || 0,
+      my_chances: typeof root.my_chances === 'number' ? root.my_chances : undefined,
+      lottery_items: Array.isArray(root.lottery_items) ? root.lottery_items : undefined
+    }
+  }
+
+  const inner = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload : {}
+  const cal = Array.isArray((inner as any).calendar) ? (inner as any).calendar : []
+  return {
+    ...(inner as object),
+    calendar: cal,
+    is_sign: firstDefined((inner as any).is_sign, root.is_sign) as CalendarResponse['is_sign'],
+    continuous_day: Number(firstDefined((inner as any).continuous_day, root.continuous_day, 0)) || 0,
+    my_points: toDrawPointsNumber(firstDefined((inner as any).my_points, root.my_points, 0)),
+    my_match_card_times:
+      Number(firstDefined((inner as any).my_match_card_times, root.my_match_card_times, 0)) || 0,
+    my_chances:
+      typeof (inner as any).my_chances === 'number'
+        ? (inner as any).my_chances
+        : typeof root.my_chances === 'number'
+          ? root.my_chances
+          : undefined,
+    lottery_items: Array.isArray((inner as any).lottery_items)
+      ? (inner as any).lottery_items
+      : Array.isArray(root.lottery_items)
+        ? root.lottery_items
+        : undefined
+  } as CalendarResponse
+}
+
 const qiandaoImgs = import.meta.glob('~/assets/image/qiandao/*', {
   eager: true,
   import: 'default'
@@ -104,6 +156,10 @@ const img = {
 const state = reactive({
   signedDays: 0,
   tomorrowRewardText: '',
+  /** 签到成功弹窗：展示本次签到奖励，取日历接口 reward_text（映射为 rewardText） */
+  signPopupRewardText: '',
+  /** 签到成功弹窗：与日历格同一套接口 icon */
+  signPopupRewardIcon: '',
   hasSignedToday: false,
   /** 是否允许点击“今日签到”按钮（由 sign/calendar 的 is_sign 控制） */
   canSignToday: false,
@@ -175,12 +231,14 @@ async function fetchCalendarData() {
   try {
     loading.value = true
     const res = await __.$Api.Checkin.calendar()
-    const data = res.data as CalendarResponse
+    const data = normalizeCalendarApiResult(res)
 
     // 便于线上/测试包排查：不依赖 import.meta.dev（仅在客户端打印）
     if (import.meta.client) {
       // eslint-disable-next-line no-console
-      console.log('[Checkin.calendar] res.data 原始数据 =>', data)
+      console.log('[Checkin.calendar] res(壳) =>', res)
+      // eslint-disable-next-line no-console
+      console.log('[Checkin.calendar] normalize 后 =>', data)
     }
 
     if (import.meta.dev) {
@@ -188,11 +246,11 @@ async function fetchCalendarData() {
       const styleKey = 'color:#60A5FA;font-weight:700;'
       const styleWarn = 'color:#F97316;font-weight:800;'
       console.groupCollapsed('%c[Checkin.calendar] 原始返回(关键字段)', styleTitle)
-      console.log('%cis_sign =>', styleKey, (data as any).is_sign, '（注意：0/1/true/false/字符串）')
-      console.log('%ccontinuous_day =>', styleKey, (data as any).continuous_day)
-      console.log('%cmy_points =>', styleKey, (data as any).my_points)
-      console.log('%cmy_chances =>', styleKey, (data as any).my_chances)
-      const cal = Array.isArray((data as any).calendar) ? (data as any).calendar : []
+      console.log('%cis_sign =>', styleKey, data.is_sign, '（注意：0/1/true/false/字符串）')
+      console.log('%ccontinuous_day =>', styleKey, data.continuous_day)
+      console.log('%cmy_points =>', styleKey, data.my_points)
+      console.log('%cmy_chances =>', styleKey, data.my_chances)
+      const cal = Array.isArray(data.calendar) ? data.calendar : []
       const signables = cal.filter((x: any) => x?.can_sign && !x?.signed)
       if (signables.length > 1) {
         console.log('%c警告：接口返回多个可签格(可能导致连签错觉)', styleWarn, signables)
@@ -213,11 +271,19 @@ async function fetchCalendarData() {
     }
 
     state.signedDays = Number((data as any)?.continuous_day ?? 0) || 0
-    const localLocked = lastSignedYmd.value === getLocalYmd()
+    let localLocked = lastSignedYmd.value === getLocalYmd()
     const apiCanSign = parseCanSignToday((data as any).is_sign)
-    // 只要本地判定“今天已签”，就强制不可再签；不再让接口的 is_sign 把状态冲掉
-    state.canSignToday = !localLocked && apiCanSign
-    state.hasSignedToday = localLocked || !state.canSignToday
+    /**
+     * 是否可签、是否已签以服务端 is_sign 为准。
+     * 若本地曾写入「今日已签」但接口仍返回 is_sign=true（错位/清缓存/换设备等），清除本地锁，避免一直显示「已签到」且无法点击。
+     */
+    if (apiCanSign && localLocked) {
+      lastSignedYmd.value = ''
+      writeLastSignedYmd('')
+      localLocked = false
+    }
+    state.canSignToday = apiCanSign
+    state.hasSignedToday = !apiCanSign
     state.drawPoints = toDrawPointsNumber((data as any).my_points)
     state.myMatchCardTimes = data.my_match_card_times
     if (typeof data.my_chances === 'number') {
@@ -242,8 +308,8 @@ async function fetchCalendarData() {
         rewardTimes: item.reward_times,
         icon: item.icon,
         rewardText: item.reward_text || `${item.reward_times}${item.reward_name}`,
-        // “今天”只表示当前自然日可签入口；如果今日已签（localLocked），就不再标 today，避免误导/连签错觉
-        status: item.signed ? 'signed' : !localLocked && item.can_sign ? 'today' : 'future',
+        // 「今天」可签格：服务端允许签且该格 can_sign（与 is_sign 一致，不单独依赖可能错位的本地锁）
+        status: item.signed ? 'signed' : apiCanSign && item.can_sign ? 'today' : 'future',
         signed: item.signed,
         canSign: item.can_sign
       }
@@ -389,6 +455,17 @@ function onSignClick() {
   handleSign()
 }
 
+/** 当前可签格对应的文案 + 图标（与日历列表展示一致） */
+function pickTodaySignRewardForPopup(): { text: string; icon: string } {
+  const mark =
+    state.calendarData.find(d => d.status === 'today' && d.canSign && !d.signed) ||
+    state.calendarData.find(d => d.status === 'today')
+  if (!mark) return { text: '', icon: '' }
+  const t = String(mark.rewardText ?? '').trim() || `${mark.rewardTimes}${mark.rewardName}`.trim()
+  const icon = String(mark.icon ?? '').trim()
+  return { text: t, icon }
+}
+
 async function handleSign() {
   if (signingInFlight.value) return
   if (lastSignedYmd.value === getLocalYmd()) {
@@ -403,6 +480,9 @@ async function handleSign() {
   }
   signingInFlight.value = true
   try {
+    const popupReward = pickTodaySignRewardForPopup()
+    state.signPopupRewardText = popupReward.text
+    state.signPopupRewardIcon = popupReward.icon
     if (import.meta.dev) {
       console.log(
         '%c[Checkin.sign] 发起签到请求',
@@ -457,7 +537,9 @@ async function fetchSignRecords() {
     signRecords.value = list.map((item, index) => ({
       id: item?.id ?? index,
       time: String(item?.created_at ?? item?.sign_date ?? ''),
-      text: `${item?.reward_name ?? ''}+${item?.reward_times ?? 0}`
+      text:
+        String(item?.reward_text ?? '').trim() ||
+        `${item?.reward_name ?? ''}+${item?.reward_times ?? 0}`
     }))
   } catch (error) {
     console.error('获取签到记录失败:', error)
@@ -719,9 +801,16 @@ const signPanelButtonLabel = computed(() => {
 
   <van-popup v-model:show="showCheckinPopup" teleport="body" :close-on-click-overlay="false" class="qd-popup">
     <div class="qd-card" :style="{ backgroundImage: img.qdBg ? `url(${img.qdBg})` : '' }">
-      <div class="qd-text">恭喜获得一次抽奖机会</div>
+      <div class="qd-text">恭喜获得{{ state.signPopupRewardText || '奖励' }}</div>
       <div class="qd-wheel">
-        <img class="qd-wheel-img" :src="img.zp" alt="" />
+        <img
+          v-if="state.signPopupRewardIcon"
+          :key="state.signPopupRewardIcon"
+          v-lazyLoad="state.signPopupRewardIcon.trim()"
+          class="qd-wheel-img"
+          alt=""
+        />
+        <img v-else class="qd-wheel-img" :src="img.zp" alt="" />
       </div>
       <button class="qd-ok" type="button" @click="closeCheckinPopup">美美收下</button>
     </div>

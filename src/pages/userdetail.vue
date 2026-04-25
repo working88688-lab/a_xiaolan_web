@@ -380,7 +380,7 @@ const is_show_bg = computed(() => {
               </div>
             </div>
 
-            <div v-if="!isMyDetail && !loading" class="user-action-buttons flex shrink-0">
+            <div v-if="!isMyDetail && !loading" class="user-action-buttons flex shrink-0 items-center">
               <btn-follow :key="userInfo.uid" :attention="follow ? 1 : 0" :uid="userInfo.uid" use-toast>
                 <template #default="{ text }">
                   <dx-button color="linear-gradient(to right, #FF0000,  #FDA03D)">
@@ -602,9 +602,6 @@ const is_show_bg = computed(() => {
 .transparent {
   color: #fff;
 }
-.btn_chat {
-  padding-top: 1px;
-}
 
 .homepage-user-header {
   --van-tabs-nav-background: #fff;
@@ -728,15 +725,27 @@ const is_show_bg = computed(() => {
     }
 
     .user-action-buttons {
-      align-items: flex-start;
+      align-items: center;
       gap: 10px;
-      /* baseline 在 iOS WebKit 上与同行 flex 搭配时容易整体上移/错位 */
+      :deep(.btn_follow) {
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
+      }
+      :deep(.btn_chat) {
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
+      }
       :deep(.van-button) {
         height: 24px;
         padding: 3px 10px;
         border-radius: 5px !important;
         font-size: 12px;
-        line-height: 12px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
     }
   }
