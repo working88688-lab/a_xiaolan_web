@@ -214,7 +214,7 @@ function buildSortFilterUrl(sortLabel: any) {
                     <div class="flex items-center gap-0.5">
                       <van-icon name="eye-o" size="0.32rem" />
                       <span>
-                        {{ $Utils.formatNumber(cardItem.view_count || cardItem.view_num || cardItem.rating || 0) }}
+                        {{ $Utils.formatNumber(cardItem.rating || cardItem.view_count || cardItem.view_num || 0) }}
                       </span>
                     </div>
                     <div>{{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张</div>
@@ -254,7 +254,7 @@ function buildSortFilterUrl(sortLabel: any) {
                 <div class="flex items-center gap-0.5">
                   <van-icon name="eye-o" size="0.32rem" />
                   <span>
-                    {{ $Utils.formatNumber(cardItem.view_count || cardItem.view_num || cardItem.rating || 0) }}
+                    {{ $Utils.formatNumber(cardItem.rating || cardItem.view_count || cardItem.view_num || 0) }}
                   </span>
                 </div>
                 <div>{{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张</div>
@@ -306,7 +306,7 @@ function buildSortFilterUrl(sortLabel: any) {
                 <div class="flex items-center gap-0.5">
                   <van-icon name="eye-o" size="0.32rem" />
                   <span>
-                    {{ $Utils.formatNumber(cardItem.view_count || cardItem.view_num || cardItem.rating || 0) }}
+                    {{ $Utils.formatNumber(cardItem.rating || cardItem.view_count || cardItem.view_num || 0) }}
                   </span>
                 </div>
                 <div>{{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张</div>

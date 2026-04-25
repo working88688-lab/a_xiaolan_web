@@ -98,7 +98,7 @@
                 </defs>
               </svg>
               <span class="image-footer-label">
-                {{ $Utils.formatNumber(pageData?.favorites ?? 0) }}
+                {{ $Utils.formatNumber(pageFavorites) }}
               </span>
             </div>
             <div class="image-footer-item image-footer-item--share" @click.stop="onShare">
@@ -359,7 +359,14 @@ const previewFooterIndex = computed(() => {
 
 const pageViews = computed(() => {
   const raw: any = pageData.value || {}
-  return raw.views ?? 0
+  // 业务口径：rating = 浏览数
+  return raw.rating ?? raw.views ?? raw.view_count ?? raw.view_num ?? 0
+})
+
+const pageFavorites = computed(() => {
+  const raw: any = pageData.value || {}
+  // 业务口径：favorites = 收藏数
+  return raw.favorites ?? raw.favorite_num ?? raw.collect_count ?? 0
 })
 
 const onLike = async () => {
@@ -368,7 +375,8 @@ const onLike = async () => {
   })
   const expectLike = pageData.value!.is_like === 0
   pageData.value!.is_like = expectLike ? 1 : 0
-  pageData.value!.favorites = expectLike ? pageData.value!.favorites + 1 : pageData.value!.favorites - 1
+  const currentFavorites = Number(pageData.value?.favorites ?? 0)
+  pageData.value!.favorites = expectLike ? currentFavorites + 1 : Math.max(0, currentFavorites - 1)
 }
 
 const onShare = () => {
