@@ -95,24 +95,53 @@ const albumInputRef = useTemplateRef<HTMLInputElement>('albumInputRef')
 const cameraInputRef = useTemplateRef<HTMLInputElement>('cameraInputRef')
 
 const chatScrollRef = ref<HTMLElement | null>(null)
+const actualScrollEl = shallowRef<HTMLElement | null>(null)
 const isUserNearBottom = ref(true)
 let __chatScrollMutationObserver: MutationObserver | null = null
 let __chatScrollImageLoadHandler: ((evt: Event) => void) | null = null
+let __initialAutoScrollStarted = false
+let __initialAutoScrollDone = false
+let __actualScrollListener: (() => void) | null = null
 
 function calcIsNearBottom(el: HTMLElement, thresholdPx = 120) {
   const remain = el.scrollHeight - el.scrollTop - el.clientHeight
   return remain <= thresholdPx
 }
 
+function resolveActualScrollEl(): HTMLElement | null {
+  const host = chatScrollRef.value
+  if (!host) return null
+  // dx-hoc-list -> scroll-list -> div.scroller 才是真正的滚动容器
+  const scroller = host.querySelector<HTMLElement>('.scroller')
+  return scroller || host
+}
+
 function scrollToBottom(opts?: { force?: boolean }) {
-  const el = chatScrollRef.value
+  const el = actualScrollEl.value || resolveActualScrollEl()
   if (!el) return
   if (!opts?.force && !isUserNearBottom.value) return
-  el.scrollTop = el.scrollHeight
+  el.scrollTop = Math.max(0, el.scrollHeight - el.clientHeight + 2)
+}
+
+async function ensureInitialScrollToBottom() {
+  if (!import.meta.client) return
+  if (__initialAutoScrollStarted) return
+  __initialAutoScrollStarted = true
+
+  // dx-hoc-list 的首屏渲染是异步的：首次 nextTick 往往还没撑开 scrollHeight。
+  // 这里在很短时间内重试几次 force 滚动，直到真正贴底。
+  for (let i = 0; i < 12; i++) {
+    await nextTick()
+    scrollToBottom({ force: true })
+    const el = chatScrollRef.value
+    if (el && calcIsNearBottom(el, 2)) break
+    await new Promise<void>(resolve => setTimeout(resolve, 80))
+  }
+  __initialAutoScrollDone = true
 }
 
 function onChatScroll() {
-  const el = chatScrollRef.value
+  const el = actualScrollEl.value || resolveActualScrollEl()
   if (!el) return
   isUserNearBottom.value = calcIsNearBottom(el)
 }
@@ -200,17 +229,18 @@ async function onPickedImage(e: Event) {
     }
     if (!url) throw new Error('图片上传失败')
 
-    // 发送图片消息：
-    // - 现网 friendMessage 刷新后可能只返回 content，不返回 images/thumb 字段
-    // - 为了确保消息列表能渲染图片，把 url 一并写进 content，前端渲染时解析
+    // 发送图片消息： 
     const payload = {
-      uid,
-      content: `[图片] ${url}`,
-      chat_token: user.value?.chat_token
+      uid, 
+      image: url,
+      chat_token: user.value?.chat_token,
+      msg_type: "image",
     }
     const sendRes = await __.$Api.User.chat(payload)
     void sendRes
     __.$Toast('图片已发送')
+    console.log('payload',JSON.stringify(payload))
+    console.log('sendRes',JSON.stringify(sendRes))
     void fetchChatQuota()
     await nextTick()
     await listRef.value?.refresh_data?.()
@@ -402,11 +432,26 @@ onMounted(() => {
   const el = chatScrollRef.value
   if (!el) return
 
-  // 初始进入：等列表第一次渲染后贴底
-  void nextTick().then(() => scrollToBottom({ force: true }))
+  // 绑定到真正的滚动容器（scroll-list 的 .scroller）
+  actualScrollEl.value = resolveActualScrollEl()
+  const scrollEl = actualScrollEl.value
+  if (scrollEl) {
+    const handler = () => onChatScroll()
+    scrollEl.addEventListener('scroll', handler, { passive: true })
+    __actualScrollListener = () => scrollEl.removeEventListener('scroll', handler)
+  }
+
+  // 初始进入：首屏是异步渲染，确保最终贴底
+  void ensureInitialScrollToBottom()
 
   // DOM 变化（列表刷新/新消息渲染）后：若用户在底部附近则跟随到底
   __chatScrollMutationObserver = new MutationObserver(() => {
+    // 首屏期间：列表可能在 ensureInitialScrollToBottom 的重试窗口之后才真正渲染，
+    // 这里在首屏未完成前强制贴底，完成后再按“用户是否在底部附近”跟随。
+    if (!__initialAutoScrollDone) {
+      void nextTick().then(() => scrollToBottom({ force: true }))
+      return
+    }
     void nextTick().then(() => scrollToBottom())
   })
   __chatScrollMutationObserver.observe(el, { childList: true, subtree: true })
@@ -418,19 +463,27 @@ onMounted(() => {
     if (t.tagName !== 'IMG') return
     void nextTick().then(() => scrollToBottom())
   }
-  el.addEventListener('load', __chatScrollImageLoadHandler, true)
+  // 监听实际滚动容器内的图片 load
+  ;(actualScrollEl.value || el).addEventListener('load', __chatScrollImageLoadHandler, true)
 })
 
 onBeforeUnmount(() => {
   const el = chatScrollRef.value
-  if (el && __chatScrollImageLoadHandler) {
+  const target = actualScrollEl.value || el
+  if (target && __chatScrollImageLoadHandler) {
     try {
-      el.removeEventListener('load', __chatScrollImageLoadHandler, true)
+      target.removeEventListener('load', __chatScrollImageLoadHandler, true)
     } catch {
       /* ignore */
     }
   }
   __chatScrollImageLoadHandler = null
+  try {
+    __actualScrollListener?.()
+  } catch {
+    /* ignore */
+  }
+  __actualScrollListener = null
   try {
     __chatScrollMutationObserver?.disconnect()
   } catch {
