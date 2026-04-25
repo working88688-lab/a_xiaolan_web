@@ -247,20 +247,16 @@ const followRecommendFromApi = computed(() => {
   return Array.isArray(u) ? u : []
 })
 
-// 关注 Tab 推荐用户接口（未关注任何人时展示，按视频总播放量排序，最多50个）
+// 关注 Tab 推荐用户（未关注任何人时展示，最多50个；仅使用 /api/mv/listOfFollow 返回的 recommend_users）
 const fetchFollowRecommend = async () => {
   if (!is_follow_tab.value || loadingFollowRecommend.value || hasFollowRecommend.value) return
 
   loadingFollowRecommend.value = true
   try {
-    // 优先使用 /api/mv/listOfFollow 自带的 recommend_users（避免多打一条接口）
-    if (followRecommendFromApi.value.length) {
-      followRecommendList.value = followRecommendFromApi.value.slice(0, 50)
-      return
+    const users = followRecommendFromApi.value
+    if (users.length) {
+      followRecommendList.value = users.slice(0, 50)
     }
-    const res = await __.$Api.Home.recommendUsers({ page: 1, limit: 50 })
-    if (followTabDebug) console.log('[关注Tab] /api/home/recommend_users 响应', res)
-    followRecommendList.value = (res?.data || []).slice(0, 50)
   } catch (error) {
     console.error('获取推荐用户失败:', error)
   } finally {
