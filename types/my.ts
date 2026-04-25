@@ -34,6 +34,8 @@ export interface UserInfo {
   // 个人标签数组（客态视角用户主页用）
   tags_ary?: string[]
   is_attention: 0 | 1
+  /** 部分列表（如粉丝列表）用该字段表示当前用户是否已关注对方 */
+  is_followed?: 0 | 1
   is_vip: 0 | 1
   vip_level: number
   expired_str: string

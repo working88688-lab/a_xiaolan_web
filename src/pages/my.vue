@@ -257,7 +257,9 @@ useSyncCacheData(cacheData => {
   }
 })
 
-// onActivated(userStore.info)
+onActivated(() => {
+  userStore.info()
+})
 </script>
 
 <style lang="less" scoped>

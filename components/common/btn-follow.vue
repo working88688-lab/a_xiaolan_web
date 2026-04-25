@@ -120,5 +120,19 @@ const is_not_self = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  user-select: none;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.12s ease;
+  &:active {
+    transform: scale(0.96);
+  }
+  &.followed {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border-color: #e5e7eb;
+  }
 }
 </style>

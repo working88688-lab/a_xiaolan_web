@@ -4,6 +4,34 @@ import type { UserInfo } from '@types'
 const props = defineProps<{
   item?: UserInfo
 }>()
+
+const emit = defineEmits<{
+  /** 操作成功后的目标关注态（用于列表补丁，避免接口滞后把按钮同步错） */
+  'follow-change': [uid?: number, nextAttention?: 0 | 1]
+}>()
+
+function norm01(v: unknown): 0 | 1 | undefined {
+  if (v === 1 || v === '1' || v === true) return 1
+  if (v === 0 || v === '0' || v === false) return 0
+  return undefined
+}
+
+/** 列表里「是否已关注」字段名不统一时，与 btn-follow 对齐为 0 | 1 */
+const attentionFromItem = computed(() => {
+  const it = props.item
+  if (!it) return undefined as undefined
+  const a = norm01(it.is_attention)
+  const f = norm01(it.is_followed)
+  if (a === undefined && f === undefined) return undefined as undefined
+  if (a === 1 || f === 1) return 1 as const
+  return 0 as const
+})
+
+/** btn-follow success：1=当前已关注，-1=当前未关注 */
+const onFollowSuccess = (flag: number) => {
+  const next: 0 | 1 = flag === 1 ? 1 : 0
+  emit('follow-change', props.item?.uid, next)
+}
 </script>
 
 <template>
@@ -33,7 +61,13 @@ const props = defineProps<{
         <slot name="desc" />
       </div>
     </div>
-    <btn-follow use-default-style :attention="props.item?.is_attention" size="tiny" :uid="props.item?.uid"></btn-follow>
+    <btn-follow
+      use-default-style
+      :attention="attentionFromItem"
+      size="tiny"
+      :uid="props.item?.uid"
+      @success="onFollowSuccess"
+    ></btn-follow>
   </div>
 </template>
 
