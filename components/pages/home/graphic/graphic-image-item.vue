@@ -133,6 +133,66 @@ function buildSortFilterUrl(sortLabel: any) {
     ...(sort ? { sort } : {})
   })
 }
+
+/** H-1*N 横向区：PC 鼠标按住拖动滚动（触摸仍走系统原生） */
+const hScrollDrag = {
+  el: null as HTMLElement | null,
+  pointerId: -1,
+  startX: 0,
+  startScrollLeft: 0,
+  moved: false
+}
+
+function onGraphicHScrollPointerDown(e: PointerEvent) {
+  if (e.pointerType === 'touch') return
+  if (e.pointerType === 'mouse' && e.button !== 0) return
+  const el = e.currentTarget as HTMLElement
+  if (el.scrollWidth <= el.clientWidth) return
+  hScrollDrag.el = el
+  hScrollDrag.pointerId = e.pointerId
+  hScrollDrag.startX = e.clientX
+  hScrollDrag.startScrollLeft = el.scrollLeft
+  hScrollDrag.moved = false
+  el.classList.add('is-dragging')
+  try {
+    el.setPointerCapture(e.pointerId)
+  } catch {
+    /* ignore */
+  }
+}
+
+function onGraphicHScrollPointerMove(e: PointerEvent) {
+  if (e.pointerId !== hScrollDrag.pointerId || !hScrollDrag.el) return
+  if (e.pointerType === 'touch') return
+  const dx = e.clientX - hScrollDrag.startX
+  if (Math.abs(dx) > 2) hScrollDrag.moved = true
+  hScrollDrag.el.scrollLeft = hScrollDrag.startScrollLeft - dx
+  e.preventDefault()
+}
+
+function onGraphicHScrollPointerUp(e: PointerEvent) {
+  if (e.pointerId !== hScrollDrag.pointerId || !hScrollDrag.el) return
+  const el = hScrollDrag.el
+  const moved = hScrollDrag.moved
+  hScrollDrag.el = null
+  hScrollDrag.pointerId = -1
+  el.classList.remove('is-dragging')
+  try {
+    el.releasePointerCapture(e.pointerId)
+  } catch {
+    /* ignore */
+  }
+  if (moved) {
+    el.addEventListener(
+      'click',
+      ev => {
+        ev.preventDefault()
+        ev.stopPropagation()
+      },
+      { capture: true, once: true }
+    )
+  }
+}
 </script>
 <template>
   <dx-hoc-list ref="hocListRef" :api="`${props.api}`" fields="data" :pullup="false">
@@ -196,21 +256,24 @@ function buildSortFilterUrl(sortLabel: any) {
         </div>
         <div class="dx-list" @touchmove.stop>
           <!-- 这里改用原生横向滚动，避免 iOS 下 better-scroll 计算边界导致“滑到空白” -->
-          <div class="graphic-native-scroll">
+          <div
+            class="graphic-native-scroll"
+            @pointerdown="onGraphicHScrollPointerDown"
+            @pointermove="onGraphicHScrollPointerMove"
+            @pointerup="onGraphicHScrollPointerUp"
+            @pointercancel="onGraphicHScrollPointerUp"
+          >
             <div class="graphic-scroll-content">
               <div
                 v-for="(cardItem, cardIndex) in card?.items"
                 :key="cardIndex"
                 v-link="`/${props.type}?id=${cardItem.id}`"
-                class="graphic-information"
+                class="graphic-information-common graphic-h-scroll-card"
               >
-                <div class="content">
-                  <div class="thumb">
-                    <dx-image :src="cardItem.thumb_full" />
-                  </div>
-
+                <div class="thumb">
+                  <dx-image :src="cardItem.thumb_full" />
                   <dx-pay-type :coins="cardItem.coins" class="absolute right-0.5 top-0.5 z-10" />
-                  <div class="absolute bottom-0.5 left-0.5 right-0.5 z-10 flex justify-between text-white">
+                  <div class="absolute bottom-0.5 left-0.5 right-0.5 z-10 flex justify-between text-[0.28rem] text-white">
                     <div class="flex items-center gap-0.5">
                       <van-icon name="eye-o" size="0.32rem" />
                       <span>
@@ -220,8 +283,7 @@ function buildSortFilterUrl(sortLabel: any) {
                     <div>{{ cardItem.total || (cardItem.series && cardItem.series.length) || 0 }}张</div>
                   </div>
                 </div>
-
-                <div class="truncate">{{ cardItem.title }}</div>
+                <div class="line-clamp-1">{{ cardItem.title }}</div>
               </div>
               <div v-if="card.items?.length == 0" class="comics-empty">数据为空</div>
             </div>
@@ -496,16 +558,24 @@ function buildSortFilterUrl(sortLabel: any) {
   }
 }
 
-/* H-1*N 横向列表：原生横向滚动（iOS 更稳，不会滑到空白） */
+/* H-1*N（最近更新）：结构与最热同款卡片 + 文案；封面固定高度 3.8rem（不按比例动态算高），保留横向滑动 */
 .graphic-native-scroll {
+  width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  /* 让内容和标题左右边距一致 */
   padding: 0 12px;
-  /* iOS 下减少误触发页面左右滑动/回弹 */
   touch-action: pan-x;
+  cursor: grab;
+  /* 用容器宽度算卡片，避免 100vw 大于内容区(如整站 500px)时只露一列 */
+  container-type: inline-size;
+  container-name: graphic-h-scroll;
+
+  &.is-dragging {
+    cursor: grabbing;
+    user-select: none;
+  }
 }
 
 .graphic-scroll-content {
@@ -514,36 +584,27 @@ function buildSortFilterUrl(sortLabel: any) {
   gap: 14px;
 }
 
-.graphic-information {
-  /* 外层容器减去 3 个 gap，展示 3.25 个卡片宽度 */
-  flex: 0 0 calc((100vw - 3 * 14px) / 3.25);
+.graphic-h-scroll-card {
+  flex: 0 0 calc((min(100vw, 500px) - 24px - 2 * 14px) / 3);
+  flex-shrink: 0;
   min-width: 0;
   overflow: hidden;
   text-align: center;
+}
 
-  .content {
-    position: relative;
-    height: 3.8rem;
-    margin-bottom: 0.2rem;
-
-    .thumb {
-      width: 100%;
-      height: 3.8rem;
-      border-radius: 5px;
-      overflow: hidden;
-      position: absolute;
-      z-index: 1;
-    }
+@supports (width: 1cqi) {
+  .graphic-h-scroll-card {
+    flex: 0 0 calc((100cqi - 2 * 14px) / 3);
   }
+}
 
-  .title {
-    color: #333333;
-    font-size: 0.32rem;
-    white-space: nowrap;
-    width: 100%;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
+.graphic-scroll-content .graphic-h-scroll-card .thumb {
+  width: 100%;
+  height: 3.8rem;
+  border-radius: 5px;
+  margin-bottom: 0.2rem;
+  overflow: hidden;
+  position: relative;
 }
 
 .graphic-meta {
