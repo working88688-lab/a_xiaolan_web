@@ -152,13 +152,15 @@ function getNovelTrackBase() {
     media_id: props.data?.media_id ?? '',
     novel_id: String(props.data?.id ?? ''),
     novel_title: props.data?.title ?? '',
-    novel_type_id: props.data?.novel_type_id ?? '',
-    novel_type_name: props.data?.novel_type_name ?? '',
+    chapter_id: String(story.value?.id ?? ''),
+    chapter_name: story.value?.title ?? '',
+    novel_type_id: props.data?.novel_type_id || 'default',
+    novel_type_name: props.data?.novel_type_name || '默认分类',
     recommend_trace_id: props.data?.recommend_trace_id ?? '',
-    novel_tag_key: props.data?.novel_tag_key ?? '',
-    novel_tag_name: props.data?.novel_tag_name ?? '',
-    page_no: props.sid ?? 0,
-    read_progress: 0
+    novel_tag_key: props.data?.novel_tag_key || 'default',
+    novel_tag_name: props.data?.novel_tag_name || '默认标签',
+    page_no: props.sid ?? 1,
+    read_progress: 0,
   }
 }
 

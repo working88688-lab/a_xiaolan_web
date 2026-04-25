@@ -20,11 +20,11 @@
           }"
           :video-info="{
             video_id: data.detail?.id,
-            video_type_id: data.detail?.video_type_id || '',
-            video_type_name: data.detail?.video_type_name || '',
-            video_tag_key: data.detail?.video_tag_key || '',
+            video_type_id: data.detail?.video_type_id || 'default',
+            video_type_name: data.detail?.video_type_name || '默认分类',
+            video_tag_key: data.detail?.video_tag_key || 'default',
             video_title: data.detail?.title,
-            video_tag_name: data.detail?.tags,
+            video_tag_name: data.detail?.tags || '默认标签',
             duration: data.detail?.duration,
             media_id: data.detail?.media_id || '',
             video_content_type: data.detail?.video_content_type || '',
@@ -192,6 +192,7 @@ const {
   api: __.$Api.Video.detail,
   success() {
     console.log('[VideoDetail]', data.value.detail)
+    __.$Tracker.setPageTraceId(data.value.detail?.recommend_trace_id || '')
     if (data.value.topic_info?.id) {
       get_collects({
         topic_id: data.value.topic_info.id

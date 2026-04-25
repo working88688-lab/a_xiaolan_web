@@ -26,7 +26,8 @@ export function encryptSecret(key: string, time: number): string {
 
 function checkRule(ctx, role_key) {
   const key = `is_report_${role_key}`
-  return ctx.bury_point[key] === 1
+  // key 未配置时默认开启，显式设为 0 才关闭
+  return ctx.bury_point[key] !== 0
 }
 
 function getPageTrackData(page: any) {
@@ -98,6 +99,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   })
 
   app.$router.afterEach((to, from) => {
+    app.$Tracker.setPageTraceId('')
     const pageMeta = getPageTrackData(to)
     const referrerMeta = getPageTrackData(from)
     app.$Tracker.trackAppPageView({
@@ -109,6 +111,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       current_page_key: pageMeta.key,
       current_page_name: pageMeta.name,
       page_load_time: performance.now() - PAGE_LOAD_MAP.get(to.name),
+      recommend_trace_id: '',
     })
 
     // PAGE_ALIVE_TIMER = setInterval(() => {
@@ -187,6 +190,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
       // 拿到这一批要上报的数据
       const payload = currentBatch.map(item => item.event)
+      console.log('[Tracker] flush', payload.length, 'events', payload.map(e => e.event))
 
       // 先备份 resolve/reject
       const resolvers = currentBatch.map(item => ({
@@ -370,6 +374,7 @@ export default defineNuxtPlugin((nuxtApp) => {
         : '',
       bury_point: {},
       createSign: () => { },
+      currentPageTraceId: '',
     },
     /**
      * 初始化 SDK
@@ -407,8 +412,12 @@ export default defineNuxtPlugin((nuxtApp) => {
           screen_height,
           click_x_percent: ((click_page_x / screen_width).toFixed(2) * 100).toFixed(2),
           click_y_percent: ((click_page_y / screen_height).toFixed(2) * 100).toFixed(2),
+          recommend_trace_id: app.$Tracker._ctx.currentPageTraceId,
         })
       })
+    },
+    setPageTraceId(traceId: string) {
+      this._ctx.currentPageTraceId = traceId || ''
     },
     /**
      * 通用 track
@@ -540,9 +549,12 @@ export default defineNuxtPlugin((nuxtApp) => {
             media_id: extra.media_id,
             video_id: extra.video_id,
             video_title: extra.video_title,
-            video_type_id: extra.video_type_id,
-            video_type_name: extra.video_type_name,
+            video_type_id: extra.video_type_id || 'default',
+            video_type_name: extra.video_type_name || '默认分类',
             video_content_type: extra.video_content_type,
+            video_tag_key: extra.video_tag_key || 'default',
+            video_tag_name: extra.video_tag_name || '默认标签',
+            video_duration: extra.video_duration,
             video_behavior_key: extra.video_behavior_key,
             video_behavior_name: extra.video_behavior_name,
             play_duration: extra.play_duration,
@@ -553,6 +565,12 @@ export default defineNuxtPlugin((nuxtApp) => {
         return send(this._ctx, {
           event: 'video_event',
           ...extra,
+          video_type_id: extra.video_type_id || 'default',
+          video_type_name: extra.video_type_name || '默认分类',
+          video_tag_key: extra.video_tag_key || 'default',
+          video_tag_name: extra.video_tag_name || '默认标签',
+          media_id: extra.media_id,
+          recommend_trace_id: extra.recommend_trace_id,
         })
       }
     },
@@ -642,6 +660,8 @@ export default defineNuxtPlugin((nuxtApp) => {
             media_id: extra.media_id,
             novel_id: extra.novel_id,
             novel_title: extra.novel_title,
+            chapter_id: extra.chapter_id,
+            chapter_name: extra.chapter_name,
             novel_type_id: extra.novel_type_id,
             novel_type_name: extra.novel_type_name,
             recommend_trace_id: extra.recommend_trace_id,
@@ -656,6 +676,12 @@ export default defineNuxtPlugin((nuxtApp) => {
         return send(this._ctx, {
           event: 'novel_event',
           ...extra,
+          novel_type_id: extra.novel_type_id || 'default',
+          novel_type_name: extra.novel_type_name || '默认分类',
+          novel_tag_key: extra.novel_tag_key || 'default',
+          novel_tag_name: extra.novel_tag_name || '默认标签',
+          media_id: extra.media_id,
+          recommend_trace_id: extra.recommend_trace_id,
         })
       }
     },
@@ -683,6 +709,12 @@ export default defineNuxtPlugin((nuxtApp) => {
         return send(this._ctx, {
           event: 'comic_event',
           ...extra,
+          comic_type_id: extra.comic_type_id || 'default',
+          comic_type_name: extra.comic_type_name || '默认分类',
+          comic_tag_key: extra.comic_tag_key || 'default',
+          comic_tag_name: extra.comic_tag_name || '默认标签',
+          media_id: extra.media_id,
+          recommend_trace_id: extra.recommend_trace_id,
         })
       }
     },
