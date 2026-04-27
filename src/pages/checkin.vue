@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onActivated } from 'vue'
+import { computed, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted } from 'vue'
 
 definePageMeta({
   keepalive: true
@@ -655,12 +655,60 @@ const signPanelButtonLabel = computed(() => {
   return '已签到'
 })
 
+/** 顶栏：首屏透明；滚动后主区域铺色（滚动容器多为布局里 .xblue-main，不是 window） */
+const CHECKIN_NAV_SOLID_THRESHOLD = 10
+const checkinScrollY = ref(0)
+const isCheckinNavbarSolid = computed(() => checkinScrollY.value > CHECKIN_NAV_SOLID_THRESHOLD)
+
+function readCheckinScrollTop(): number {
+  if (!import.meta.client) return 0
+  const main = document.querySelector('.xblue-main') as HTMLElement | null
+  if (main) return main.scrollTop
+  return window.scrollY || document.documentElement.scrollTop || 0
+}
+
+let unbindCheckinScroll: (() => void) | null = null
+
+function bindCheckinScrollListener() {
+  if (!import.meta.client) return
+  unbindCheckinScroll?.()
+  const main = document.querySelector('.xblue-main') as HTMLElement | null
+  const target: HTMLElement | Window = main ?? window
+  const onScroll = () => {
+    checkinScrollY.value = readCheckinScrollTop()
+  }
+  target.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+  unbindCheckinScroll = () => target.removeEventListener('scroll', onScroll)
+}
+
+onMounted(() => {
+  nextTick(() => bindCheckinScrollListener())
+})
+
+onActivated(() => {
+  nextTick(() => {
+    bindCheckinScrollListener()
+    checkinScrollY.value = readCheckinScrollTop()
+  })
+})
+
+onDeactivated(() => {
+  unbindCheckinScroll?.()
+  unbindCheckinScroll = null
+})
+
+onBeforeUnmount(() => {
+  unbindCheckinScroll?.()
+  unbindCheckinScroll = null
+})
+
 // 日历格图标：直接使用接口返回的 icon（不做本地兜底）
 </script>
 
 <template>
   <div class="checkin-page" :style="{ backgroundImage: img.bg ? `url(${img.bg})` : '' }">
-    <dx-navbar class="checkin-navbar">
+    <dx-navbar class="checkin-navbar" :class="{ 'checkin-navbar--solid': isCheckinNavbarSolid }">
       <template #title>
         <div class="checkin-nav-title">签到</div>
       </template>
@@ -863,14 +911,26 @@ const signPanelButtonLabel = computed(() => {
 }
 
 .checkin-navbar :deep(.van-nav-bar) {
-  /* 与 .checkin-page 底一致，避免滚动时格子/图片从顶栏透出 */
-  background: #f8faff !important;
-  box-shadow: 0 1px 0 rgba(18, 38, 63, 0.06);
+  background: transparent !important;
+  box-shadow: none;
+  transition:
+    background-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .checkin-navbar :deep(.van-nav-bar__content) {
   height: 48px;
-  background: #f8faff;
+  background: transparent;
+  transition: background-color 0.22s ease;
+}
+
+.checkin-navbar.checkin-navbar--solid :deep(.van-nav-bar) {
+  background: #e4c4fd !important;
+  box-shadow: 0 1px 0 rgba(18, 38, 63, 0.08);
+}
+
+.checkin-navbar.checkin-navbar--solid :deep(.van-nav-bar__content) {
+  background: #e4c4fd;
 }
 
 .checkin-nav-title {
