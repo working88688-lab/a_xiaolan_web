@@ -30,7 +30,13 @@
         <van-tab title="视频">
           <dx-tabs v-model:active="video_tab" class="dx-tabs primary-tabs" animated swipeable>
             <van-tab title="上架中">
-              <dx-hoc-list v-if="key" ref="published_list_ref" :filter="filter" :api="publishedListApi">
+              <dx-hoc-list
+                v-if="key"
+                ref="published_list_ref"
+                :filter="filter"
+                :api="publishedListApi"
+                :success="onPublishedListSuccess"
+              >
                 <template #item="{ item }">
                   <div
                     class="work-item work-item--clickable"
@@ -93,7 +99,7 @@
                                 fill="#919191"
                               />
                             </svg>
-                            <span>{{ item.like_count || 0 }}</span>
+                            <span>{{ item.like ?? item.like_count ?? 0 }}</span>
                           </div>
                           <!-- 上架中：收藏按钮先注释 -->
                           <!--
@@ -464,6 +470,25 @@ const publishedListApi = __.$Api.Video.published
 const submitListApi = __.$Api.Video.wait
 const rejectListApi = __.$Api.Video.reject
 const hideListApi = __.$Api.Video.hide
+
+/** 调试：创作中心 · 视频 · 上架中 — 打印接口聚合数据 */
+function onPublishedListSuccess(res: any) {
+  if (!import.meta.client) return
+  const list = res?.data?.list
+  const n = Array.isArray(list) ? list.length : 0
+  console.log(
+    '%c[创作中心][视频][上架中]',
+    'color:#fff;background:#2494ff;padding:2px 8px;border-radius:4px;font-weight:700',
+    '完整响应:',
+    res
+  )
+  console.log(
+    '%c[创作中心][视频][上架中]',
+    'color:#2494ff;font-weight:600',
+    `list 条数: ${n}`,
+    list
+  )
+}
 
 const filter = (item: any) => {
   const t = item.title ?? ''
