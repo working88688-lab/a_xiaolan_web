@@ -2323,28 +2323,46 @@ async function goChat() {
   -webkit-overflow-scrolling: auto;
 }
 
-/* PC：收窄到接近手机内容宽，两列不变；整体高度压低，避免大屏「一块巨大卡片」 */
+/*
+ * PC：固定内容宽（与常见 H5 视口一致），保证 6 宫格「一排两个」整格可见、不被裁一半。
+ * 不用整屏 vw 算缩略图高度，避免弹层变窄后列宽与高度错位。
+ */
 @media (min-width: 768px) {
   :global(.van-popup.tq-match-popup:not(.van-popup--bottom):not(.van-toast)) {
-    width: min(390px, calc(100vw - 48px)) !important;
-    max-width: min(390px, calc(100vw - 48px)) !important;
-    max-height: min(72vh, 620px) !important;
+    width: 375px !important;
+    max-width: min(375px, calc(100vw - 24px)) !important;
+    max-height: min(85vh, 680px) !important;
+    box-sizing: border-box !important;
   }
 
   .tq-flip {
-    height: min(72vh, 620px);
-    height: min(72svh, 620px);
-    max-height: min(72vh, 620px);
+    width: 100%;
+    height: min(82vh, 660px);
+    max-height: min(82vh, 660px);
+    box-sizing: border-box;
   }
 
   .tq-success {
-    padding-top: 52px;
-    padding-bottom: 14px;
+    padding: 52px 12px 14px;
+    min-width: 0;
   }
 
+  .tq-grid {
+    width: 100%;
+    box-sizing: border-box;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+    justify-items: stretch;
+  }
+
+  /* 单格宽约 (375 - 24水平padding - 12列间距)/2 ≈ 167，与 H5 上 min(42vw,176) 量级一致 */
   .tq-grid-img {
-    height: 132px;
-    max-height: none;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    max-height: 168px;
+    object-fit: cover;
+    box-sizing: border-box;
   }
 }
 
