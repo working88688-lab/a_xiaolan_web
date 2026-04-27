@@ -121,6 +121,7 @@ const { key } = useKeepAlive({
 })
 const router = useRouter()
 function submit(type: number) {
+  if (show_buy.value || paying.value) return
   if (is_custom_tpl.value) {
     if (!options.value.ground) {
       return __.$Alert('请上传模板')
@@ -256,7 +257,7 @@ watch(is_custom_tpl, val => {
       <div>
         <div class="mb-1 mt-2 px-1">脸部注意事项：</div>
         <div
-          class="mb-2.5 mt-2 whitespace-pre-line px-1 text-mgray"
+          class="mb-2.5 mt-2 whitespace-pre-line px-1"
           v-html="DOMPurify.sanitize(data.ai_ht_tips ?? '')"
         />
 
@@ -283,7 +284,15 @@ watch(is_custom_tpl, val => {
       </div>
 
       <div class="dx-grid-1 mt-3">
-        <dx-button v-if="data.free_num && cache[CACHE_KEY.AI_FACE].type === 1" :round="false" block @click="submit(1)">
+        <dx-button
+          v-if="data.free_num && cache[CACHE_KEY.AI_FACE].type === 1"
+          :round="false"
+          block
+          loading-text="提交中..."
+          :loading="paying || show_buy"
+          :disabled="paying || show_buy"
+          @click="submit(1)"
+        >
           <span class="text-normal">免费生成（剩余{{ data.free_num }}次）</span>
         </dx-button>
         <dx-button
@@ -291,6 +300,9 @@ watch(is_custom_tpl, val => {
           class="text-white"
           :round="false"
           color="linear-gradient(to right, #FFC300, #FFB052)"
+          loading-text="提交中..."
+          :loading="paying || show_buy"
+          :disabled="paying || show_buy"
           @click="submit(0)"
         >
           <span class="text-normal text-[#9E4800]">

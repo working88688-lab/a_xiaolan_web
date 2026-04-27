@@ -133,7 +133,7 @@ async function ensureInitialScrollToBottom() {
   for (let i = 0; i < 12; i++) {
     await nextTick()
     scrollToBottom({ force: true })
-    const el = chatScrollRef.value
+    const el = resolveActualScrollEl()
     if (el && calcIsNearBottom(el, 2)) break
     await new Promise<void>(resolve => setTimeout(resolve, 80))
   }
@@ -507,19 +507,21 @@ function toggleMore() {
 
 <template>
   <div class="chat-room">
-    <dx-navbar class="chat-navbar" @click-left="onBack">
-      <template #title>
-        <div class="chat-title">{{ title }}</div>
-      </template>
-      <template #right>
-        <button class="chat-right-pill" type="button" @click="openRecharge">
-          <span class="chat-right-text">可以消息数量：{{ leftTimeLabel }}</span>
-          <span class="chat-right-plus" aria-hidden="true">＋</span>
-        </button>
-      </template>
-    </dx-navbar>
+    <header class="chat-room-head">
+      <dx-navbar class="chat-navbar" @click-left="onBack">
+        <template #title>
+          <div class="chat-title">{{ title }}</div>
+        </template>
+        <template #right>
+          <button class="chat-right-pill" type="button" @click="openRecharge">
+            <span class="chat-right-text">可以消息数量：{{ leftTimeLabel }}</span>
+            <span class="chat-right-plus" aria-hidden="true">＋</span>
+          </button>
+        </template>
+      </dx-navbar>
 
-    <div class="chat-tip">请勿发送广告等违规消息，谨防私下交易上当受骗。违规用户将被永久禁言处理。</div>
+      <div class="chat-tip">请勿发送广告等违规消息，谨防私下交易上当受骗。违规用户将被永久禁言处理。</div>
+    </header>
 
     <div class="chat-body">
       <div v-if="showInsufficientTip" class="chat-insufficient">
@@ -529,7 +531,7 @@ function toggleMore() {
 
       <div v-if="matchInfoLoading" class="chat-match-loading">加载中…</div>
 
-      <div ref="chatScrollRef" class="chat-scroll" @scroll.passive="onChatScroll">
+      <div ref="chatScrollRef" class="chat-scroll">
         <dx-hoc-list
           ref="listRef"
           :pullup="false"
@@ -762,12 +764,22 @@ function toggleMore() {
 }
 
 .chat-room {
-  height: 100dvh;
-  min-height: 100vh;
+  box-sizing: border-box;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
   background: transparent;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.chat-room-head {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(180deg, #cfe9ff 0%, #ffffff 92%);
 }
 
 .chat-title {
@@ -778,7 +790,7 @@ function toggleMore() {
 }
 
 .chat-navbar :deep(.van-nav-bar) {
-  background: linear-gradient(180deg, #cfe9ff 0%, #ffffff 78%) !important;
+  background: transparent !important;
 }
 
 .chat-navbar :deep(.van-nav-bar__content) {
@@ -876,7 +888,15 @@ function toggleMore() {
 .chat-scroll {
   min-height: 0;
   flex: 1 1 auto;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chat-scroll :deep(.scroller) {
+  flex: 1;
+  min-height: 0;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -996,6 +1016,7 @@ function toggleMore() {
 }
 
 .chat-composer-wrap {
+  flex-shrink: 0;
   background: #e3e3e3;
   border-top: 1px solid rgba(0, 0, 0, 0.04);
 }

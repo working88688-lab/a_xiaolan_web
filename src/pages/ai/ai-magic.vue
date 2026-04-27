@@ -74,6 +74,7 @@ watch(showPopup, v => {
 const MAX_SIZE = 2 * 1024 * 1024
 const images = ref<any[]>([])
 const showPayPopup = ref(false)
+const submitLoading = ref(false)
 
 /** /api/aimagic/pre_magic */
 interface PreMagicData {
@@ -293,6 +294,8 @@ async function submitMagic() {
   if (!activeItem.value) {
     return __.$Toast('请选择魔法素材')
   }
+  if (submitLoading.value) return
+  submitLoading.value = true
   try {
     const entry = images.value[0] as any
     const rawFile = entry?.file as File | undefined
@@ -382,6 +385,8 @@ async function submitMagic() {
     const errorMsg = error?.message || '提交失败'
     __.$Toast(errorMsg)
     console.error('提交AI魔法任务失败:', error)
+  } finally {
+    submitLoading.value = false
   }
 }
 
@@ -502,7 +507,12 @@ async function confirmPay() {
           </div>
         </div>
 
-        <button class="magic-popup-pay-btn" type="button" :disabled="!images.length" @click="onPay">
+        <button
+          class="magic-popup-pay-btn"
+          type="button"
+          :disabled="!images.length || submitLoading"
+          @click="onPay"
+        >
           {{ magicMainPayLabel }}
         </button>
         <div class="magic-popup-balance">
@@ -531,7 +541,17 @@ async function confirmPay() {
           <div class="pay-popup-label">实际支付</div>
           <div class="pay-popup-value pay-popup-value-strong">{{ magicDisplayCost }} 金币</div>
         </div>
-        <button class="pay-popup-btn" type="button" :disabled="!images.length" @click="confirmPay">立即支付</button>
+        <van-button
+          class="pay-popup-btn"
+          block
+          native-type="button"
+          :loading="submitLoading"
+          loading-text="提交中..."
+          :disabled="!images.length || submitLoading"
+          @click="confirmPay"
+        >
+          立即支付
+        </van-button>
       </div>
     </van-popup>
   </div>

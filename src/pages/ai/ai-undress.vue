@@ -28,6 +28,8 @@ const stripData = ref<PreStripData>({
   tips: ''
 })
 
+const submitLoading = ref(false)
+
 function pickNumericField(row: Record<string, unknown> | undefined, keys: string[]): number {
   if (!row) return 0
   for (const k of keys) {
@@ -145,36 +147,46 @@ async function confirmPay(payType: number) {
   if (!images.value.length) {
     return __.$Toast('请先上传图片')
   }
+  if (submitLoading.value) return
 
+  const file = images.value[0]
+  const thumb = file.content || file.url
+  if (!thumb) {
+    return __.$Toast('图片读取失败，请重新上传')
+  }
+
+  submitLoading.value = true
   try {
-    const file = images.value[0]
-    // 获取图片尺寸
-    const img = new Image()
-    img.onload = async () => {
-      const res = await __.$Api.AI.strip({
-        thumb: file.content || file.url,
-        thumb_w: img.width,
-        thumb_h: img.height,
-        // 约定：1=使用免费次数卡，0=支付金币
-        type: payType
-      })
-      const tip = pickTaskMsg(res)
-      if (tip) __.$Toast(tip)
-      showPayPopup.value = false
-      await __.$Alert({
-        title: '提交成功',
-        message: '正在生成，稍后请前往 AI科技-我的\n记录中查看',
-        confirmButtonText: '朕知道了',
-        confirmButtonColor: '#2494ff',
-        className: 'ai-undress-success-dialog'
-      })
-      router.push('/ai/record?_index=2')
-    }
-    img.src = file.content || file.url
+    const { width, height } = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => resolve({ width: img.width, height: img.height })
+      img.onerror = () => reject(new Error('获取图片尺寸失败'))
+      img.src = thumb
+    })
+
+    const res = await __.$Api.AI.strip({
+      thumb,
+      thumb_w: width,
+      thumb_h: height,
+      type: payType
+    })
+    const tip = pickTaskMsg(res)
+    if (tip) __.$Toast(tip)
+    showPayPopup.value = false
+    await __.$Alert({
+      title: '提交成功',
+      message: '正在生成，稍后请前往 AI科技-我的\n记录中查看',
+      confirmButtonText: '朕知道了',
+      confirmButtonColor: '#2494ff',
+      className: 'ai-undress-success-dialog'
+    })
+    router.push('/ai/record?_index=2')
   } catch (error: any) {
     const errorMsg = error?.message || '提交失败'
     __.$Toast(errorMsg)
     console.error('提交AI去衣任务失败:', error)
+  } finally {
+    submitLoading.value = false
   }
 }
 </script>
@@ -235,7 +247,9 @@ async function confirmPay(payType: number) {
                 class="action-choice-btn action-free-btn"
                 color="#2494ff"
                 :round="false"
-                :disabled="!canUseFree"
+                loading-text="提交中..."
+                :loading="submitLoading"
+                :disabled="!canUseFree || submitLoading"
                 @click="onUseFree"
               >
                 使用次数卡（可用{{ stripData.free_num }}次）
@@ -245,7 +259,9 @@ async function confirmPay(payType: number) {
                 class="action-choice-btn action-pay-btn"
                 color="#2494ff"
                 :round="false"
-                :disabled="!canPayCoin"
+                loading-text="提交中..."
+                :loading="submitLoading"
+                :disabled="!canPayCoin || submitLoading"
                 @click="onPayCoins"
               >
                 支付{{ stripData.cost_coin }}金币
@@ -280,9 +296,17 @@ async function confirmPay(payType: number) {
           <div class="pay-popup-label">实际支付</div>
           <div class="pay-popup-value pay-popup-value-strong">{{ stripData.cost_coin }}</div>
         </div>
-        <button class="pay-popup-btn" type="button" :disabled="!images.length || !canPayCoin" @click="confirmPay(0)">
+        <van-button
+          class="pay-popup-btn"
+          block
+          native-type="button"
+          :loading="submitLoading"
+          loading-text="提交中..."
+          :disabled="!images.length || !canPayCoin || submitLoading"
+          @click="confirmPay(0)"
+        >
           立即支付
-        </button>
+        </van-button>
       </div>
     </van-popup>
   </div>
