@@ -115,6 +115,35 @@ function resolvePoster(item: Record<string, any>) {
   return ''
 }
 
+/** AI 魔法记录：接口字段不一，兼容多种视频 URL（相对路径会经 resolveMediaUrl 补全） */
+function resolveMagicPlayableVideo(item: Record<string, any>): string {
+  const keys = [
+    'video',
+    'video_url',
+    'preview_video',
+    'preview_url',
+    'down_url',
+    'result_video',
+    'url',
+    'preview'
+  ]
+  for (const k of keys) {
+    const raw = item?.[k]
+    const s = typeof raw === 'string' ? raw.trim() : ''
+    if (!s) continue
+    const resolved = resolveMediaUrl(s)
+    if (resolved) return resolved
+  }
+  return ''
+}
+
+function magicRecordPoster(item: Record<string, any>): string {
+  for (const f of ['cover', 'thumb', 'strip_thumb']) {
+    if (item?.[f]) return resolveMediaUrl(item[f])
+  }
+  return ''
+}
+
 function openFullscreenFromIndex(index: number) {
   const list = listRef.value?.listData ?? []
   if (!list.length) return
@@ -150,11 +179,22 @@ function onFullscreenSave() {
 }
 
 function openMagicVideoPopup(item: any) {
-  activeVideoItem.value = item
+  const videoSrc = resolveMagicPlayableVideo(item)
+  if (!videoSrc) return
+  activeVideoItem.value = {
+    ...item,
+    id: item.id ?? item.task_id ?? videoSrc,
+    video: videoSrc,
+    cover: magicRecordPoster(item)
+  }
   showVideoPopup.value = true
 }
 
 function onCoverAreaClick(item: any, index: number) {
+  if (aiType.value === 'magic' && statusTab.value === 'done' && resolveMagicPlayableVideo(item)) {
+    openMagicVideoPopup(item)
+    return
+  }
   openFullscreenFromIndex(index)
 }
 
@@ -172,6 +212,7 @@ const { key } = useKeepAlive({
 })
 
 const activeApi = computed(() => API_MAP[aiType.value])
+/** status：1 处理中 / 2 已完成 / 3 已失败（三种业务与下方状态 tab 一致） */
 const listParams = computed(() => ({ status: listStatusParam(aiType.value, statusTab.value) }))
 </script>
 
@@ -203,7 +244,9 @@ const listParams = computed(() => ({ status: listStatusParam(aiType.value, statu
       </button>
     </div>
 
+    <!-- key：dx-hoc-list 内部 api 只在挂载时用 props.api 生成一次；切换 AI 类型必须重建否则会一直请求首个 tab 的接口 -->
     <dx-hoc-list
+      :key="aiType"
       ref="listRef"
       class="ai-record-grid"
       :api="activeApi"
@@ -241,7 +284,7 @@ const listParams = computed(() => ({ status: listStatusParam(aiType.value, statu
               >保存</dx-button>
             </div>
             <div
-              v-if="aiType === 'magic' && statusTab === 'done' && item.video"
+              v-if="aiType === 'magic' && statusTab === 'done' && resolveMagicPlayableVideo(item)"
               class="ai-record-play-icon"
               @click.stop="openMagicVideoPopup(item)"
             >
