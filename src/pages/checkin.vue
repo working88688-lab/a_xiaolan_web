@@ -863,11 +863,14 @@ const signPanelButtonLabel = computed(() => {
 }
 
 .checkin-navbar :deep(.van-nav-bar) {
-  background: transparent !important;
+  /* 与 .checkin-page 底一致，避免滚动时格子/图片从顶栏透出 */
+  background: #f8faff !important;
+  box-shadow: 0 1px 0 rgba(18, 38, 63, 0.06);
 }
 
 .checkin-navbar :deep(.van-nav-bar__content) {
   height: 48px;
+  background: #f8faff;
 }
 
 .checkin-nav-title {
