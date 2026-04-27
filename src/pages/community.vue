@@ -34,7 +34,7 @@
       <nuxt-icon name="search" filled class="icon-search !text-[20px] !text-[#141414]"></nuxt-icon>
     </nuxt-link>
 
-    <div class="float-btn">
+    <div v-if="activeTab !== 'scircle'" class="float-btn">
       <publish-popup>
         <img src="~/assets/image/community/addFeedButton.svg" alt="" />
       </publish-popup>

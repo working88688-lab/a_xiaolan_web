@@ -2323,6 +2323,31 @@ async function goChat() {
   -webkit-overflow-scrolling: auto;
 }
 
+/* PC：收窄到接近手机内容宽，两列不变；整体高度压低，避免大屏「一块巨大卡片」 */
+@media (min-width: 768px) {
+  :global(.van-popup.tq-match-popup:not(.van-popup--bottom):not(.van-toast)) {
+    width: min(390px, calc(100vw - 48px)) !important;
+    max-width: min(390px, calc(100vw - 48px)) !important;
+    max-height: min(72vh, 620px) !important;
+  }
+
+  .tq-flip {
+    height: min(72vh, 620px);
+    height: min(72svh, 620px);
+    max-height: min(72vh, 620px);
+  }
+
+  .tq-success {
+    padding-top: 52px;
+    padding-bottom: 14px;
+  }
+
+  .tq-grid-img {
+    height: 132px;
+    max-height: none;
+  }
+}
+
 .tq-flip {
   width: 100%;
   /* iOS 二次打开时 vh/max-height + aspect-ratio 容易抖动导致裁切，直接固定视口高度更稳 */
@@ -2380,7 +2405,7 @@ async function goChat() {
 
 .tq-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px 15px;
   flex: 1;
   min-height: 0;
@@ -2391,6 +2416,8 @@ async function goChat() {
 }
 
 .tq-grid-item {
+  min-width: 0;
+  width: 100%;
   border: 0;
   padding: 0;
   background: transparent;
@@ -2398,7 +2425,7 @@ async function goChat() {
 
 .tq-grid-img {
   width: 100%;
-  /* iOS 上 aspect-ratio/auto 高度易造成行高被拉大，固定一个随屏宽变化的高度更稳 */
+  /* iOS 上 aspect-ratio/auto 高度易造成行高被拉大，固定一个随屏宽变化的高度更稳（H5 保持原 vw） */
   height: min(42vw, 176px);
   object-fit: cover;
   border-radius: 14px;
@@ -2713,6 +2740,14 @@ async function goChat() {
   flex-direction: column;
 }
 
+@media (min-width: 768px) {
+  .match-goods-popup {
+    max-width: min(390px, calc(100vw - 48px));
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
 .match-goods-popup__header {
   text-align: center;
   padding: 8px 0 14px;
@@ -2752,7 +2787,7 @@ async function goChat() {
 
 .match-goods-popup__grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 10px;
   overflow-y: auto;
   flex: 1;
@@ -2761,6 +2796,7 @@ async function goChat() {
 }
 
 .match-goods-card {
+  min-width: 0;
   position: relative;
   border: 2px solid #eee;
   border-radius: 10px;
