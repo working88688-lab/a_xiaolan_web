@@ -221,6 +221,8 @@
               </div>
             </div>
 
+            <!-- 个人照片上传：暂时隐藏 -->
+            <!--
             <div class="scircle-settings-section">
               <div class="scircle-settings-section-title">个人照片</div>
               <div class="scircle-settings-photo">
@@ -286,6 +288,7 @@
                 />
               </div>
             </div>
+            -->
 
             <!-- 语音功能：先整体注释（包含上传/播放/录音）
             <div class="scircle-settings-section">
