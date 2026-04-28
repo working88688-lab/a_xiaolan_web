@@ -1,7 +1,7 @@
 <template>
   <div class="positioned-container login container">
     <div class="login-container">
-      <div class="login-back" @click="__.$Back" />
+      <button type="button" class="login-back" aria-label="返回首页" @click="onLoginBack" />
       <div class="login-head">
         <div class="login-head-avatar">
           <img src="~/assets/image/logo.png" />
@@ -55,6 +55,11 @@ const { execute: login, loading: loginLoading } = useMyFetch({
 const { execute: register, loading: regLoadinng } = useMyFetch({
   api: userStore.register
 })
+
+function onLoginBack() {
+  __.$Replace('/home')
+}
+
 // 提交 {type: 类型{0/null: 登录, 1: 注册}}
 const onSubmit = async type => {
   const reg = /^\s*$/g
@@ -121,12 +126,16 @@ const onSubmit = async type => {
 .login-back {
   width: 1.5rem;
   height: 1.5rem;
-  background: center/0.5rem no-repeat url('~/assets/image/icon_arrow_left_blak.png');
+  box-sizing: border-box;
+  border: 0;
+  padding: 0;
+  background: transparent center/0.5rem no-repeat url('~/assets/image/icon_arrow_left_blak.png');
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 1;
+  z-index: 10;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .login-head {
