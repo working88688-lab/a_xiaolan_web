@@ -525,13 +525,24 @@
     <van-popup
       v-model:show="showMatchPopup"
       teleport="body"
-      :close-on-click-overlay="false"
-      :closeable="false"
+      close-on-click-overlay
       :show-toolbar="false"
       :lock-scroll="true"
       class="tq-match-popup"
+      @closed="onMatchPopupClosed"
     >
-      <div class="tq-flip" :class="{ 'is-detail': matchView === 'detail' }">
+      <div class="tq-match-popup-shell">
+        <button class="tq-match-close" type="button" aria-label="关闭" @click="closeMatchPopup">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path
+              d="M4 4L14 14M14 4L4 14"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <div class="tq-flip" :class="{ 'is-detail': matchView === 'detail' }">
         <div class="tq-flip-inner">
           <!-- 第一层：匹配成功（6选1） -->
           <div class="tq-face tq-face-front">
@@ -539,7 +550,7 @@
               <div class="tq-success-bg" :style="{ backgroundImage: `url(${successBgUrl})` }" aria-hidden="true" />
               <div class="tq-success-inner">
                 <div v-if="matchItems.length > 0" class="tq-success-title">点击任意图片可查看用户详细信息</div>
-                <div v-else class="tq-success-title tq-success-title--muted">暂无匹配结果</div>
+                <div v-else class="tq-success-title tq-success-title--muted">暂无匹配结果，请稍后重试</div>
 
                 <div v-if="matchItems.length === 0" class="tq-match-empty">
                   <p class="tq-match-empty-text">没有查询到匹配信息</p>
@@ -685,6 +696,7 @@
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </van-popup>
@@ -1556,6 +1568,11 @@ function closeMatchPopup() {
   matchView.value = 'grid'
 }
 
+/** 点遮罩关闭时走 v-model，需同步重置详情态，避免下次打开仍停在翻转页 */
+function onMatchPopupClosed() {
+  matchView.value = 'grid'
+}
+
 async function fetchMatchDetail() {
   const current = activeMatchItem.value
   if (!current?.uid) return
@@ -2407,6 +2424,33 @@ async function goChat() {
   overflow: hidden !important;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: auto;
+}
+
+.tq-match-popup-shell {
+  position: relative;
+  width: 100%;
+}
+
+.tq-match-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 100;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tq-match-close:active {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 /* 匹配弹窗：背景层与内容层分离，避免 cover 裁切 + flex 子项把背景“挤没” */
