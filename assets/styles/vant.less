@@ -137,6 +137,15 @@ body {
   max-width: 100%;
   position: absolute !important;
 
+  /* 底部弹出层 teleported 到 body 时必须 fixed，否则 absolute 会相对错误包含块，PC 上整体跑偏 */
+  &.van-popup--bottom {
+    position: fixed !important;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 100%;
+  }
+
   &:not(.van-popup--bottom):not(.van-toast) {
     width: 8.16rem !important;
   }
@@ -200,9 +209,14 @@ body {
  * 宽度不超过 var(--max-app-width)，避免 teleport 到 body 后铺满整个桌面视口。
  */
 @media (min-width: 501px) {
+  /*
+   * 水平居中：用 left:50% + 负 margin 对齐「条带宽度」，避免 50vw 与 100vw 在出现纵向滚动条时不一致导致跑偏。
+   * 条带宽度与 --max-app-width / device-width 逻辑一致。
+   */
   .van-overlay {
     width: ~'min(var(--max-app-width, 500px), 100vw) !important';
-    left: ~'calc(50vw - min(var(--max-app-width, 500px), 100vw) / 2) !important';
+    left: 50% !important;
+    margin-left: ~'calc(-1 * min(var(--max-app-width, 500px), 100vw) / 2) !important';
     right: auto !important;
   }
 
@@ -212,7 +226,8 @@ body {
 
   .van-popup--bottom {
     width: ~'min(var(--max-app-width, 500px), 100vw) !important';
-    left: ~'calc(50vw - min(var(--max-app-width, 500px), 100vw) / 2) !important';
+    left: 50% !important;
+    margin-left: ~'calc(-1 * min(var(--max-app-width, 500px), 100vw) / 2) !important';
     right: auto !important;
   }
 
@@ -223,7 +238,8 @@ body {
 
   .van-nav-bar--fixed {
     width: ~'min(var(--max-app-width, 500px), 100vw) !important';
-    left: ~'calc(50vw - min(var(--max-app-width, 500px), 100vw) / 2) !important';
+    left: 50% !important;
+    margin-left: ~'calc(-1 * min(var(--max-app-width, 500px), 100vw) / 2) !important';
     right: auto !important;
   }
 

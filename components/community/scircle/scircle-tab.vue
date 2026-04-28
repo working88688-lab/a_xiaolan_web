@@ -131,7 +131,15 @@
       </div>
     </van-popup>
 
-    <van-popup v-model:show="showSettings" position="bottom" teleport="body" round closeable @closed="resetSettings">
+    <van-popup
+      v-model:show="showSettings"
+      class="scircle-settings-popup"
+      position="bottom"
+      teleport="body"
+      round
+      closeable
+      @closed="resetSettings"
+    >
       <div class="scircle-settings">
         <div class="scircle-settings-header">
           <div class="scircle-settings-header-left">
@@ -1828,6 +1836,8 @@ async function goChat() {
   max-height: 95vh;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  box-sizing: border-box;
 }
 
 .scircle-settings-header {
@@ -1835,6 +1845,7 @@ async function goChat() {
   grid-template-columns: 44px 1fr 44px;
   align-items: center;
   margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .scircle-settings-header-left,
@@ -1877,6 +1888,8 @@ async function goChat() {
   padding-bottom: 0;
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .scircle-settings-scroll {
@@ -2095,6 +2108,37 @@ async function goChat() {
 
 .scircle-settings-footer {
   padding-top: 0;
+  flex-shrink: 0;
+}
+
+/*
+ * 大屏：与全站 max-width 列一致（501px），底部弹层已由 vant.less 限宽居中；
+ * 这里补高度与内边距，避免 PC 上过高撑破视口、中部列表无法滚动。
+ */
+@media (min-width: 501px) {
+  :global(.van-popup.scircle-settings-popup.van-popup--bottom) {
+    max-height: min(86vh, 680px) !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    border-radius: 14px 14px 0 0 !important;
+  }
+
+  .scircle-settings {
+    max-height: min(86vh, 680px);
+    padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .scircle-settings-title {
+    font-size: 15px;
+  }
+
+  .scircle-settings-section + .scircle-settings-section {
+    margin-top: 12px;
+  }
+
+  .scircle-settings-scroll {
+    overscroll-behavior: contain;
+  }
 }
 
 .scircle-settings-primary {
@@ -2362,49 +2406,6 @@ async function goChat() {
   -webkit-overflow-scrolling: auto;
 }
 
-/*
- * PC：固定内容宽（与常见 H5 视口一致），保证 6 宫格「一排两个」整格可见、不被裁一半。
- * 不用整屏 vw 算缩略图高度，避免弹层变窄后列宽与高度错位。
- */
-@media (min-width: 768px) {
-  :global(.van-popup.tq-match-popup:not(.van-popup--bottom):not(.van-toast)) {
-    width: 375px !important;
-    max-width: min(375px, calc(100vw - 24px)) !important;
-    max-height: min(85vh, 680px) !important;
-    box-sizing: border-box !important;
-  }
-
-  .tq-flip {
-    width: 100%;
-    height: min(82vh, 660px);
-    max-height: min(82vh, 660px);
-    box-sizing: border-box;
-  }
-
-  .tq-success {
-    padding: 52px 12px 14px;
-    min-width: 0;
-  }
-
-  .tq-grid {
-    width: 100%;
-    box-sizing: border-box;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px 12px;
-    justify-items: stretch;
-  }
-
-  /* 单格宽约 (375 - 24水平padding - 12列间距)/2 ≈ 167，与 H5 上 min(42vw,176) 量级一致 */
-  .tq-grid-img {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 4 / 5;
-    max-height: 168px;
-    object-fit: cover;
-    box-sizing: border-box;
-  }
-}
-
 .tq-flip {
   width: 100%;
   /* iOS 二次打开时 vh/max-height + aspect-ratio 容易抖动导致裁切，直接固定视口高度更稳 */
@@ -2521,6 +2522,78 @@ async function goChat() {
   object-fit: cover;
   border-radius: 14px;
   display: block;
+}
+
+/*
+ * 大屏 / PC：与全站 max-width≈500px 列对齐（501px 起生效，避免 768 导致窄桌面永远不命中）。
+ * 必须写在基础 .tq-flip / .tq-success 之后，否则会后被覆盖导致「显示不全」。
+ */
+@media (min-width: 501px) {
+  :global(.van-popup.tq-match-popup:not(.van-popup--bottom):not(.van-toast)) {
+    width: min(340px, calc(100vw - 24px)) !important;
+    max-width: min(340px, calc(100vw - 24px)) !important;
+    max-height: min(82vh, 640px) !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 三行×两列共 6 格：缩略图高度压低 + 顶栏收紧，避免只露出 4 格 */
+  .tq-flip {
+    height: min(78vh, 600px);
+    max-height: min(78vh, 600px);
+    box-sizing: border-box;
+  }
+
+  .tq-success {
+    padding: 32px 10px 10px;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .tq-success-title {
+    flex-shrink: 0;
+    font-size: 11px;
+    line-height: 1.45;
+    margin-bottom: 8px;
+    padding: 0 6px;
+    word-break: break-word;
+  }
+
+  .tq-match-empty {
+    min-height: 100px;
+    padding: 12px 12px 6px;
+  }
+
+  .tq-match-empty-text {
+    font-size: 13px;
+  }
+
+  .tq-grid {
+    flex: 1 1 0;
+    min-height: 0;
+    gap: 5px 8px;
+    padding-bottom: 2px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    align-content: start;
+  }
+
+  .tq-grid-img {
+    width: 100%;
+    height: auto !important;
+    max-height: 76px;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+
+  .tq-rematch-btn {
+    flex-shrink: 0;
+    margin-top: 6px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    font-size: 14px;
+  }
 }
 
 .tq-detail {
