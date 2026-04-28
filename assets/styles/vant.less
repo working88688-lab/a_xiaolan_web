@@ -194,3 +194,40 @@ body {
   font-weight: normal;
   font-size: 12px;
 }
+
+/*
+ * 大屏（与 ResizeConfig MAX_DIVICE_WIDTH 一致）：fixed 遮罩/弹层相对视口水平居中，
+ * 宽度不超过 var(--max-app-width)，避免 teleport 到 body 后铺满整个桌面视口。
+ */
+@media (min-width: 501px) {
+  .van-overlay {
+    width: ~'min(var(--max-app-width, 500px), 100vw) !important';
+    left: ~'calc(50vw - min(var(--max-app-width, 500px), 100vw) / 2) !important';
+    right: auto !important;
+  }
+
+  .van-popup {
+    max-width: ~'min(var(--max-app-width, 500px), 100vw) !important';
+  }
+
+  .van-popup--bottom {
+    width: ~'min(var(--max-app-width, 500px), 100vw) !important';
+    left: ~'calc(50vw - min(var(--max-app-width, 500px), 100vw) / 2) !important';
+    right: auto !important;
+  }
+
+  /* 居中弹窗由组件自身 transform，只限宽避免撑破视口 */
+  .van-popup:not(.van-popup--bottom):not(.van-toast) {
+    max-width: ~'min(var(--max-app-width, 500px), 100vw) !important';
+  }
+
+  .van-nav-bar--fixed {
+    width: ~'min(var(--max-app-width, 500px), 100vw) !important';
+    left: ~'calc(50vw - min(var(--max-app-width, 500px), 100vw) / 2) !important';
+    right: auto !important;
+  }
+
+  .van-dialog {
+    max-width: ~'min(var(--max-app-width, 500px), 100vw) !important';
+  }
+}

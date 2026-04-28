@@ -157,7 +157,10 @@ body,
 #__nuxt {
   width: 100%;
   height: 100%;
-
+  max-width: min(100%, var(--max-app-width, 500px));
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
 }
 
 body {
@@ -170,6 +173,11 @@ body {
 
 #__nuxt {
   position: relative;
+}
+
+:root {
+  /* 与 ResizeConfig.ts MAX_DIVICE_WIDTH 保持一致；脚本会再写入 documentElement */
+  --max-app-width: 500px;
 }
 
 html {

@@ -528,25 +528,39 @@
           <!-- 第一层：匹配成功（6选1） -->
           <div class="tq-face tq-face-front">
             <div class="tq-success" :style="{ backgroundImage: `url(${successBgUrl})` }">
-              <div class="tq-success-title">点击任意图片可查看用户详细信息</div>
+              <div v-if="matchItems.length > 0" class="tq-success-title">点击任意图片可查看用户详细信息</div>
+              <div v-else class="tq-success-title tq-success-title--muted">暂无匹配结果</div>
 
-              <div class="tq-grid">
+              <div v-if="matchItems.length === 0" class="tq-match-empty">
+                <p class="tq-match-empty-text">没有查询到匹配信息</p>
+              </div>
+
+              <div v-else class="tq-grid">
                 <button
                   v-for="(item, idx) in matchItems"
-                  :key="idx"
+                  :key="`tq-grid-${idx}-${item.uid}`"
                   class="tq-grid-item"
                   type="button"
                   @click="openMatchDetail(idx)"
                 >
                   <img
-                    :key="item.cover"
+                    v-if="!shouldLazyLoadMatchCover(item.cover)"
+                    :src="item.cover || tqItemUrl"
+                    class="tq-grid-img"
+                    alt=""
+                  />
+                  <img
+                    v-else
                     v-lazyLoad="item.cover"
                     class="tq-grid-img"
-                    src="~/assets/image/img_loading.png"
-                    alt="匹配结果"
+                    :src="imgLoading"
+                    alt=""
                   />
                 </button>
               </div>
+              <button class="tq-btn tq-btn-primary tq-rematch-btn" type="button" :disabled="isMatching" @click="onStartMatch">
+                {{ isMatching ? '匹配中…' : '重新匹配' }}
+              </button>
             </div>
           </div>
 
@@ -554,11 +568,17 @@
           <div class="tq-face tq-face-back">
             <div class="tq-detail">
               <img
-                v-if="activeDetailBg"
+                v-if="activeDetailBg && !shouldLazyLoadMatchCover(activeDetailBg)"
+                class="tq-detail-bg"
+                :src="activeDetailBg"
+                alt=""
+              />
+              <img
+                v-else-if="activeDetailBg"
                 :key="activeDetailBg"
                 v-lazyLoad="activeDetailBg"
                 class="tq-detail-bg"
-                src="~/assets/image/img_loading.png"
+                :src="imgLoading"
                 alt=""
               />
               <div class="tq-detail-top">
@@ -664,6 +684,36 @@
 import { computed, onBeforeUnmount, onMounted } from 'vue'
 import successBgUrl from '~/assets/image/success-bg.png'
 import tqItemUrl from '~/assets/image/tq-item.png'
+import imgLoading from '@assets/image/img_loading.png'
+
+/** 接口常返回 ""，不能用 ?? 串联，否则无法回落到占位图 */
+function firstNonEmptyUrl(...candidates: unknown[]): string {
+  for (const c of candidates) {
+    if (c == null) continue
+    const s = String(c).trim()
+    if (s !== '') return s
+  }
+  return tqItemUrl
+}
+
+/** 头像等字段：无非空候选时返回 ''，不用占位图 */
+function firstNonEmptyStr(...candidates: unknown[]): string {
+  for (const c of candidates) {
+    if (c == null) continue
+    const s = String(c).trim()
+    if (s !== '') return s
+  }
+  return ''
+}
+
+/** 本地占位、blob/data 不走 v-lazyLoad（避免走解密 Worker 失败或占 key 冲突） */
+function shouldLazyLoadMatchCover(u: string | undefined | null): boolean {
+  const s = String(u ?? '').trim()
+  if (!s) return false
+  if (s === tqItemUrl) return false
+  if (s.startsWith('blob:') || s.startsWith('data:')) return false
+  return true
+}
 
 const props = defineProps<{
   data: any
@@ -1292,8 +1342,9 @@ function normalizeMatchItems(raw: any): MatchItem[] {
   return source.map((item: any, index: number) => ({
     uid: item?.uid ?? item?.id ?? index,
     nickname: item?.nickname ?? item?.name ?? '匿名用户',
-    avatar: item?.avatar ?? item?.avatar_url ?? item?.thumb ?? '',
-    cover: item?.cover ?? item?.thumb ?? item?.avatar ?? item?.avatar_url ?? tqItemUrl,
+    avatar: firstNonEmptyStr(item?.avatar_url),
+    /** 宫格与翻转大图仅用 avatar_url，无非空则用占位图（不用 thumb/cover 兜底） */
+    cover: firstNonEmptyUrl(item?.avatar_url),
     match_percent: Number(item?.match_percent ?? item?.match_score ?? item?.score ?? 0),
     match_line_text: '',
     tags: Array.isArray(item?.tags) ? item.tags : [],
@@ -1362,19 +1413,7 @@ async function onStartMatch() {
       )
       console.groupEnd()
     }
-    matchItems.value = rows.length
-      ? rows.slice(0, 6)
-      : Array.from({ length: 6 }).map((_, index) => ({
-          uid: index,
-          nickname: '匿名用户',
-          avatar: '',
-          cover: tqItemUrl,
-          match_percent: 0,
-          match_line_text: '',
-          tags: [],
-          voice_url: '',
-          voice_duration: '0"'
-        }))
+    matchItems.value = rows.length ? rows.slice(0, 6) : []
     selectedMatchIndex.value = 0
     showMatchPopup.value = true
     matchView.value = 'grid'
@@ -1524,8 +1563,9 @@ async function fetchMatchDetail() {
       ...current,
       uid: detail?.uid ?? current.uid,
       nickname: detail?.nickname ?? current.nickname,
-      avatar: detail?.avatar_url ?? detail?.avatar ?? detail?.thumb ?? current.avatar,
-      cover: detail?.thumb ?? detail?.avatar_url ?? detail?.avatar ?? current.cover,
+      avatar: firstNonEmptyStr(detail?.avatar_url, current.avatar),
+      /** 详情大图仅 avatar_url：接口优先，否则沿用列表里已存的 avatar_url（current.avatar），不用 thumb/cover */
+      cover: firstNonEmptyUrl(detail?.avatar_url, current.avatar),
       match_percent: current.match_percent,
       match_line_text: matchLineText,
       tags: list.map((it: any) => it?.name).filter(Boolean),
@@ -1577,8 +1617,7 @@ async function goChat() {
         // get_match_info 需要列表分数；同时兼容历史参数名 scoreNum
         score: String(score),
         scoreNum: String(score),
-        // chat-room 头像兜底：优先用详情/列表 thumb（这里用当前项 cover）
-        thumb: String(current.cover || '')
+        thumb: firstNonEmptyStr(current.avatar)
       }
     })
   } catch (error) {
@@ -2421,6 +2460,30 @@ async function goChat() {
   margin-bottom: 16px;
 }
 
+.tq-success-title--muted {
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 8px;
+}
+
+.tq-match-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  padding: 20px 20px 8px;
+  box-sizing: border-box;
+}
+
+.tq-match-empty-text {
+  margin: 0;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+}
+
 .tq-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2439,6 +2502,16 @@ async function goChat() {
   border: 0;
   padding: 0;
   background: transparent;
+}
+
+.tq-rematch-btn {
+  margin-top: 10px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.tq-rematch-btn:disabled {
+  opacity: 0.72;
 }
 
 .tq-grid-img {

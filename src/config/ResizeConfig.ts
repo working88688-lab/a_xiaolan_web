@@ -19,6 +19,8 @@ function setRem() {
     }
 
     const MAX_DIVICE_WIDTH = 500
+    /** 布局/弹窗上限宽度（px），供 CSS var(--max-app-width) 与 device-width 大屏分支一致 */
+    docEl.style.setProperty('--max-app-width', `${MAX_DIVICE_WIDTH}px`)
     setBodyFontSize()
     function setRemUnit() {
       const clientWidth = docEl.clientWidth
