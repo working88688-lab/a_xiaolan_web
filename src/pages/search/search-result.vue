@@ -39,9 +39,9 @@ onMounted(() => {
   })
 })
 
-const app = useNuxtApp()
+const __ = useNuxtApp()
 function onTrack(data: any) {
-  app.$Tracker.trackKeywordSearch({
+  __.$Tracker.trackKeywordSearch({
     keyword: searchValue.value,
     search_result_count: data.count
   })

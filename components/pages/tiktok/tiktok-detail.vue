@@ -29,6 +29,7 @@ const {
   },
   fields: 'detail',
   success() {
+    __.$Tracker.setPageTraceId(item.value?.recommend_trace_id || '')
     saveTimer = setTimeout(() => {
       if (props.active) {
         useDb('tiktok', toRaw(item.value))
@@ -165,12 +166,15 @@ function openShare() {
 <template>
   <xg-tk-player ref="player" :video-info="{
     video_id: item.id,
-    video_type_id: item.video_type_id || '',
-    video_type_name: item.video_type_name || '',
-    video_tag_key: item.video_tag_key || '',
+    video_type_id: item.video_type_id || 'default',
+    video_type_name: item.video_type_name || '默认分类',
+    video_tag_key: item.video_tag_key || 'default',
     video_title: item.title,
-    video_tag_name: item.tags,
-    duration: item.duration
+    video_tag_name: item.tags || '默认标签',
+    duration: item.duration,
+    media_id: item.media_id || '',
+    video_content_type: item.video_content_type || 'short_video',
+    recommend_trace_id: item.recommend_trace_id || ''
   }" :active="props.active" :disabled="showPreviewTip" :src="play_url" :loop="item.is_pay === 1"
     :poster="props.poster" @end="onVideoEnd" @seeking-action="onSeeking">
     <template #default="{ seeking }">

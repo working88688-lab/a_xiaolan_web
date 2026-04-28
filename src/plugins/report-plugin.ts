@@ -26,7 +26,8 @@ export function encryptSecret(key: string, time: number): string {
 
 function checkRule(ctx, role_key) {
   const key = `is_report_${role_key}`
-  return ctx.bury_point[key] === 1
+  // key 未配置时默认开启，显式设为 0 才关闭
+  return ctx.bury_point[key] !== 0
 }
 
 function getPageTrackData(page: any) {
@@ -98,6 +99,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   })
 
   app.$router.afterEach((to, from) => {
+    app.$Tracker.setPageTraceId('')
     const pageMeta = getPageTrackData(to)
     const referrerMeta = getPageTrackData(from)
     app.$Tracker.trackAppPageView({
@@ -109,6 +111,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       current_page_key: pageMeta.key,
       current_page_name: pageMeta.name,
       page_load_time: performance.now() - PAGE_LOAD_MAP.get(to.name),
+      recommend_trace_id: '',
     })
 
     // PAGE_ALIVE_TIMER = setInterval(() => {
@@ -187,6 +190,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
       // 拿到这一批要上报的数据
       const payload = currentBatch.map(item => item.event)
+      console.log('[Tracker] flush', payload.length, 'events', payload.map(e => e.event))
 
       // 先备份 resolve/reject
       const resolvers = currentBatch.map(item => ({
@@ -352,6 +356,8 @@ export default defineNuxtPlugin((nuxtApp) => {
       payload,
     }
 
+    console.log('[Tracker]', event, payload)
+
     return limitedFetch(data).catch((e) => {
       console.log('e: ', e)
     })
@@ -368,6 +374,7 @@ export default defineNuxtPlugin((nuxtApp) => {
         : '',
       bury_point: {},
       createSign: () => { },
+      currentPageTraceId: '',
     },
     /**
      * 初始化 SDK
@@ -405,8 +412,12 @@ export default defineNuxtPlugin((nuxtApp) => {
           screen_height,
           click_x_percent: ((click_page_x / screen_width).toFixed(2) * 100).toFixed(2),
           click_y_percent: ((click_page_y / screen_height).toFixed(2) * 100).toFixed(2),
+          recommend_trace_id: app.$Tracker._ctx.currentPageTraceId,
         })
       })
+    },
+    setPageTraceId(traceId: string) {
+      this._ctx.currentPageTraceId = traceId || ''
     },
     /**
      * 通用 track
@@ -438,6 +449,13 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 导航路径行为 navigation
     trackNavigation(extra) {
       if (checkRule(this._ctx, 'navigation')) {
+        window.WebSDK?.track({
+          event: 'navigation',
+          payload: {
+            navigation_key: extra.navigation_key,
+            navigation_name: extra.navigation_name,
+          },
+        })
         return send(this._ctx, {
           event: 'navigation',
           ...extra,
@@ -448,6 +466,20 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 应用页面展示 app_page_view
     trackAppPageView(extra) {
       if (checkRule(this._ctx, 'app_page_view')) {
+        window.WebSDK?.track({
+          event: 'app_page_view',
+          payload: {
+            user_type: extra.user_type,
+            page_key: extra.page_key,
+            page_name: extra.page_name,
+            referrer_page_key: extra.referrer_page_key,
+            referrer_page_name: extra.referrer_page_name,
+            current_page_key: extra.current_page_key,
+            current_page_name: extra.current_page_name,
+            page_load_time: extra.page_load_time,
+            recommend_trace_id: extra.recommend_trace_id,
+          },
+        })
         return send(this._ctx, {
           event: 'app_page_view',
           ...extra,
@@ -458,6 +490,20 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 应用页面点击 page_click
     trackPageClick(extra) {
       if (checkRule(this._ctx, 'page_click')) {
+        window.WebSDK?.track({
+          event: 'page_click',
+          payload: {
+            page_key: extra.page_key,
+            page_name: extra.page_name,
+            click_page_x: extra.click_page_x,
+            click_page_y: extra.click_page_y,
+            click_x_percent: extra.click_x_percent,
+            click_y_percent: extra.click_y_percent,
+            screen_width: extra.screen_width,
+            screen_height: extra.screen_height,
+            recommend_trace_id: extra.recommend_trace_id,
+          },
+        })
         return send(this._ctx, {
           event: 'page_click',
           ...extra,
@@ -468,6 +514,15 @@ export default defineNuxtPlugin((nuxtApp) => {
     // APP 广告行为 advertising
     trackAdvertising(extra) {
       if (checkRule(this._ctx, 'advertising')) {
+        window.WebSDK?.track({
+          event: 'advertising',
+          payload: {
+            event_type: extra.event_type,
+            advertising_key: extra.advertising_key,
+            advertising_name: extra.advertising_name,
+            advertising_id: extra.advertising_id,
+          },
+        })
         return send(this._ctx, {
           event: 'advertising',
           ...extra,
@@ -488,9 +543,34 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 视频事件 video_event
     trackVideoEvent(extra) {
       if (checkRule(this._ctx, 'video_event')) {
+        window.WebSDK?.track({
+          event: 'video_event',
+          payload: {
+            media_id: extra.media_id,
+            video_id: extra.video_id,
+            video_title: extra.video_title,
+            video_type_id: extra.video_type_id || 'default',
+            video_type_name: extra.video_type_name || '默认分类',
+            video_content_type: extra.video_content_type,
+            video_tag_key: extra.video_tag_key || 'default',
+            video_tag_name: extra.video_tag_name || '默认标签',
+            video_duration: extra.video_duration,
+            video_behavior_key: extra.video_behavior_key,
+            video_behavior_name: extra.video_behavior_name,
+            play_duration: extra.play_duration,
+            play_progress: extra.play_progress,
+            recommend_trace_id: extra.recommend_trace_id,
+          },
+        })
         return send(this._ctx, {
           event: 'video_event',
           ...extra,
+          video_type_id: extra.video_type_id || 'default',
+          video_type_name: extra.video_type_name || '默认分类',
+          video_tag_key: extra.video_tag_key || 'default',
+          video_tag_name: extra.video_tag_name || '默认标签',
+          media_id: extra.media_id,
+          recommend_trace_id: extra.recommend_trace_id,
         })
       }
     },
@@ -498,6 +578,16 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 关键词搜索 keyword_search
     trackKeywordSearch(extra) {
       if (checkRule(this._ctx, 'keyword_search')) {
+        window.WebSDK?.track({
+          event: 'keyword_search',
+          payload: {
+            keyword: extra.keyword,
+            search_result_count: extra.search_result_count,
+            search_content_type: extra.search_content_type,
+            search_trace_id: extra.search_trace_id,
+            search_id: extra.search_id,
+          },
+        })
         return send(this._ctx, {
           event: 'keyword_search',
           ...extra,
@@ -508,6 +598,17 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 关键词搜索点击 keyword_click
     trackKeywordClick(extra) {
       if (checkRule(this._ctx, 'keyword_click')) {
+        window.WebSDK?.track({
+          event: 'keyword_click',
+          payload: {
+            keyword: extra.keyword,
+            click_item_id: extra.click_item_id,
+            click_item_type_key: extra.click_item_type_key,
+            click_item_type_name: extra.click_item_type_name,
+            click_position: extra.click_position,
+            search_trace_id: extra.search_trace_id,
+          },
+        })
         return send(this._ctx, {
           event: 'keyword_click',
           ...extra,
@@ -526,6 +627,18 @@ export default defineNuxtPlugin((nuxtApp) => {
         ad_impression_timer = setTimeout(() => {
           const adGrounds = groupAds()
           adGrounds.forEach((_data) => {
+            window.WebSDK?.track({
+              event: 'ad_impression',
+              payload: {
+                page_key: _data.page_key,
+                page_name: _data.page_name,
+                ad_slot_key: _data.ad_slot_key,
+                ad_slot_name: _data.ad_slot_name,
+                ad_id: _data.ad_id,
+                creative_id: _data.creative_id,
+                ad_type: _data.ad_type,
+              },
+            })
             send(ctx, {
               event: 'ad_impression',
               ..._data,
@@ -538,9 +651,89 @@ export default defineNuxtPlugin((nuxtApp) => {
       }
     },
 
+    // 小说事件 novel_event
+    trackNovelEvent(extra) {
+      if (checkRule(this._ctx, 'novel_event')) {
+        window.WebSDK?.track({
+          event: 'novel_event',
+          payload: {
+            media_id: extra.media_id,
+            novel_id: extra.novel_id,
+            novel_title: extra.novel_title,
+            chapter_id: extra.chapter_id,
+            chapter_name: extra.chapter_name,
+            novel_type_id: extra.novel_type_id,
+            novel_type_name: extra.novel_type_name,
+            recommend_trace_id: extra.recommend_trace_id,
+            novel_tag_key: extra.novel_tag_key,
+            novel_tag_name: extra.novel_tag_name,
+            read_progress: extra.read_progress,
+            page_no: extra.page_no,
+            novel_behavior_key: extra.novel_behavior_key,
+            novel_behavior_name: extra.novel_behavior_name,
+          },
+        })
+        return send(this._ctx, {
+          event: 'novel_event',
+          ...extra,
+          novel_type_id: extra.novel_type_id || 'default',
+          novel_type_name: extra.novel_type_name || '默认分类',
+          novel_tag_key: extra.novel_tag_key || 'default',
+          novel_tag_name: extra.novel_tag_name || '默认标签',
+          media_id: extra.media_id,
+          recommend_trace_id: extra.recommend_trace_id,
+        })
+      }
+    },
+
+    // 漫画事件 comic_event
+    trackComicEvent(extra) {
+      if (checkRule(this._ctx, 'comic_event')) {
+        window.WebSDK?.track({
+          event: 'comic_event',
+          payload: {
+            media_id: extra.media_id,
+            comic_id: extra.comic_id,
+            comic_title: extra.comic_title,
+            comic_type_id: extra.comic_type_id,
+            comic_type_name: extra.comic_type_name,
+            recommend_trace_id: extra.recommend_trace_id,
+            comic_tag_key: extra.comic_tag_key,
+            comic_tag_name: extra.comic_tag_name,
+            read_progress: extra.read_progress,
+            page_no: extra.page_no,
+            comic_behavior_key: extra.comic_behavior_key,
+            comic_behavior_name: extra.comic_behavior_name,
+          },
+        })
+        return send(this._ctx, {
+          event: 'comic_event',
+          ...extra,
+          comic_type_id: extra.comic_type_id || 'default',
+          comic_type_name: extra.comic_type_name || '默认分类',
+          comic_tag_key: extra.comic_tag_key || 'default',
+          comic_tag_name: extra.comic_tag_name || '默认标签',
+          media_id: extra.media_id,
+          recommend_trace_id: extra.recommend_trace_id,
+        })
+      }
+    },
+
     // 广告点击 ad_click
     trackAdClick(extra) {
       if (checkRule(this._ctx, 'ad_click')) {
+        window.WebSDK?.track({
+          event: 'ad_click',
+          payload: {
+            page_key: extra.page_key,
+            page_name: extra.page_name,
+            ad_slot_key: extra.ad_slot_key,
+            ad_slot_name: extra.ad_slot_name,
+            ad_id: extra.ad_id,
+            creative_id: extra.creative_id,
+            ad_type: extra.ad_type,
+          },
+        })
         return send(this._ctx, {
           event: 'ad_click',
           ...extra,
