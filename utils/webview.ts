@@ -29,7 +29,7 @@ const EVENT_MAP = {
     return new Promise(resolve => {
       const router = useRouter()
       router.isReady().then(() => {
-        router.push('/community?tab=scircle')
+        router.push('/community')
 
         resolve(true)
       })
