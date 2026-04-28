@@ -2447,6 +2447,18 @@ async function goChat() {
   transform: rotateY(180deg);
 }
 
+/*
+ * 翻转后正面不可见，但部分浏览器仍让正面层参与点击命中，会挡住背面按钮（返回/聊天无响应）。
+ * 按当前展示的面切换 pointer-events。
+ */
+.tq-flip:not(.is-detail) .tq-face-back {
+  pointer-events: none;
+}
+
+.tq-flip.is-detail .tq-face-front {
+  pointer-events: none;
+}
+
 .tq-success {
   position: relative;
   width: 100%;
