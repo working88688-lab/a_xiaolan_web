@@ -269,9 +269,16 @@ export default defineNuxtPlugin(nuxtApp => {
    * 页面跳转
    */
   const LINK_BIND_HANDLER = Symbol('link__bind__handler')
-  const linkBind = (el, binding, vnode) => {
+  const linkUnbind = (el: HTMLElement & { [LINK_BIND_HANDLER]?: () => void }) => {
+    const prev = el[LINK_BIND_HANDLER]
+    if (prev) {
+      el.removeEventListener('click', prev)
+      Reflect.deleteProperty(el, LINK_BIND_HANDLER)
+    }
+  }
+  const linkBind = (el: HTMLElement & { [LINK_BIND_HANDLER]?: () => void }, binding, vnode) => {
     const _this = nuxtApp
-
+    linkUnbind(el)
     if (!binding.value) {
       return
     }
@@ -290,8 +297,7 @@ export default defineNuxtPlugin(nuxtApp => {
       linkBind(el, binding, vnode)
     },
     beforeUnmount(el, binding, vnode) {
-      el.removeEventListener('click', el[LINK_BIND_HANDLER])
-      el.__link__bind = null
+      linkUnbind(el as HTMLElement & { [LINK_BIND_HANDLER]?: () => void })
     }
   })
   // txt 文本内容加载

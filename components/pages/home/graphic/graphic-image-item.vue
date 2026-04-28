@@ -134,55 +134,64 @@ function buildSortFilterUrl(sortLabel: any) {
   })
 }
 
-/** H-1*N 横向区：PC 鼠标按住拖动滚动（触摸仍走系统原生） */
+/** H-1*N 横向区：PC 指针拖拽滚动（触摸仍走系统原生）。按下立刻 capture 会伤 click，改为超过阈值再捕获。 */
+const DRAG_THRESHOLD_PX = 8
 const hScrollDrag = {
   el: null as HTMLElement | null,
   pointerId: -1,
   startX: 0,
   startScrollLeft: 0,
-  moved: false
+  dragging: false
 }
 
 function onGraphicHScrollPointerDown(e: PointerEvent) {
   if (e.pointerType === 'touch') return
-  if (e.pointerType === 'mouse' && e.button !== 0) return
+  if (e.button !== 0) return
   const el = e.currentTarget as HTMLElement
   if (el.scrollWidth <= el.clientWidth) return
   hScrollDrag.el = el
   hScrollDrag.pointerId = e.pointerId
   hScrollDrag.startX = e.clientX
   hScrollDrag.startScrollLeft = el.scrollLeft
-  hScrollDrag.moved = false
-  el.classList.add('is-dragging')
-  try {
-    el.setPointerCapture(e.pointerId)
-  } catch {
-    /* ignore */
-  }
+  hScrollDrag.dragging = false
 }
 
 function onGraphicHScrollPointerMove(e: PointerEvent) {
   if (e.pointerId !== hScrollDrag.pointerId || !hScrollDrag.el) return
   if (e.pointerType === 'touch') return
+  const el = hScrollDrag.el
   const dx = e.clientX - hScrollDrag.startX
-  if (Math.abs(dx) > 2) hScrollDrag.moved = true
-  hScrollDrag.el.scrollLeft = hScrollDrag.startScrollLeft - dx
+
+  if (!hScrollDrag.dragging) {
+    if (Math.abs(dx) < DRAG_THRESHOLD_PX) return
+    hScrollDrag.dragging = true
+    el.classList.add('is-dragging')
+    try {
+      el.setPointerCapture(e.pointerId)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  el.scrollLeft = hScrollDrag.startScrollLeft - dx
   e.preventDefault()
 }
 
 function onGraphicHScrollPointerUp(e: PointerEvent) {
   if (e.pointerId !== hScrollDrag.pointerId || !hScrollDrag.el) return
   const el = hScrollDrag.el
-  const moved = hScrollDrag.moved
+  const wasDragging = hScrollDrag.dragging
   hScrollDrag.el = null
   hScrollDrag.pointerId = -1
+  hScrollDrag.dragging = false
   el.classList.remove('is-dragging')
   try {
     el.releasePointerCapture(e.pointerId)
   } catch {
     /* ignore */
   }
-  if (moved) {
+  // 已进入拖拽则吞掉紧随的 click，避免松手误进详情；未达阈值则不打断正常点击
+  if (wasDragging) {
     el.addEventListener(
       'click',
       ev => {
