@@ -96,6 +96,7 @@ export default defineNuxtConfig({
     { src: '@config/ApiConfig/http/index' },
     { src: '@config/ApiConfig' },
     { src: '@plugins/report-plugin', mode: 'client' },
+    { src: '@plugins/web-sdk-plugin', mode: 'client' },
     { src: '@config/ApiConfig/global' },
 
     // 工具配置
