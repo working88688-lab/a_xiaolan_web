@@ -535,40 +535,43 @@
         <div class="tq-flip-inner">
           <!-- 第一层：匹配成功（6选1） -->
           <div class="tq-face tq-face-front">
-            <div class="tq-success" :style="{ backgroundImage: `url(${successBgUrl})` }">
-              <div v-if="matchItems.length > 0" class="tq-success-title">点击任意图片可查看用户详细信息</div>
-              <div v-else class="tq-success-title tq-success-title--muted">暂无匹配结果</div>
+            <div class="tq-success">
+              <div class="tq-success-bg" :style="{ backgroundImage: `url(${successBgUrl})` }" aria-hidden="true" />
+              <div class="tq-success-inner">
+                <div v-if="matchItems.length > 0" class="tq-success-title">点击任意图片可查看用户详细信息</div>
+                <div v-else class="tq-success-title tq-success-title--muted">暂无匹配结果</div>
 
-              <div v-if="matchItems.length === 0" class="tq-match-empty">
-                <p class="tq-match-empty-text">没有查询到匹配信息</p>
-              </div>
+                <div v-if="matchItems.length === 0" class="tq-match-empty">
+                  <p class="tq-match-empty-text">没有查询到匹配信息</p>
+                </div>
 
-              <div v-else class="tq-grid">
-                <button
-                  v-for="(item, idx) in matchItems"
-                  :key="`tq-grid-${idx}-${item.uid}`"
-                  class="tq-grid-item"
-                  type="button"
-                  @click="openMatchDetail(idx)"
-                >
-                  <img
-                    v-if="!shouldLazyLoadMatchCover(item.cover)"
-                    :src="item.cover || tqItemUrl"
-                    class="tq-grid-img"
-                    alt=""
-                  />
-                  <img
-                    v-else
-                    v-lazyLoad="item.cover"
-                    class="tq-grid-img"
-                    :src="imgLoading"
-                    alt=""
-                  />
+                <div v-else class="tq-grid">
+                  <button
+                    v-for="(item, idx) in matchItems"
+                    :key="`tq-grid-${idx}-${item.uid}`"
+                    class="tq-grid-item"
+                    type="button"
+                    @click="openMatchDetail(idx)"
+                  >
+                    <img
+                      v-if="!shouldLazyLoadMatchCover(item.cover)"
+                      :src="item.cover || tqItemUrl"
+                      class="tq-grid-img"
+                      alt=""
+                    />
+                    <img
+                      v-else
+                      v-lazyLoad="item.cover"
+                      class="tq-grid-img"
+                      :src="imgLoading"
+                      alt=""
+                    />
+                  </button>
+                </div>
+                <button class="tq-btn tq-btn-primary tq-rematch-btn" type="button" :disabled="isMatching" @click="onStartMatch">
+                  {{ isMatching ? '匹配中…' : '重新匹配' }}
                 </button>
               </div>
-              <button class="tq-btn tq-btn-primary tq-rematch-btn" type="button" :disabled="isMatching" @click="onStartMatch">
-                {{ isMatching ? '匹配中…' : '重新匹配' }}
-              </button>
             </div>
           </div>
 
@@ -2406,6 +2409,8 @@ async function goChat() {
   -webkit-overflow-scrolling: auto;
 }
 
+/* 匹配弹窗：背景层与内容层分离，避免 cover 裁切 + flex 子项把背景“挤没” */
+
 .tq-flip {
   width: 100%;
   /* iOS 二次打开时 vh/max-height + aspect-ratio 容易抖动导致裁切，直接固定视口高度更稳 */
@@ -2443,15 +2448,36 @@ async function goChat() {
 }
 
 .tq-success {
+  position: relative;
   width: 100%;
   height: 100%;
-  background-size: 100% 100%;
-  background-position: center;
-  padding: 78px 15px 18px;
+  min-height: 0;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.tq-success-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* 素材偏竖版海报：顶对齐更容易露出主视觉，避免扁容器 cover 裁到只剩深色底 */
+  background-position: center top;
+}
+
+.tq-success-inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 78px 15px 18px;
+  box-sizing: border-box;
 }
 
 .tq-success-title {
@@ -2515,6 +2541,12 @@ async function goChat() {
   opacity: 0.72;
 }
 
+/* 与全局 .tq-btn 固定 height 协调，避免 padding 被裁 */
+.tq-success-inner .tq-rematch-btn.tq-btn {
+  height: auto;
+  min-height: 44px;
+}
+
 .tq-grid-img {
   width: 100%;
   /* iOS 上 aspect-ratio/auto 高度易造成行高被拉大，固定一个随屏宽变化的高度更稳（H5 保持原 vw） */
@@ -2525,74 +2557,23 @@ async function goChat() {
 }
 
 /*
- * 大屏 / PC：与全站 max-width≈500px 列对齐（501px 起生效，避免 768 导致窄桌面永远不命中）。
- * 必须写在基础 .tq-flip / .tq-success 之后，否则会后被覆盖导致「显示不全」。
+ * PC：与移动端同套尺寸——宽度用 calc(100vw-20px) 并限制在约 375 内容宽；高度用 92vh 与默认 .tq-flip 一致。
+ * 内边距、宫格、缩略图不再单独写一套，避免比 H5 显大。
  */
 @media (min-width: 501px) {
   :global(.van-popup.tq-match-popup:not(.van-popup--bottom):not(.van-toast)) {
-    width: min(340px, calc(100vw - 24px)) !important;
-    max-width: min(340px, calc(100vw - 24px)) !important;
-    max-height: min(82vh, 640px) !important;
+    width: min(375px, calc(100vw - 20px)) !important;
+    max-width: min(375px, calc(100vw - 20px)) !important;
+    max-height: none !important;
     box-sizing: border-box !important;
+    overflow: hidden !important;
   }
 
-  /* 三行×两列共 6 格：缩略图高度压低 + 顶栏收紧，避免只露出 4 格 */
   .tq-flip {
-    height: min(78vh, 600px);
-    max-height: min(78vh, 600px);
+    height: 92vh;
+    height: 92svh;
+    max-height: none;
     box-sizing: border-box;
-  }
-
-  .tq-success {
-    padding: 32px 10px 10px;
-    min-width: 0;
-    min-height: 0;
-  }
-
-  .tq-success-title {
-    flex-shrink: 0;
-    font-size: 11px;
-    line-height: 1.45;
-    margin-bottom: 8px;
-    padding: 0 6px;
-    word-break: break-word;
-  }
-
-  .tq-match-empty {
-    min-height: 100px;
-    padding: 12px 12px 6px;
-  }
-
-  .tq-match-empty-text {
-    font-size: 13px;
-  }
-
-  .tq-grid {
-    flex: 1 1 0;
-    min-height: 0;
-    gap: 5px 8px;
-    padding-bottom: 2px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    align-content: start;
-  }
-
-  .tq-grid-img {
-    width: 100%;
-    height: auto !important;
-    max-height: 76px;
-    aspect-ratio: 4 / 5;
-    object-fit: cover;
-    border-radius: 10px;
-    box-sizing: border-box;
-  }
-
-  .tq-rematch-btn {
-    flex-shrink: 0;
-    margin-top: 6px;
-    padding-top: 9px;
-    padding-bottom: 9px;
-    font-size: 14px;
   }
 }
 
