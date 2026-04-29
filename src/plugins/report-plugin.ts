@@ -341,6 +341,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       channel: ctx.channel || '', // 渠道码
       event_id: generateEventId(), // 事件唯一标识
       app_id: ctx.appId || '', // 应用 id
+      app_version: ctx.appVersion || '', // 应用版本号
       uid: ctx.uid || '', // 用户 id
       sid: getSessionId(), // 会话 id
       client_ts: Math.floor(Date.now() / 1000), // 10 位时间戳
@@ -376,6 +377,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       channel: '',
       uid: '',
       deviceId: '',
+      appVersion: '',
       user_agent: typeof navigator !== 'undefined'
         ? navigator.userAgent
         : '',
@@ -393,6 +395,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       this._ctx.channel = options.channel || ''
       this._ctx.uid = options.uid.toString() || ''
       this._ctx.deviceId = options.deviceId
+      this._ctx.appVersion = options.appVersion || ''
       this._ctx.bury_point = options?.bury_point || {}
       this._ctx.createSign = options.createSign
       if (options.rule) {
