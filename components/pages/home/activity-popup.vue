@@ -4,21 +4,9 @@
 -->
 <template>
   <van-popup v-bind="$attrs" class="active-dialog" transition-appear transition="modal" teleport="body"
-    :close-on-click-overlay="false" @closed="onTrackClose">
+    :close-on-click-overlay="false">
     <div class="activity-dialog-content">
-      <ad-link v-if="props.type === 1" :trace-click-data="{
-        event: 'advertising',
-        event_type: 'click',
-        advertising_key: item.advertise_location_code,
-        advertising_name: item.ad_slot_name,
-        advertising_id: item.advertise_code
-      }" :trace-show-data="{
-          event: 'advertising',
-          event_type: 'show',
-          advertising_key: item.advertise_location_code,
-          advertising_name: item.ad_slot_name,
-          advertising_id: item.advertise_code
-        }" class="ad-item" ad-name="首页弹框" :data="props.item" @click="onClose">
+      <ad-link v-if="props.type === 1" class="ad-item" ad-name="首页弹框" :data="props.item" @click="onClose">
         <dx-image class="h-full w-full" fit="fill" :src="props.item.img_url" />
       </ad-link>
       <div v-else>
@@ -56,18 +44,6 @@ function onClose() {
   emit('close')
 }
 
-const app = useNuxtApp()
-function onTrackClose() {
-  if (props.type === 1) {
-    app.$Tracker.track({
-      event: 'advertising',
-      event_type: 'close',
-      advertising_key: props.item.advertise_location_code,
-      advertising_name: props.item.ad_slot_name,
-      advertising_id: props.item.advertise_code
-    })
-  }
-}
 </script>
 
 <style lang="less" scoped>

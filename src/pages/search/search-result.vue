@@ -66,7 +66,7 @@ function onTrack(data: any) {
                 click_item_type_key: 'video',
                 click_item_type_name: '视频',
                 click_item_id: item.id,
-                click_position: index
+                click_position: index + 1
               }">
                 <video-item :key="item.id" :item />
               </report-click-item>
@@ -82,7 +82,7 @@ function onTrack(data: any) {
                 click_item_type_key: 'short',
                 click_item_type_name: '短视频',
                 click_item_id: item.id,
-                click_position: index
+                click_position: index + 1
               }">
                 <video-tiktok-item :key="item.id" api="api/search/mv" show-title :list="items" :index="index"
                   :item="item" field-path="data.list" :params="{
@@ -103,7 +103,7 @@ function onTrack(data: any) {
                 click_item_type_key: 'original',
                 click_item_type_name: '片库',
                 click_item_id: item.id,
-                click_position: index
+                click_position: index + 1
               }">
                 <video-card :key="item.id" :index="index" :list="items" :show-type="false" :mv-type="2"
                   :show-duration="false"
@@ -123,7 +123,7 @@ function onTrack(data: any) {
                 click_item_type_key: 'community',
                 click_item_type_name: '帖子',
                 click_item_id: item.id,
-                click_position: index
+                click_position: index + 1
               }">
                 <post-item :key="item.id" show-author show-original :item="item" />
               </report-click-item>
@@ -139,7 +139,7 @@ function onTrack(data: any) {
                 click_item_type_key: 'user',
                 click_item_type_name: '用户',
                 click_item_id: item.uid,
-                click_position: index
+                click_position: index + 1
               }">
                 <nuxt-link :key="item.uid" :to="`/userdetail?id=${item.uid}`" class="flex items-center">
                   <div class="mr-1 flex flex-1 items-center overflow-hidden">
@@ -184,7 +184,7 @@ function onTrack(data: any) {
                 click_item_type_key: 'cartoon',
                 click_item_type_name: '动漫',
                 click_item_id: item.id,
-                click_position: index
+                click_position: index + 1
               }">
                 <video-card :key="item.id" :show-type="false" :mv-type="3" lines :show-duration="false"
                   :item="{ cover_thumb_url: item.cover_full, rating: item.play_count, ...item }" />
@@ -202,7 +202,7 @@ function onTrack(data: any) {
                 click_item_type_key: 'comic',
                 click_item_type_name: '漫画',
                 click_item_id: item.id,
-                click_position: index
+                click_position: index + 1
               }">
                 <comics-item :key="item.id" :item="item" />
               </report-click-item>
@@ -219,7 +219,7 @@ function onTrack(data: any) {
                 click_item_type_key: 'image',
                 click_item_type_name: '美男',
                 click_item_id: item.id,
-                click_position: index
+                click_position: index + 1
               }">
                 <comics-item :key="item.id" page="images" :item="item" />
               </report-click-item>
@@ -236,7 +236,7 @@ function onTrack(data: any) {
                 click_item_type_key: 'story',
                 click_item_type_name: '小说',
                 click_item_id: item.id,
-                click_position: index
+                click_position: index + 1
               }">
                 <comics-item :key="item.id" page="story" :item="item" />
               </report-click-item>
@@ -253,7 +253,7 @@ function onTrack(data: any) {
                 click_item_type_key: 'porngame',
                 click_item_type_name: '黄游',
                 click_item_id: item.id,
-                click_position: index
+                click_position: index + 1
               }">
                 <game-item :key="item.id" :item="item" />
               </report-click-item>

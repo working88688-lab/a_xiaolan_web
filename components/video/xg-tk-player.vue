@@ -97,11 +97,12 @@ function onError(e: any) {
 }
 function getVideoInfo() {
   const { duration: video_duration, currentTime: play_duration } = (xg_player || {}) as SimplePlayer
+  const vd = Math.floor(video_duration || props.videoInfo.duration || 0)
+  const pd = Math.floor(play_duration || 0)
   return {
-    video_duration: video_duration || props.videoInfo.duration || 0,
-    play_duration,
-    play_progress:
-      !play_duration || !video_duration ? 0 : (parseFloat((play_duration / video_duration).toFixed(2)) * 100).toFixed(0)
+    video_duration: vd,
+    play_duration: pd,
+    play_progress: !pd || !vd ? 0 : (parseFloat((pd / vd).toFixed(2)) * 100).toFixed(0)
   }
 }
 async function init_player() {

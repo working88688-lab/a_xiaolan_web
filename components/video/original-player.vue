@@ -213,8 +213,7 @@ onBeforeRouteUpdate(async to => {
             video_tag_name: data.detail?.tags,
             video_type_id: data.detail?.video_type_id,
             video_type_name: data.detail?.video_type_name,
-            video_tag_key: data.detail?.video_type_name,
-            duration: 0
+            duration: data.detail?.duration || 0
           }" @preview-ended="onVideoEnd" />
       </template>
       <div v-else class="translate-50 absolute left-1/2 top-1/2 text-xl font-semibold text-white">资源不存在</div>
