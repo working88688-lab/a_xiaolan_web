@@ -1634,6 +1634,8 @@ async function goChat() {
       to_uid: String(current.uid || 0)
     })
     // stopMatchDetailVoice()
+    // 与「开始匹配」一致：提交成功后拉 myprofile，校准可匹配次数（后端可能因选聊天扣次）
+    void fetchTalkHome()
     showMatchPopup.value = false
     matchView.value = 'grid'
     const score = Math.round(Number(current.match_percent) || 0)
