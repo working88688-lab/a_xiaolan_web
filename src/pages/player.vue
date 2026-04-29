@@ -191,7 +191,6 @@ const {
 } = useMyFetch<VideoData>({
   api: __.$Api.Video.detail,
   success() {
-    console.log('[VideoDetail]', data.value.detail)
     __.$Tracker.setPageTraceId(data.value.detail?.recommend_trace_id || '')
     if (data.value.topic_info?.id) {
       get_collects({

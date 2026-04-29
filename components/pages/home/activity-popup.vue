@@ -79,18 +79,6 @@ function onClose() {
   emit('close')
 }
 
-const app = useNuxtApp()
-function onTrackClose() {
-  if (props.type === 1) {
-    app.$Tracker.track({
-      event: 'advertising',
-      event_type: 'close',
-      advertising_key: props.item.advertise_location_code,
-      advertising_name: props.item.ad_slot_name,
-      advertising_id: props.item.advertise_code
-    })
-  }
-}
 </script>
 
 <style lang="less" scoped>

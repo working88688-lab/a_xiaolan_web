@@ -29,7 +29,6 @@ const {
   },
   fields: 'detail',
   success() {
-    console.log('[TiktokDetail]', item.value)
     __.$Tracker.setPageTraceId(item.value?.recommend_trace_id || '')
     saveTimer = setTimeout(() => {
       if (props.active) {

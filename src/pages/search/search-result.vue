@@ -81,6 +81,7 @@ onMounted(() => {
   })
 })
 
+const __ = useNuxtApp()
 function onTrack(data: any) {
   __.$Tracker.trackKeywordSearch({
     keyword: searchValue.value,
@@ -101,16 +102,14 @@ function onTrack(data: any) {
         <van-tab title="视频">
           <dx-hoc-list :on-track class="dx-grid-1" api="api/search/mv" :params="{ kwy: searchValue, show_type: 0 }">
             <template #item="{ item, index, items }">
-              <report-click-item
-                :data="{
-                  event: 'keyword_click',
-                  keyword: searchValue,
-                  click_item_type_key: 'video',
-                  click_item_type_name: '视频',
-                  click_item_id: item.id,
-                  click_position: index
-                }"
-              >
+              <report-click-item :data="{
+                event: 'keyword_click',
+                keyword: searchValue,
+                click_item_type_key: 'video',
+                click_item_type_name: '视频',
+                click_item_id: item.id,
+                click_position: index + 1
+              }">
                 <video-item :key="item.id" :item />
               </report-click-item>
             </template>
@@ -119,25 +118,16 @@ function onTrack(data: any) {
         <van-tab title="短视频">
           <dx-hoc-list :on-track class="dx-grid-3" api="api/search/mv" :params="{ show_type: 1, kwy: searchValue }">
             <template #item="{ item, items, index, page }">
-              <report-click-item
-                :data="{
-                  event: 'keyword_click',
-                  keyword: searchValue,
-                  click_item_type_key: 'short',
-                  click_item_type_name: '短视频',
-                  click_item_id: item.id,
-                  click_position: index
-                }"
-              >
-                <video-tiktok-item
-                  :key="item.id"
-                  api="api/search/mv"
-                  show-title
-                  :list="items"
-                  :index="index"
-                  :item="item"
-                  field-path="data.list"
-                  :params="{
+              <report-click-item :data="{
+                event: 'keyword_click',
+                keyword: searchValue,
+                click_item_type_key: 'short',
+                click_item_type_name: '短视频',
+                click_item_id: item.id,
+                click_position: index + 1
+              }">
+                <video-tiktok-item :key="item.id" api="api/search/mv" show-title :list="items" :index="index"
+                  :item="item" field-path="data.list" :params="{
                     page: page.page,
                     show_type: 1,
                     kwy: searchValue
@@ -150,22 +140,15 @@ function onTrack(data: any) {
         <van-tab title="片库">
           <dx-hoc-list :on-track class="dx-grid-2" api="api/original/search" :params="{ kwy: searchValue }">
             <template #item="{ item, items, index }">
-              <report-click-item
-                :data="{
-                  event: 'keyword_click',
-                  keyword: searchValue,
-                  click_item_type_key: 'original',
-                  click_item_type_name: '片库',
-                  click_item_id: item.id,
-                  click_position: index
-                }"
-              >
-                <video-card
-                  :key="item.id"
-                  :index="index"
-                  :list="items"
-                  :show-type="false"
-                  :mv-type="2"
+              <report-click-item :data="{
+                event: 'keyword_click',
+                keyword: searchValue,
+                click_item_type_key: 'original',
+                click_item_type_name: '片库',
+                click_item_id: item.id,
+                click_position: index + 1
+              }">
+                <video-card :key="item.id" :index="index" :list="items" :show-type="false" :mv-type="2"
                   :show-duration="false"
                   :item="{ cover_thumb_url: item.cover_full, rating: item.play_count, ...item }"
                 />
@@ -183,16 +166,14 @@ function onTrack(data: any) {
             }"
           >
             <template #item="{ item, index }">
-              <report-click-item
-                :data="{
-                  event: 'keyword_click',
-                  keyword: searchValue,
-                  click_item_type_key: 'community',
-                  click_item_type_name: '帖子',
-                  click_item_id: item.id,
-                  click_position: index
-                }"
-              >
+              <report-click-item :data="{
+                event: 'keyword_click',
+                keyword: searchValue,
+                click_item_type_key: 'community',
+                click_item_type_name: '帖子',
+                click_item_id: item.id,
+                click_position: index + 1
+              }">
                 <post-item :key="item.id" show-author show-original :item="item" />
               </report-click-item>
             </template>
@@ -201,16 +182,14 @@ function onTrack(data: any) {
         <van-tab title="用户">
           <dx-hoc-list :on-track class="dx-grid-1" api="api/search/user" :params="{ kwy: searchValue }">
             <template #item="{ item, index }">
-              <report-click-item
-                :data="{
-                  event: 'keyword_click',
-                  keyword: searchValue,
-                  click_item_type_key: 'user',
-                  click_item_type_name: '用户',
-                  click_item_id: item.uid,
-                  click_position: index
-                }"
-              >
+              <report-click-item :data="{
+                event: 'keyword_click',
+                keyword: searchValue,
+                click_item_type_key: 'user',
+                click_item_type_name: '用户',
+                click_item_id: item.uid,
+                click_position: index + 1
+              }">
                 <nuxt-link :key="item.uid" :to="`/userdetail?id=${item.uid}`" class="flex items-center">
                   <div class="mr-1 flex flex-1 items-center overflow-hidden">
                     <dx-avatar
@@ -260,24 +239,16 @@ function onTrack(data: any) {
         <van-tab title="动漫">
           <dx-hoc-list :on-track class="dx-grid-2" api="api/cartoon/search" :params="{ word: searchValue }">
             <template #item="{ item, index }">
-              <report-click-item
-                :data="{
-                  event: 'keyword_click',
-                  keyword: searchValue,
-                  click_item_type_key: 'cartoon',
-                  click_item_type_name: '动漫',
-                  click_item_id: item.id,
-                  click_position: index
-                }"
-              >
-                <video-card
-                  :key="item.id"
-                  :show-type="false"
-                  :mv-type="3"
-                  lines
-                  :show-duration="false"
-                  :item="{ cover_thumb_url: item.cover_full, rating: item.play_count, ...item }"
-                />
+              <report-click-item :data="{
+                event: 'keyword_click',
+                keyword: searchValue,
+                click_item_type_key: 'cartoon',
+                click_item_type_name: '动漫',
+                click_item_id: item.id,
+                click_position: index + 1
+              }">
+                <video-card :key="item.id" :show-type="false" :mv-type="3" lines :show-duration="false"
+                  :item="{ cover_thumb_url: item.cover_full, rating: item.play_count, ...item }" />
               </report-click-item>
             </template>
           </dx-hoc-list>
@@ -286,16 +257,14 @@ function onTrack(data: any) {
         <van-tab title="漫画">
           <dx-hoc-list :on-track class="dx-grid-2" api="api/manhua/search" :params="{ kwy: searchValue }">
             <template #item="{ item, index }">
-              <report-click-item
-                :data="{
-                  event: 'keyword_click',
-                  keyword: searchValue,
-                  click_item_type_key: 'comic',
-                  click_item_type_name: '漫画',
-                  click_item_id: item.id,
-                  click_position: index
-                }"
-              >
+              <report-click-item :data="{
+                event: 'keyword_click',
+                keyword: searchValue,
+                click_item_type_key: 'comic',
+                click_item_type_name: '漫画',
+                click_item_id: item.id,
+                click_position: index + 1
+              }">
                 <comics-item :key="item.id" :item="item" />
               </report-click-item>
             </template>
@@ -305,16 +274,14 @@ function onTrack(data: any) {
         <van-tab title="男色">
           <dx-hoc-list :on-track class="dx-grid-2" api="api/image/search" :params="{ kwy: searchValue }">
             <template #item="{ item, index }">
-              <report-click-item
-                :data="{
-                  event: 'keyword_click',
-                  keyword: searchValue,
-                  click_item_type_key: 'image',
-                  click_item_type_name: '美男',
-                  click_item_id: item.id,
-                  click_position: index
-                }"
-              >
+              <report-click-item :data="{
+                event: 'keyword_click',
+                keyword: searchValue,
+                click_item_type_key: 'image',
+                click_item_type_name: '美男',
+                click_item_id: item.id,
+                click_position: index + 1
+              }">
                 <comics-item :key="item.id" page="images" :item="item" />
               </report-click-item>
             </template>
@@ -324,16 +291,14 @@ function onTrack(data: any) {
         <van-tab title="小说">
           <dx-hoc-list :on-track class="dx-grid-2" api="api/story/search" :params="{ kwy: searchValue }">
             <template #item="{ item, index }">
-              <report-click-item
-                :data="{
-                  event: 'keyword_click',
-                  keyword: searchValue,
-                  click_item_type_key: 'story',
-                  click_item_type_name: '小说',
-                  click_item_id: item.id,
-                  click_position: index
-                }"
-              >
+              <report-click-item :data="{
+                event: 'keyword_click',
+                keyword: searchValue,
+                click_item_type_key: 'story',
+                click_item_type_name: '小说',
+                click_item_id: item.id,
+                click_position: index + 1
+              }">
                 <comics-item :key="item.id" page="story" :item="item" />
               </report-click-item>
             </template>
@@ -343,16 +308,14 @@ function onTrack(data: any) {
         <van-tab title="黄游">
           <dx-hoc-list :on-track class="dx-grid-2" api="api/porngame/search" :params="{ word: searchValue }">
             <template #item="{ item, index }">
-              <report-click-item
-                :data="{
-                  event: 'keyword_click',
-                  keyword: searchValue,
-                  click_item_type_key: 'porngame',
-                  click_item_type_name: '黄游',
-                  click_item_id: item.id,
-                  click_position: index
-                }"
-              >
+              <report-click-item :data="{
+                event: 'keyword_click',
+                keyword: searchValue,
+                click_item_type_key: 'porngame',
+                click_item_type_name: '黄游',
+                click_item_id: item.id,
+                click_position: index + 1
+              }">
                 <game-item :key="item.id" :item="item" />
               </report-click-item>
             </template>

@@ -59,6 +59,13 @@ function groupAds() {
   }, [])
 }
 
+function buildTagKey(tagName: string | undefined): string {
+  if (!tagName) return 'default'
+  const tags = tagName.split(',').map(t => t.trim()).filter(Boolean)
+  if (!tags.length) return 'default'
+  return tags.map(t => MD5(t).toString()).join(',')
+}
+
 export default defineNuxtPlugin((nuxtApp) => {
   const route = useRoute()
   // document.addEventListener('visibilitychange', (e) => {
@@ -110,7 +117,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       referrer_page_name: referrerMeta.name,
       current_page_key: pageMeta.key,
       current_page_name: pageMeta.name,
-      page_load_time: performance.now() - PAGE_LOAD_MAP.get(to.name),
+      page_load_time: Math.floor(performance.now() - PAGE_LOAD_MAP.get(to.name)),
       recommend_trace_id: '',
     })
 
@@ -543,6 +550,8 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 视频事件 video_event
     trackVideoEvent(extra) {
       if (checkRule(this._ctx, 'video_event')) {
+        const video_tag_name = extra.video_tag_name || '默认标签'
+        const video_tag_key = buildTagKey(extra.video_tag_name)
         window.WebSDK?.track({
           event: 'video_event',
           payload: {
@@ -552,8 +561,8 @@ export default defineNuxtPlugin((nuxtApp) => {
             video_type_id: extra.video_type_id || 'default',
             video_type_name: extra.video_type_name || '默认分类',
             video_content_type: extra.video_content_type,
-            video_tag_key: extra.video_tag_key || 'default',
-            video_tag_name: extra.video_tag_name || '默认标签',
+            video_tag_key,
+            video_tag_name,
             video_duration: extra.video_duration,
             video_behavior_key: extra.video_behavior_key,
             video_behavior_name: extra.video_behavior_name,
@@ -567,8 +576,8 @@ export default defineNuxtPlugin((nuxtApp) => {
           ...extra,
           video_type_id: extra.video_type_id || 'default',
           video_type_name: extra.video_type_name || '默认分类',
-          video_tag_key: extra.video_tag_key || 'default',
-          video_tag_name: extra.video_tag_name || '默认标签',
+          video_tag_key,
+          video_tag_name,
           media_id: extra.media_id,
           recommend_trace_id: extra.recommend_trace_id,
         })
@@ -654,6 +663,8 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 小说事件 novel_event
     trackNovelEvent(extra) {
       if (checkRule(this._ctx, 'novel_event')) {
+        const novel_tag_name = extra.novel_tag_name || '默认标签'
+        const novel_tag_key = buildTagKey(extra.novel_tag_name)
         window.WebSDK?.track({
           event: 'novel_event',
           payload: {
@@ -662,11 +673,11 @@ export default defineNuxtPlugin((nuxtApp) => {
             novel_title: extra.novel_title,
             chapter_id: extra.chapter_id,
             chapter_name: extra.chapter_name,
-            novel_type_id: extra.novel_type_id,
-            novel_type_name: extra.novel_type_name,
+            novel_type_id: extra.novel_type_id || 'default',
+            novel_type_name: extra.novel_type_name || '默认分类',
             recommend_trace_id: extra.recommend_trace_id,
-            novel_tag_key: extra.novel_tag_key,
-            novel_tag_name: extra.novel_tag_name,
+            novel_tag_key,
+            novel_tag_name,
             read_progress: extra.read_progress,
             page_no: extra.page_no,
             novel_behavior_key: extra.novel_behavior_key,
@@ -678,8 +689,8 @@ export default defineNuxtPlugin((nuxtApp) => {
           ...extra,
           novel_type_id: extra.novel_type_id || 'default',
           novel_type_name: extra.novel_type_name || '默认分类',
-          novel_tag_key: extra.novel_tag_key || 'default',
-          novel_tag_name: extra.novel_tag_name || '默认标签',
+          novel_tag_key,
+          novel_tag_name,
           media_id: extra.media_id,
           recommend_trace_id: extra.recommend_trace_id,
         })
@@ -689,17 +700,19 @@ export default defineNuxtPlugin((nuxtApp) => {
     // 漫画事件 comic_event
     trackComicEvent(extra) {
       if (checkRule(this._ctx, 'comic_event')) {
+        const comic_tag_name = extra.comic_tag_name || '默认标签'
+        const comic_tag_key = buildTagKey(extra.comic_tag_name)
         window.WebSDK?.track({
           event: 'comic_event',
           payload: {
             media_id: extra.media_id,
             comic_id: extra.comic_id,
             comic_title: extra.comic_title,
-            comic_type_id: extra.comic_type_id,
-            comic_type_name: extra.comic_type_name,
+            comic_type_id: extra.comic_type_id || 'default',
+            comic_type_name: extra.comic_type_name || '默认分类',
             recommend_trace_id: extra.recommend_trace_id,
-            comic_tag_key: extra.comic_tag_key,
-            comic_tag_name: extra.comic_tag_name,
+            comic_tag_key,
+            comic_tag_name,
             read_progress: extra.read_progress,
             page_no: extra.page_no,
             comic_behavior_key: extra.comic_behavior_key,
@@ -711,8 +724,8 @@ export default defineNuxtPlugin((nuxtApp) => {
           ...extra,
           comic_type_id: extra.comic_type_id || 'default',
           comic_type_name: extra.comic_type_name || '默认分类',
-          comic_tag_key: extra.comic_tag_key || 'default',
-          comic_tag_name: extra.comic_tag_name || '默认标签',
+          comic_tag_key,
+          comic_tag_name,
           media_id: extra.media_id,
           recommend_trace_id: extra.recommend_trace_id,
         })

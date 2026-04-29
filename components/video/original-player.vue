@@ -219,7 +219,7 @@ onBeforeRouteUpdate(async to => {
             video_type_id: data.detail?.video_type_id,
             video_type_name: data.detail?.video_type_name,
             video_tag_key: data.detail?.video_type_name,
-            duration: 0
+            duration: data.detail?.duration || 0
           }"
           @preview-ended="onVideoEnd"
         />
