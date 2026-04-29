@@ -72,11 +72,13 @@ export default defineNuxtPlugin(async () => {
     return app.$CryptoData.encryptReportParamsBrowser(data, { keyString, ivString, signKey })
   }
 
+  const appConfig = useAppConfig()
   const trackerInitOptions = {
     channel: userStore.u.build_id,
     appId: globalStore.config?.bury_point?.click_app_id,
     uid: userStore.u.uid,
     deviceId: app.$Oauth.data().oauth_id,
+    appVersion: appConfig.api.version,
     reportUrl: globalStore.config?.bury_point?.click_transit_path ?? '',
     bury_point: toRaw(globalStore.config?.bury_point ?? {}),
     createSign
