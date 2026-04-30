@@ -19,13 +19,13 @@
           <span class="text-[#158bfe]">{{ is_original ? '发布原创' : '申请原创认证' }}</span>
         </van-button>
         <div class="grid w-full grid-cols-2 justify-center gap-1">
-          <div v-link="`/post/publish-post`" class="flex-col-center cursor-pointer" @click="close">
+          <div class="flex-col-center cursor-pointer" @click.stop="onPublishPost">
             <div class="mb-0.5 h-[36px] w-[36px]">
               <img src="~/assets/image/community/post.png" alt="" />
             </div>
             <span>帖子</span>
           </div>
-          <div v-link="`/post/publish-post?type=film`" class="flex-col-center cursor-pointer" @click="close">
+          <div class="flex-col-center cursor-pointer" @click.stop="onPublishFilm">
             <div class="mb-0.5 h-[36px] w-[36px]">
               <img src="~/assets/image/community/qiupian.png" alt="" />
             </div>
@@ -38,6 +38,7 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick } from 'vue'
 import type { CollectInfo } from '@types'
 defineProps<{
   videoInfo?: CollectInfo
@@ -53,6 +54,21 @@ const __ = useNuxtApp()
 const { value: show_popup, open, close } = useBoolean()
 const onClose = () => {
   emit('update:show', false)
+}
+
+/** 与 v-link + @click 同节点会抢顺序导致 router.push 未生效；先关弹层再在 nextTick 跳转 */
+function onPublishPost() {
+  close()
+  nextTick(() => {
+    __.$NavigateTo('/post/publish-post')
+  })
+}
+
+function onPublishFilm() {
+  close()
+  nextTick(() => {
+    __.$NavigateTo('/post/publish-post?type=film')
+  })
 }
 
 const is_original = computed(() => {

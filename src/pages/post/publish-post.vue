@@ -3,7 +3,7 @@
     <dx-navbar
       class="my-nav-bar"
       :border="false"
-      title="发布帖子"
+      :title="isQiupian ? '发布信息' : '发布帖子'"
       left-arrow
       @click-left="__.$Back"
       @click-right="$router.push('/post/rule')"
