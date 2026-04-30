@@ -1,6 +1,6 @@
 <template>
   <div class="follow-recommend">
-    <div v-if="!list.length" class="empty-text">暂无推荐用户（mock）</div>
+    <div v-if="!list.length" class="empty-text">暂无推荐用户</div>
 
     <div v-for="user in list" :key="user.uid" class="recommend-card">
       <div class="recommend-card-header">
